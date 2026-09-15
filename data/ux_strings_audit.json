@@ -233,7 +233,11 @@
   "solve",
   "total",
   "updates",
-  "value"
+  "value",
+  "History buffers (control, sensor)",
+  "Selected state components do not exist in the model.",
+  "Invalid field/index!",
+  "Body Tree"
  ],
  "skip": [],
  "by_panel": {

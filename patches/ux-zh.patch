@@ -123,11 +123,7 @@
 -      {"QPOS", "Position"},
 -      {"QVEL", "Velocity"},
 -      {"ACT", "Actuator activation"},
-+      {"TIME", "时间 (Time)##Time"},
-+      {"QPOS", "位置 (Position)##Position"},
-+      {"QVEL", "速度 (Velocity)##Velocity"},
-+      {"ACT", "执行器激励 (Actuator activation)##Actuator activation"},
-       {"HISTORY", "History buffers (control, sensor)"},
+-      {"HISTORY", "History buffers (control, sensor)"},
 -      {"WARMSTART", "Acceleration used for warmstart"},
 -      {"CTRL", "Control"},
 -      {"QFRC_APPLIED", "Applied generalized force"},
@@ -137,15 +133,20 @@
 -      {"MOCAP_QUAT", "Orientations of mocap bodies"},
 -      {"USERDATA", "User data"},
 -      {"PLUGIN", "Plugin state"},
-+      {"WARMSTART", "用于热启动的加速度 (Acceleration used for warmstart)##Acceleration used for warmstart"},
-+      {"CTRL", "控制 (Control)##Control"},
-+      {"QFRC_APPLIED", "施加的广义力 (Applied generalized force)##Applied generalized force"},
-+      {"XFRC_APPLIED", "施加的笛卡尔力/力矩 (Applied Cartesian force/torque)##Applied Cartesian force/torque"},
-+      {"EQ_ACTIVE", "启用/禁用约束 (Enable/disable constraints)##Enable/disable constraints"},
-+      {"MOCAP_POS", "动捕刚体位置 (Positions of mocap bodies)##Positions of mocap bodies"},
-+      {"MOCAP_QUAT", "动捕刚体姿态 (Orientations of mocap bodies)##Orientations of mocap bodies"},
-+      {"USERDATA", "用户数据 (User data)##User data"},
-+      {"插件 (PLUGIN)##PLUGIN", "插件状态 (Plugin state)##Plugin state"},
++      {"TIME", "时间 (Time)"},
++      {"QPOS", "位置 (Position)"},
++      {"QVEL", "速度 (Velocity)"},
++      {"ACT", "执行器激励 (Actuator activation)"},
++      {"HISTORY", "历史缓冲区 (control, sensor) (History buffers (control, sensor))"},
++      {"WARMSTART", "用于热启动的加速度 (Acceleration used for warmstart)"},
++      {"CTRL", "控制 (Control)"},
++      {"QFRC_APPLIED", "施加的广义力 (Applied generalized force)"},
++      {"XFRC_APPLIED", "施加的笛卡尔力/力矩 (Applied Cartesian force/torque)"},
++      {"EQ_ACTIVE", "启用/禁用约束 (Enable/disable constraints)"},
++      {"MOCAP_POS", "动捕刚体位置 (Positions of mocap bodies)"},
++      {"MOCAP_QUAT", "动捕刚体姿态 (Orientations of mocap bodies)"},
++      {"USERDATA", "用户数据 (User data)"},
++      {"PLUGIN", "插件状态 (Plugin state)"},
    };
  
    int prev_state_sig = state_sig;
@@ -173,16 +174,17 @@
        state_sig = (state_sig == mjSTATE_INTEGRATION) ? 0 : mjSTATE_INTEGRATION;
      }
      ImGui::EndTable();
-@@ -889,7 +889,7 @@
+@@ -889,22 +889,22 @@
      ImGui::BeginDisabled();
      ImGui::TextWrapped(
          state_sig == 0
 -            ? "No state components are selected."
-+            ? "未选择任何状态分量。 (No state components are selected.)##No state components are selected."
-             : "Selected state components do not exist in the model.");
+-            : "Selected state components do not exist in the model.");
++            ? "未选择任何状态分量。 (No state components are selected.)"
++            : "所选的状态分量在该模型中不存在。 (Selected state components do not exist in the model.)");
      ImGui::EndDisabled();
    } else {
-@@ -897,14 +897,14 @@
+     mj_getState(model, data, state.data(), state_sig);
      bool changed = false;
  
      if (ImGui::BeginTable(
@@ -223,8 +225,9 @@
    } else {
      ImGui::BeginDisabled();
      style.Color(ImGuiCol_Text, ImColor(255, 0, 0, 255));
-     char buf[] = "Invalid field/index!";
+-    char buf[] = "Invalid field/index!";
 -    ImGui::InputText("Value", buf, sizeof(buf), ImGuiInputTextFlags_ReadOnly);
++    char buf[] = "字段/下标无效！ (Invalid field/index!)";
 +    ImGui::InputText("数值 (Value)##Value", buf, sizeof(buf), ImGuiInputTextFlags_ReadOnly);
      ImGui::EndDisabled();
    }
@@ -1072,25 +1075,25 @@
  
 -  ImGui::Text("Time");
 -  ImGui::Text("Size");
-+  ImGui::Text("时间 (Time)##Time");
-+  ImGui::Text("尺寸 (Size)##Size");
++  ImGui::Text("时间 (Time)");
++  ImGui::Text("尺寸 (Size)");
    ImGui::Text("CPU");
 -  ImGui::Text("Solver");
-+  ImGui::Text("求解器 (Solver)##Solver");
++  ImGui::Text("求解器 (Solver)");
    ImGui::Text("FPS");
 -  ImGui::Text("Memory");
-+  ImGui::Text("内存 (Memory)##Memory");
++  ImGui::Text("内存 (Memory)");
    if (model->opt.enableflags & mjENBL_ENERGY) {
 -    ImGui::Text("Energy");
-+    ImGui::Text("能量 (Energy)##Energy");
++    ImGui::Text("能量 (Energy)");
    }
    if (model->opt.enableflags & mjENBL_FWDINV) {
 -    ImGui::Text("FwdInv");
-+    ImGui::Text("前向-逆向 (FwdInv)##FwdInv");
++    ImGui::Text("前向-逆向 (FwdInv)");
    }
    if (!(model->opt.disableflags & mjDSBL_ISLAND)) {
 -    ImGui::Text("Islands");
-+    ImGui::Text("孤岛 (Islands)##Islands");
++    ImGui::Text("孤岛 (Islands)");
    }
  
    ImGui::NextColumn();
@@ -1128,6 +1131,15 @@
      BodyChildrenGui("Lights", mjOBJ_LIGHT, element, body, editor);
      BodyChildrenGui("Cameras", mjOBJ_CAMERA, element, body, editor);
      ImGui::TreePop();
+@@ -224,7 +224,7 @@
+   style.Var(ImGuiStyleVar_FramePadding, ImVec2(4, 0));
+   style.Color(ImGuiCol_Border, ImGuiCol_WindowBg);
+ 
+-  if (SectionHeader("Body Tree", flags, 0.65f)) {
++  if (SectionHeader("刚体树 (Body Tree)##Body Tree", flags, 0.65f)) {
+     mjsElement* root = mjs_firstElement(spec, mjOBJ_BODY);
+     if (root) {
+       mjsBody* body = mjs_asBody(root);
 @@ -242,35 +242,236 @@
    ImGui::PushID("$spec$");
  

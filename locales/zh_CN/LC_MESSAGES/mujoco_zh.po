@@ -976,3 +976,18 @@ msgstr "纹理"
 msgid "Tuple"
 msgstr "元组"
 
+#: History buffers (control, sensor)
+msgid "History buffers (control, sensor)"
+msgstr "历史缓冲区 (control, sensor)"
+
+#: Selected state components do not exist in the model.
+msgid "Selected state components do not exist in the model."
+msgstr "所选的状态分量在该模型中不存在。"
+
+#: Invalid field/index!
+msgid "Invalid field/index!"
+msgstr "字段/下标无效！"
+
+#: Body Tree
+msgid "Body Tree"
+msgstr "刚体树"

@@ -82,7 +82,7 @@ NO_TRANSLATE: frozenset[str] = frozenset({
     # 状态组件标识符（mjData 字段名）
     "ACT", "CTRL", "EQ_ACTIVE", "QFRC_APPLIED", "XFRC_APPLIED",
     "QPOS", "QVEL", "MOCAP_POS", "MOCAP_QUAT", "WARMSTART", "HISTORY",
-    "USERDATA", "TIME",
+    "USERDATA", "TIME", "PLUGIN",
     # 积分器 / 求解器算法名（专有名词）
     "CG", "PGS", "Newton", "RK4", "Euler", "Dense", "Sparse",
     # 单位 / 缩写
@@ -167,7 +167,14 @@ def c_escape(s: str) -> str:
 #: （`GroupGui("Geoms", ...)`），危险发生在**函数体内**。
 #: 这类只能靠**知道函数名**来判 —— 见 `CONCAT_HELPERS`。
 NOWRAP_GUARDS: tuple[str, ...] = (
-    "snprintf", "sprintf", "to_string", "SetItemTooltip", "###",
+    "snprintf", "sprintf", "to_string", "SetItemTooltip", "SetTooltip", "###",
+    # ⚠️⚠️ 这几个的**第一个参数是显示文本**，ImGui **不剥 `##`**
+    #    （`imgui_widgets.cpp:190`：*"we don't hide text after ## in this
+    #      end-user function"*）⇒ 屏幕上会**原样画出 `##Time`**。
+    #    实测踩过 14 处（`gui.cc` 的 7 个 `ImGui::Text` + 7 个 `SetItemTooltip`）
+    #    ＋ 1 处 `TextWrapped`（「未选择任何状态分量。##No state components…」）。
+    "ImGui::Text(", "TextWrapped", "TextDisabled", "TextUnformatted",
+    "BulletText", "TextColored", "LabelText",
 )
 
 #: ⚠️ 这些辅助函数**内部会拼接/格式化它的参数**，所以调用点传进去的
@@ -184,6 +191,28 @@ CONCAT_HELPERS: tuple[str, ...] = (
 
 #: 一行里出现这些 ⇒ 该行上的字面量**不能**加 `##`
 IDX_RE = re.compile(r"%[-#0-9.]*[dsfegx]")
+
+#: ⚠️⚠️ **位置型守卫**：这些字面量**本身**长得人畜无害，但它们的
+#: **消费端**是显示文本 —— 加 `##` 会在屏幕上原样画出来。
+#:
+#: 踏过的实例：`StateGui` 的 `name_and_tooltip[mjNSTATE][2]` 数组，
+#: 第二列进的是 `if (IsItemHovered()) ImGui::SetTooltip("%s", ...)`。
+#: `{"PLUGIN", "Plugin state"}` 这一行里**没有任何** guard 关键字
+#: （`SetTooltip` 在 20 行之外的循环体里），行级/语句级都判不出来
+#: ⇒ 只能按**字面量内容**直接拉黑。
+NO_WRAP_LITERALS: frozenset[str] = frozenset({
+    # StateGui 的状态量说明（进 SetTooltip）
+    "Time", "Position", "Velocity", "Actuator activation",
+    "History buffers (control, sensor)",
+    "Acceleration used for warmstart", "Control",
+    "Applied generalized force", "Applied Cartesian force/torque",
+    "Enable/disable constraints", "Positions of mocap bodies",
+    "Orientations of mocap bodies", "User data", "Plugin state",
+    "Selected state components do not exist in the model.",
+    "No state components are selected.",
+    # `gui.cc:978` —— 进 `ImGui::InputText(..., buf, ...)` 当**只读文本**显示
+    "Invalid field/index!",
+})
 
 
 def _needs_no_wrap(line: str, stmt: str = "") -> bool:
@@ -224,6 +253,10 @@ def _needs_no_wrap(line: str, stmt: str = "") -> bool:
             return True
         if any(re.search(rf'\b{h}\s*\(', text) for h in CONCAT_HELPERS):
             return True
+        # ③ 位置型：字面量本身就在「会被当显示文本消费」的名单上
+        for lit in NO_WRAP_LITERALS:
+            if f'"{lit}"' in text:
+                return True
     return False
 
 
@@ -806,6 +839,7 @@ def load_control_tooltips(path: Path) -> dict:
         return {}
     d = json.loads(path.read_text(encoding="utf-8"))
     table: dict[tuple[str, str], str] = {}
+    state: list[dict] = []
     for e in d.get("entries", []):
         if not e.get("zh"):
             raise SystemExit(
@@ -818,11 +852,14 @@ def load_control_tooltips(path: Path) -> dict:
             raise SystemExit(
                 f"❌ 控件 tooltip {e['label_en']!r} 的 zh 含 markdown `**` —— "
                 f"ImGui 按**纯文本**渲染，会原样画出星号")
+        if e.get("kind") == "state":
+            state.append(e)          # 走官方第三机制（name_and_tooltip 数组）
+            continue
         key = (e["panel"], e["label_en"])
         if key in table:
             raise SystemExit(f"❌ 控件 tooltip {key} 重复")
         table[key] = e["zh"]
-    return {"table": table, "n": len(table)}
+    return {"table": table, "state": state, "n": len(table) + len(state)}
 
 
 def _control_calls(src_dir: Path) -> list[dict]:
@@ -1063,6 +1100,48 @@ def _loop_body_after(text: str, anchor: int) -> int | None:
     return (j + 1) if j >= 0 else None
 
 
+def _inject_state_tooltips(text: str, controls: dict) -> tuple[str, int]:
+    """把 StateGui 的 `name_and_tooltip` 数组说明换成中文。
+
+    ⚠️ 这是官方的**第三种 tooltip 机制**：不是 `SetItemTooltip`，而是
+    `ImGui::Checkbox(...)` + `if (ImGui::IsItemHovered()) ImGui::SetTooltip(...)`
+    ＋ 一张 `name_and_tooltip[mjNSTATE][2]` 表。**已经挂上了**，只是内容是英文。
+
+    ⚠️ 数组的**第一列是 mjData 字段名**（`TIME` `QPOS` …）——
+    按本项目既有规范**刻意不翻**（与 UI 里成对出现的标签只翻标签）。
+    只换第二列（英文说明 → 中文）。
+    """
+    if not controls:
+        return text, 0
+    rows = {e["state_name"]: e["zh"] for e in controls.get("state", [])
+            if e.get("state_name")}
+    if not rows:
+        return text, 0
+
+    # ⚠️⚠️ 必须**一次性**替换完，不能 for 循环里逐行 subn。
+    #    踩过：替换进去的中文本身也长得像目标模式（`{"TIME", "…中文…"}`），
+    #    下一轮迭代会匹配到**刚写进去的那一行**，于是把后面的真行"挤"掉，
+    #    表现为「找不到 'PLUGIN' 那一行（匹配到 0 处）」。
+    def repl(m: re.Match) -> str:
+        name = m.group("name")
+        zh = rows.get(name)
+        if zh is None:
+            return m.group(0)
+        found.add(name)
+        return f'{m.group("pre")}"{_cpp_str(zh)}"{m.group("post")}'
+
+    found: set[str] = set()
+    pat = re.compile(
+        r'(?P<pre>\{\s*"(?P<name>[A-Z_]+)"\s*,\s*)"[^"]*"(?P<post>\s*\})')
+    text = pat.sub(repl, text)
+    missing = sorted(set(rows) - found)
+    if missing:
+        raise SystemExit(
+            f"❌ StateGui 的 name_and_tooltip 里找不到这些行：{missing}\n"
+            f"   （匹配到 {len(found)}/{len(rows)}）")
+    return text, len(found)
+
+
 def _offset_of_line(text: str, line: int) -> int:
     """第 `line` 行（1 起）的行首偏移。"""
     pos, cur = 0, 1
@@ -1202,6 +1281,9 @@ def build_patch(translations: dict[str, str], src_dir: Path,
             #    ⇒ 先做按偏移的，再做按锚点的。
             text, n_ctl = _inject_control_tooltips(text, controls, ctl)
             text, n_loop = _inject_loop_tips(text, controls, ctl)
+            text, n_state = _inject_state_tooltips(text, controls)
+            applied.extend((f"statetip:{e['state_name']}", "状态量说明", rel, 1)
+                           for e in controls.get("state", []))
             applied.extend((f"ctltip:{c['panel']}:{c['label_en']}", "控件悬停说明", rel, 1)
                            for c in ctl)
             lines = text.splitlines(keepends=True)
