@@ -212,7 +212,7 @@
    const mjtNum* value = static_cast<const mjtNum*>(
        GetValue(model, data, field_name, field_index));
  
-@@ -971,18 +971,64 @@
+@@ -971,18 +971,120 @@
    if (value) {
      char buf[100];
      int size = std::snprintf(buf, sizeof(buf), "%0.3f", *value);
@@ -231,7 +231,7 @@
  }
  
 +// ══ mujoco-zh 开关悬停说明（由 scripts/gen_cpp_patch.py 生成，勿手改）══
-+// 数据源：data/tooltips_flags.json（26 条）
++// 数据源：data/tooltips_flags.json（68 条）
 +namespace {
 +constexpr const char* kDisableTip[] = {
 +    /* 0*/ "约束 (Constraint)\n\n取消勾选 = 关掉整个约束求解器，不再施加任何约束力。\n\n官方原文：这个开关管「全部约束」，下面四个（等式/摩擦损失/限位/接触）各管一类。\n某一类要生效，本级和分类开关必须同时开着。",
@@ -273,13 +273,69 @@
 +//    若改成显式定长 kEnableTip[mjNENABLE]，则会**静默错位**（下标合法但挂错开关）。
 +static_assert(sizeof(kEnableTip) / sizeof(kEnableTip[0]) == mjNENABLE,
 +              "kEnableTip 与 mjtEnableBit 不同步 —— 需更新 data/tooltips_flags.json");
++constexpr const char* kVisTip[] = {
++    /* 0*/ "凸包 (Convex Hull)\n\n勾上 = 用网格的**凸包**代替原网格来显示。\n\n只对有碰撞的网格生效（contype 或 conaffinity 非 0），且该网格必须已计算凸包。",
++    /* 1*/ "纹理 (Texture)\n\n勾上 = 显示材质纹理贴图。\n\n取消勾选后物体只显示纯色（材质基础色），不带贴图花纹。",
++    /* 2*/ "关节 (Joint)\n\n勾上 = 显示关节。\n\n画出每个关节的位置与轴向，长度/宽度由「缩放 (Scale)」区的「关节长度/宽度」决定。",
++    /* 3*/ "相机 (Camera)\n\n勾上 = 显示模型里定义的相机。\n\n画成视锥体；若相机分辨率大于 1×1，锥体半透明（alpha 0.3）以免遮挡。",
++    /* 4*/ "执行器 (Actuator)\n\n勾上 = 显示执行器。\n\n每个执行器画成一条线，长度反映当前控制量的大小。",
++    /* 5*/ "激励 (Activation)\n\n勾上 = 执行器长度按**内部激励值**显示，而不是控制输入。\n\n仅对设了激励范围（actlimited）的执行器生效，且仅在没有 ctrl 范围时用。",
++    /* 6*/ "光源 (Light)\n\n勾上 = 显示模型里定义的光源。\n\n画成一个小坐标系，方向即光的照射方向。",
++    /* 7*/ "肌腱 (Tendon)\n\n勾上 = 显示肌腱。\n\n悬链线类型的肌腱会按实际形状画成弧线。",
++    /* 8*/ "测距传感器 (Range Finder)\n\n勾上 = 把测距传感器的射线画出来。\n\n能直观看到每个传感器打到哪、有没有打中东西。",
++    /* 9*/ "等式约束 (Equality)\n\n勾上 = 显示**焊接 (weld)** 和**连接 (connect)** 类型的等式约束。\n\n只画当前激活的（eq_active），从两个连接点的全局坐标画一条连线。",
++    /*10*/ "惯量 (Inertia)\n\n勾上 = 显示每个刚体的**等效惯量盒**。\n\n盒子大小由刚体的质量与惯性张量算出，用来直观判断质量分布是否合理。\n形状（盒 / 椭球）由「全局 (Global)」里的「椭球惯量」决定。",
++    /*11*/ "惯量按密度缩放 (Scale Inertia)\n\n勾上 = 惯量盒大小**再乘以密度的立方根**。\n\n让「密度都为 1000」的盒/椭球具有相同显示尺寸，\n这样惯量盒大小就只反映**质量分布**，不夹杂体积差异。",
++    /*12*/ "扰动力 (Perturb Force)\n\n勾上 = 显示施加在刚体上的外部扰动力。\n\n只画 xfrc_applied 非零的刚体；\n常用于看 Ctrl+右键拖拽施加的推力大小。",
++    /*13*/ "扰动对象 (Perturb Object)\n\n勾上 = 显示**被选中的扰动对象**。\n\n只在有选中对象时出现，会画出平移/旋转的操纵柄。",
++    /*14*/ "接触点 (Contact Point)\n\n勾上 = 显示接触点（画成圆柱）。\n\n官方文档的提示：把圆柱调得**又矮又宽**，\n就会呈现「薄饼 (pancake)」状 —— 正好代表接触处的切平面。\n大小由「缩放」区的接触宽度/高度控制。",
++    /*15*/ "约束孤岛 (Island)\n\n勾上 = 按**约束孤岛**给接触点上色。\n\n不同孤岛（互不作用的约束/自由度集合）用不同色相，\n用来判断模型的约束是怎么分块的。",
++    /*16*/ "接触力 (Contact Force)\n\n勾上 = 显示接触力。\n\n从接触点画箭头，长度正比于力的大小。\n默认画**合力**；若同时勾上「分离接触力」则拆成法向和切向两条。",
++    /*17*/ "分离接触力 (Contact Split)\n\n勾上 = 把接触力**拆成法向力和摩擦力**分别画。\n\n仅对接触维度 > 1（真正有摩擦的接触）生效。\n需要同时勾上「接触力」才看得到。",
++    /*18*/ "动态物体半透明 (Transparent)\n\n勾上 = 让**动态刚体**半透明，静态的保持不变。\n\n官方文档：「所有运动刚体上的 geom 会被变得更透明，\n做法是把各自的 alpha 乘上本参数值」（即「映射」区的 Alpha）。\n用来透过外壳看清内部的关节/接触情况。",
++    /*19*/ "自动连线 (Auto Connect)\n\n勾上 = 自动生成骨架线。\n\n官方文档的说法：「连接刚体与关节的胶囊体半径，\n**结果是一副自动生成的骨架**」。\n实现上从每个刚体质心连到它内部的关节中心（不连世界体）。\n粗细由「缩放」区的「连接 (Connect)」控制。",
++    /*20*/ "质心 (Center of Mass)\n\n勾上 = 显示每个**运动学树**的质心。\n\n画成球体，每个树只画一个（在其根刚体处）。",
++    /*21*/ "选点 (Select Point)\n\n勾上 = 显示**选中的点**。\n\n即双击物体后标记的那个点（局部坐标换算到世界坐标），用于确认选中的具体位置。",
++    /*22*/ "静态物体 (Static Body)\n\n勾上 = 显示静态刚体（如地面、固定支架）。\n\n官方特别说明：它切换的是**所有**静态刚体，不只是世界体的直接子级。\n取消勾选可把地面等固定物隐藏，方便看机器人本身。",
++    /*23*/ "蒙皮 (Skin)\n\n勾上 = 显示蒙皮。\n\n蒙皮只用于渲染，不影响物理。受「分组可见性」里 Skin 分组开关的过滤。",
++    /*24*/ "柔性体顶点 (Flex Vert)\n\n勾上 = 把柔性体画成**分离的顶点**。\n\n柔性体有四种显示方式（顶点/边/面/平滑蒙皮），\n取决于勾了哪几个，以及柔性体本身的维度。",
++    /*25*/ "柔性体边 (Flex Edge)\n\n勾上 = 把柔性体画成**边**（线框）。\n\n适合看一维柔性体（绳子/缆索）。",
++    /*26*/ "柔性体面 (Flex Face)\n\n勾上 = 把柔性体画成**面**（三角面片）。\n\n适合看二维柔性体（布/膜）。",
++    /*27*/ "柔性体平滑蒙皮 (Flex Skin)\n\n勾上 = 用**平滑蒙皮**渲染柔性体。\n\n官方注释特意说明：勾上它会**取代**「柔性体面 (Flex Face)」，\n即禁用其余三种显示方式（顶点/边/面）。\n三维柔性体还需配合「柔性体图层 (Flex layer)」滑块选层。",
++    /*28*/ "刚体 BVH (Body Tree)\n\n勾上 = 显示静态刚体的 **BVH**（包围体层次树）。\n\n官方述为「刚体惯性坐标系下的静态 AABB 层次树」。\n注意：显示到第几层由「全局」区的「树深度 (Tree depth)」决定 ——\n不调它可能什么都看不到。",
++    /*29*/ "网格 BVH (Mesh Tree)\n\n勾上 = 显示网格/柔性体的 **BVH**（动态包围盒）。\n\n官方 changelog：原 `mjVIS_FLEXBVH` 已废弃，功能并入本开关。\n它同时覆盖 SDF 的八叉树显示。\n注意：同样受「全局」区的「树深度」滑块控制。",
++    /*30*/ "SDF 迭代 (SDF iters)\n\n勾上 = 显示 **SDF 碰撞检测的梯度下降轨迹**。\n\n这是 SDF 插件的调试功能：\n每步画一个球（**起点蓝、终点红**），中间用渐变色连线。\n只对使用 SDF 几何体的模型有意义。",
++};
++// ⚠️ 这条 static_assert **不能省** —— 数组声明成 [] 由初始化列表定长，
++//    MuJoCo 升级后枚举变长而这边没跟上就会**编译失败**（响亮地失败）。
++//    若改成显式定长 kVisTip[mjNVISFLAG]，则会**静默错位**（下标合法但挂错开关）。
++static_assert(sizeof(kVisTip) / sizeof(kVisTip[0]) == mjNVISFLAG,
++              "kVisTip 与 mjtVisFlag 不同步 —— 需更新 data/tooltips_flags.json");
++constexpr const char* kRndTip[] = {
++    /* 0*/ "阴影 (Shadow)\n\n勾上 = 开启阴影（关闭/取消勾选即关闭）。\n\n直接控制渲染请求里的 enable_shadows。\n关掉能提升性能，也便于看清暗部细节。",
++    /* 1*/ "线框 (Wireframe)\n\n勾上 = 用**线框**模式渲染（只画三角形的边）。\n\n取消勾选恢复正常实体渲染。\n注意：和「深度 (Depth)」「分割 (Segment)」是互斥的显示模式。",
++    /* 2*/ "反射 (Reflection)\n\n勾上 = 开启**平面反射**。\n\n官方文档强调的限制：**只有平面 (plane)，以及盒体的 Z+ 面**会被渲染出反射 ——\n其他形状不反射。\n反射强度由各 geom 的 reflectance 属性决定。",
++    /* 3*/ "加色混合 (Additive)\n\n勾上 = 半透明物体用**加色混合**绘制（越叠越亮）。\n\n取消勾选用常规的 alpha 混合（越叠越暗/越实）。\n官方实现：勾上时 blended 用 GL_SRC_ALPHA/GL_ONE，\n取消时用 GL_SRC_ALPHA/GL_ONE_MINUS_SRC_ALPHA。\n适合看发光的力矢量、重叠的透明体。",
++    /* 4*/ "天空盒 (Skybox)\n\n勾上 = 显示天空盒背景。\n\n取消勾选后背景为纯色。\n天空盒贴图由模型 <asset> 里 type=\"skybox\" 的纹理决定。",
++    /* 5*/ "雾 (Fog)\n\n勾上 = 开启雾效（远处物体渐隐）。\n\n雾的颜色在「颜色 (Colors)」区的「雾」里设置，\n起止距离在模型的 <visual><map> 里（fogstart/fogend）。",
++    /* 6*/ "霾 (Haze)\n\n勾上 = 给**无限大平面**（地面）叠加一层「霾」。\n\n官方文档：霾覆盖「到地平线距离」的指定比例，\n**且必须有天空盒 (Skybox) 才会生效**。\n用来让无限地面远处自然融入背景，不出现硬边。",
++    /* 7*/ "深度图 (Depth)\n\n勾上 = 渲染**深度图**而不是彩色图像。\n\n用途：生成视觉策略的训练数据、做深度相机仿真。\n注意两点：① 与「线框」「分割图」互斥；\n② 开启后会**顺带关掉反射**（render_gl3.c:1031）。",
++    /* 8*/ "分割图 (Segment)\n\n勾上 = 渲染**分割图**（segmentation）。\n\n每个物体用不同颜色填充，用于实例/语义分割标注。\n官方文档：渲染分割图时会**自动关闭多重采样**，\n以免把相邻的分割 id 平均掉。\n配色取决于「Id 着色」；与「线框」「深度图」互斥。",
++    /* 9*/ "Id 着色 (Id Color)\n\n勾上 = 分割图按 **geom 的 id+1** 上色（每 8 位一个通道）。\n\n取消勾选则按**随机颜色**上色。\n只在勾上「分割图 (Segment)」时才有效。\n按 id 着色适合程序化读取；随机色适合人眼区分相邻物体。",
++    /*10*/ "背面剔除 (Cull Face)\n\n勾上 = 开启**背面剔除**（不画背对相机的面）。\n\n能提升性能，但前提是模型的法线方向正确 ——\n若模型面片朝向反了，勾上后会看到「破洞」。\n这种情况取消勾选即可正常显示。",
++};
++// ⚠️ 这条 static_assert **不能省** —— 数组声明成 [] 由初始化列表定长，
++//    MuJoCo 升级后枚举变长而这边没跟上就会**编译失败**（响亮地失败）。
++//    若改成显式定长 kRndTip[mjNRNDFLAG]，则会**静默错位**（下标合法但挂错开关）。
++static_assert(sizeof(kRndTip) / sizeof(kRndTip[0]) == mjNRNDFLAG,
++              "kRndTip 与 mjtRndFlag 不同步 —— 需更新 data/tooltips_flags.json");
 +
 +}  // namespace
 +// ══ end mujoco-zh ══
  void PhysicsGui(mjModel* model, float min_width) {
    const float available_width =
        GetStableAvailWidth() - ImGui::GetTreeNodeToLabelSpacing();
-@@ -994,35 +1040,35 @@
+@@ -994,35 +1096,35 @@
  
    auto& opt = model->opt;
  
@@ -336,7 +392,7 @@
      // Viscous posing mode toggle: disables gravity and passive springs, adds
      // viscosity. All changes are directly visible in the parameters below.
      {
-@@ -1030,7 +1076,7 @@
+@@ -1030,7 +1132,7 @@
        bool active = (opt.disableflags & mjDSBL_GRAVITY) &&
                      (opt.disableflags & mjDSBL_SPRING) &&
                      (opt.viscosity >= kPosingViscosity);
@@ -345,7 +401,7 @@
          if (active) {
            opt.disableflags |= mjDSBL_GRAVITY;
            opt.disableflags |= mjDSBL_SPRING;
-@@ -1043,51 +1089,55 @@
+@@ -1043,51 +1145,55 @@
        }
        ImGui::SetItemTooltip(
            "Disable gravity and passive springs,\n"
@@ -416,7 +472,7 @@
          ImGui::TableNextColumn();
          int flipped = ~opt.disableactuator;
          ImGui_BitToggle(label, &flipped, 1 << i, size);
-@@ -1109,100 +1159,100 @@
+@@ -1109,100 +1215,100 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -592,7 +648,7 @@
      ImGui::TreePop();
    }
  
-@@ -1216,7 +1266,7 @@
+@@ -1216,24 +1322,28 @@
    const int num_cols = std::clamp(
        static_cast<int>(std::floor(available_width / min_width)), 1, 6);
  
@@ -601,7 +657,13 @@
      if (ImGui::BeginTable("##ModelElementsTable", num_cols)) {
        const ImVec2 size = GetFlexElementSize(num_cols);
        for (int i = 0; i < mjNVISFLAG; ++i) {
-@@ -1228,7 +1278,7 @@
+         ImGui::TableNextColumn();
+         ImGui_ButtonToggle(mjVISSTRING[i][0], &vis_options->flags[i], size);
++        // mujoco-zh: 悬停说明（生成物，勿手改）
++        if (kVisTip[i]) ImGui::SetItemTooltip("%s", kVisTip[i]);
+       }
+       ImGui::EndTable();
+     }
      ImGui::TreePop();
    }
  
@@ -610,7 +672,14 @@
      if (ImGui::BeginTable("##RenderFlagsTable", num_cols)) {
        const ImVec2 size = GetFlexElementSize(num_cols);
        for (int i = 0; i < mjNRNDFLAG; ++i) {
-@@ -1269,13 +1319,13 @@
+         ImGui::TableNextColumn();
+         ImGui_ButtonToggle(mjRNDSTRING[i][0], &render_flags[i], size);
++        // mujoco-zh: 悬停说明（生成物，勿手改）
++        if (kRndTip[i]) ImGui::SetItemTooltip("%s", kRndTip[i]);
+       }
+       ImGui::EndTable();
+     }
+@@ -1269,13 +1379,13 @@
      }
    };
  
@@ -631,7 +700,7 @@
  }
  
  void NoiseGui(StepControl* step_control) {
-@@ -1283,8 +1333,8 @@
+@@ -1283,8 +1393,8 @@
    step_control->GetNoiseParameters(noise_scale, noise_rate);
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
@@ -642,7 +711,7 @@
    ImGui::PopItemWidth();
    step_control->SetNoiseParameters(noise_scale, noise_rate);
  }
-@@ -1309,7 +1359,7 @@
+@@ -1309,7 +1419,7 @@
      if (jnt_name) {
        std::snprintf(name, sizeof(name), "%s", jnt_name);
      } else {
@@ -651,7 +720,7 @@
      }
  
      double min = -1.0;
-@@ -1328,7 +1378,7 @@
+@@ -1328,7 +1438,7 @@
      const int data_adr = model->jnt_qposadr[i];
      ImGui_Slider(name, &data->qpos[data_adr], min, max);
      if (ImGui::BeginPopupContextItem()) {
@@ -660,7 +729,7 @@
          data->qpos[data_adr] = model->qpos0[data_adr];
        }
        ImGui::EndPopup();
-@@ -1343,7 +1393,7 @@
+@@ -1343,7 +1453,7 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -669,7 +738,7 @@
      mj_resetCtrl(model, data);
    }
  
-@@ -1373,7 +1423,7 @@
+@@ -1373,7 +1483,7 @@
        } else if (act_name) {
          std::snprintf(name, sizeof(name), "%s", act_name);
        } else {
@@ -678,7 +747,7 @@
        }
  
        double min = -1.0;
-@@ -1385,7 +1435,7 @@
+@@ -1385,7 +1495,7 @@
        }
        ImGui_Slider(name, &data->ctrl[j], min, max);
        if (ImGui::BeginPopupContextItem()) {
@@ -687,7 +756,7 @@
            data->ctrl[j] = mju_clip(0.0, min, max);
          }
          ImGui::EndPopup();
-@@ -1413,7 +1463,7 @@
+@@ -1413,7 +1523,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -696,7 +765,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1433,7 +1483,7 @@
+@@ -1433,7 +1543,7 @@
            mjMIN(mjMIN(data->solver_niter[k], mjNSOLVER), mjMAXLINEPNT);
  
        ImPlot::PlotLineG(
@@ -705,7 +774,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1448,7 +1498,7 @@
+@@ -1448,7 +1558,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -714,7 +783,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1459,7 +1509,7 @@
+@@ -1459,7 +1569,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -723,7 +792,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1482,7 +1532,7 @@
+@@ -1482,7 +1592,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -732,7 +801,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1502,7 +1552,7 @@
+@@ -1502,7 +1612,7 @@
        int nefc = nisland == 1 ? data->nefc : data->island_nefc[k];
  
        ImPlot::PlotLineG(
@@ -741,7 +810,7 @@
            +[](int i, void* user_data) {
              const float x = static_cast<float>(i);
              const float y = *(static_cast<int*>(user_data));
-@@ -1511,7 +1561,7 @@
+@@ -1511,7 +1621,7 @@
            &nefc, npoints);
  
        ImPlot::PlotLineG(
@@ -750,7 +819,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1522,7 +1572,7 @@
+@@ -1522,7 +1632,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -759,7 +828,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1537,7 +1587,7 @@
+@@ -1537,7 +1647,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -768,7 +837,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1552,7 +1602,7 @@
+@@ -1552,7 +1662,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -777,7 +846,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1599,20 +1649,20 @@
+@@ -1599,20 +1709,20 @@
    ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.4f);
    ImGui::SetColumnWidth(1, ImGui::GetWindowWidth() * 0.6f);
  

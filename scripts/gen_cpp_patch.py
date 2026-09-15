@@ -257,11 +257,16 @@ GUI_CC = "src/experimental/platform/ux/gui.cc"
 #: ⚠️ 不能锚在 RenderingGui（1212）之前：kDisableTip 在 PhysicsGui（986）里就要用
 INJECT_ANCHOR = "void PhysicsGui(mjModel* model, float min_width) {"
 
-#: 调用点：循环变量名 → tooltip 数组名
-#: ⚠️ 只有 kDisableTip / kEnableTip 两处 —— Rendering 的 42 个开关这次不做
+#: 调用点：循环头 → 标签表达式 → tooltip 数组名
+#:
+#: ⚠️ 标签表达式有两种形态，别搞混：
+#:   `mjDISABLESTRING[i]`    —— 一维数组
+#:   `mjVISSTRING[i][0]`     —— **二维**（[i][0] 是显示名、[i][1] 是默认值、[i][2] 是快捷键）
 CALL_SITES: tuple[tuple[str, str, str], ...] = (
     ("for (int i = 0; i < mjNDISABLE; ++i)", "mjDISABLESTRING[i]", "kDisableTip"),
     ("for (int i = 0; i < mjNENABLE; ++i)",  "mjENABLESTRING[i]",  "kEnableTip"),
+    ("for (int i = 0; i < mjNVISFLAG; ++i)", "mjVISSTRING[i][0]",  "kVisTip"),
+    ("for (int i = 0; i < mjNRNDFLAG; ++i)", "mjRNDSTRING[i][0]",  "kRndTip"),
 )
 
 #: 生成 C++ 数组时用的类型 —— `const char*` 而非 `std::string`：
@@ -331,13 +336,15 @@ def _cpp_str(s: str) -> str:
 
 def _render_tables(tables: dict[str, dict[int, str]]) -> str:
     """渲染成 C++ 数组块。"""
-    # 表名 → 官方枚举常量名（static_assert 用）
+    # 表名 → (官方枚举常量名, 枚举类型名)（static_assert 用）
     enum_of = {
         "kDisableTip": ("mjNDISABLE", "mjtDisableBit"),
         "kEnableTip":  ("mjNENABLE",  "mjtEnableBit"),
+        "kVisTip":     ("mjNVISFLAG", "mjtVisFlag"),
+        "kRndTip":     ("mjNRNDFLAG", "mjtRndFlag"),
     }
     blocks = []
-    for name in ("kDisableTip", "kEnableTip"):
+    for name in ("kDisableTip", "kEnableTip", "kVisTip", "kRndTip"):
         if name not in tables:
             continue
         tips = tables[name]
@@ -362,36 +369,39 @@ def _inject_tooltips(lines: list[str], tables: dict[str, dict[int, str]]
     block = _render_tables(tables)
     src = src.replace(INJECT_ANCHOR, block + INJECT_ANCHOR, 1)
 
-    # ② 调用点 —— 紧跟在 ImGui_BitToggle 之后
+    # ② 调用点 —— 紧跟在 toggle 调用之后
     #    ⚠️ tooltip 附着的是「上一个 item」，中间不能插任何 ImGui 调用
+    #
+    #    ⚠️ 两种 toggle 函数、两种标签形态（都实测过）：
+    #      Physics  : ImGui_BitToggle(mjDISABLESTRING[i], ...)     一维
+    #      Rendering: ImGui_ButtonToggle(mjVISSTRING[i][0], ...)  二维
+    #    ⇒ 正则必须同时吃下 `ImGui_(Bit|Button)Toggle` 和 `[i]` / `[i][0]`
     inserted = []
     for loop, label_expr, table in CALL_SITES:
         if table not in tables:
             continue
         if loop not in src:
             raise SystemExit(f"❌ tooltip: 找不到调用点循环\n   {loop}")
-        # 找到该循环内 ImGui_BitToggle(...) 那一行，在它后面插一行
+        # 从该循环头开始，抓到最近的 toggle 调用行
         pat = re.compile(
-            r"( *)(for \(int i = 0; i < mjN\w+; \+\+i\) \{\n"
-            r"(?:[^\n]*\n)*?"
-            r" *ImGui_BitToggle\([^;]*?\);\n)")
+            re.escape(loop) +
+            r"(?P<body>(?:[^\n]*\n)*?"
+            r"(?P<indent> *)(?:if \(.*?\) )?"
+            r"ImGui_(?:Bit|Button)Toggle\([^;]*?\);\n)")
         m = pat.search(src)
-        # 逐个匹配，找到含目标 label_expr 的那个循环
-        for m in pat.finditer(src):
-            seg = m.group(2)
-            if label_expr not in seg:
-                continue
-            indent = re.search(r"^( *)ImGui_BitToggle", seg, re.M).group(1)
-            call = (f'{indent}// mujoco-zh: 悬停说明（生成物，勿手改）\n'
-                    f'{indent}if ({table}[i]) '
-                    f'ImGui::SetItemTooltip("%s", {table}[i]);\n')
-            src = src[:m.end(2)] + call + src[m.end(2):]
-            inserted.append((table, label_expr))
-            break
-        else:
+        if not m:
+            raise SystemExit(f"❌ tooltip: 循环 `{loop}` 后找不到 toggle 调用")
+        seg = m.group("body")
+        if label_expr not in seg:
             raise SystemExit(
-                f"❌ tooltip: 在循环 `{loop}` 里找不到 ImGui_BitToggle({label_expr})\n"
-                f"   源码结构可能变了")
+                f"❌ tooltip: 循环 `{loop}` 里的 toggle 调用不含 `{label_expr}`\n"
+                f"   实际是: {seg.strip().splitlines()[-1].strip()[:90]}")
+        indent = m.group("indent")
+        call = (f'{indent}// mujoco-zh: 悬停说明（生成物，勿手改）\n'
+                f'{indent}if ({table}[i]) '
+                f'ImGui::SetItemTooltip("%s", {table}[i]);\n')
+        src = src[:m.end("body")] + call + src[m.end("body"):]
+        inserted.append((table, label_expr))
 
     return src.splitlines(keepends=True), [
         (f"tooltip:{t}", "C++ 悬停说明", GUI_CC, 1) for t, _ in inserted

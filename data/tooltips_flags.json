@@ -34,6 +34,14 @@
     "kEnableTip": {
       "enum": "mjtEnableBit",
       "count": 6
+    },
+    "kVisTip": {
+      "enum": "mjtVisFlag",
+      "count": 31
+    },
+    "kRndTip": {
+      "enum": "mjtRndFlag",
+      "count": 11
     }
   },
   "entries": [
@@ -379,6 +387,552 @@
       "verified": [
         "事实句全部来自 provenance 所引官方原文；未写任何现象描述",
         "⚠️ 该开关在 dm10/stewart/g1 上实测**无差异或差异不显著** —— 见 data/flag_effects_measured.json"
+      ]
+    },
+    {
+      "key": "mjVIS_CONVEXHULL",
+      "table": "kVisTip",
+      "index": 0,
+      "label_en": "Convex Hull",
+      "zh": "凸包",
+      "audience": "fact",
+      "tip": "凸包 (Convex Hull)\n\n勾上 = 用网格的**凸包**代替原网格来显示。\n\n只对有碰撞的网格生效（contype 或 conaffinity 非 0），且该网格必须已计算凸包。",
+      "provenance": "【官方文档】doc/overview.rst:395 —— 碰撞检测用 convex hull\n【源码】src/engine/engine_vis_visualize.c:1040（mjVIS_CONVEXHULL 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_TEXTURE",
+      "table": "kVisTip",
+      "index": 1,
+      "label_en": "Texture",
+      "zh": "纹理",
+      "audience": "fact",
+      "tip": "纹理 (Texture)\n\n勾上 = 显示材质纹理贴图。\n\n取消勾选后物体只显示纯色（材质基础色），不带贴图花纹。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:242（mjVIS_TEXTURE 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_JOINT",
+      "table": "kVisTip",
+      "index": 2,
+      "label_en": "Joint",
+      "zh": "关节",
+      "audience": "fact",
+      "tip": "关节 (Joint)\n\n勾上 = 显示关节。\n\n画出每个关节的位置与轴向，长度/宽度由「缩放 (Scale)」区的「关节长度/宽度」决定。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/joint + rgba/constraint —— 「If a joint is limited and the joint value exceeds the limit, the value of the constraint impedance d is used to mix this color and rgba/constraint.」\n【源码】src/engine/engine_vis_visualize.c:2055（mjVIS_JOINT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_CAMERA",
+      "table": "kVisTip",
+      "index": 3,
+      "label_en": "Camera",
+      "zh": "相机",
+      "audience": "fact",
+      "tip": "相机 (Camera)\n\n勾上 = 显示模型里定义的相机。\n\n画成视锥体；若相机分辨率大于 1×1，锥体半透明（alpha 0.3）以免遮挡。",
+      "provenance": "【官方文档】doc/changelog.rst:2114 —— 「Visualize the calibrated frustum using the mjVIS_CAMERA visualization flag」\n【源码】src/engine/engine_vis_visualize.c:2374（mjVIS_CAMERA 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_ACTUATOR",
+      "table": "kVisTip",
+      "index": 4,
+      "label_en": "Actuator",
+      "zh": "执行器",
+      "audience": "fact",
+      "tip": "执行器 (Actuator)\n\n勾上 = 显示执行器。\n\n每个执行器画成一条线，长度反映当前控制量的大小。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/actuator —— 「acting on scalar joints only」\n【源码】src/engine/engine_vis_visualize.c:2135（mjVIS_ACTUATOR 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_ACTIVATION",
+      "table": "kVisTip",
+      "index": 5,
+      "label_en": "Activation",
+      "zh": "激励",
+      "audience": "fact",
+      "tip": "激励 (Activation)\n\n勾上 = 执行器长度按**内部激励值**显示，而不是控制输入。\n\n仅对设了激励范围（actlimited）的执行器生效，且仅在没有 ctrl 范围时用。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:2154（mjVIS_ACTIVATION 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_LIGHT",
+      "table": "kVisTip",
+      "index": 6,
+      "label_en": "Light",
+      "zh": "光源",
+      "audience": "fact",
+      "tip": "光源 (Light)\n\n勾上 = 显示模型里定义的光源。\n\n画成一个小坐标系，方向即光的照射方向。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/light —— 「The size of the decorative object used to represent model lights in the rendering.」\n【源码】src/engine/engine_vis_visualize.c:2521（mjVIS_LIGHT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_TENDON",
+      "table": "kVisTip",
+      "index": 7,
+      "label_en": "Tendon",
+      "zh": "肌腱",
+      "audience": "fact",
+      "tip": "肌腱 (Tendon)\n\n勾上 = 显示肌腱。\n\n悬链线类型的肌腱会按实际形状画成弧线。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:1207（mjVIS_TENDON 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_RANGEFINDER",
+      "table": "kVisTip",
+      "index": 8,
+      "label_en": "Range Finder",
+      "zh": "测距传感器",
+      "audience": "fact",
+      "tip": "测距传感器 (Range Finder)\n\n勾上 = 把测距传感器的射线画出来。\n\n能直观看到每个传感器打到哪、有没有打中东西。",
+      "provenance": "【官方文档】doc/XMLreference.rst sensor/fromto —— 「When this sensor is present and the mjVIS_RANGEFINDER visualization flag is set, segments will be visualized as rangefinder rays.」\n【源码】src/engine/engine_vis_visualize.c:2632（mjVIS_RANGEFINDER 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_CONSTRAINT",
+      "table": "kVisTip",
+      "index": 9,
+      "label_en": "Equality",
+      "zh": "等式约束",
+      "audience": "fact",
+      "tip": "等式约束 (Equality)\n\n勾上 = 显示**焊接 (weld)** 和**连接 (connect)** 类型的等式约束。\n\n只画当前激活的（eq_active），从两个连接点的全局坐标画一条连线。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/constraint —— 「Color corresponding to spatial constraint violations -- equality constraints, joint limits, and tendon limits.」\n【源码】src/engine/engine_vis_visualize.c:2821（mjVIS_CONSTRAINT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_INERTIA",
+      "table": "kVisTip",
+      "index": 10,
+      "label_en": "Inertia",
+      "zh": "惯量",
+      "audience": "fact",
+      "tip": "惯量 (Inertia)\n\n勾上 = 显示每个刚体的**等效惯量盒**。\n\n盒子大小由刚体的质量与惯性张量算出，用来直观判断质量分布是否合理。\n形状（盒 / 椭球）由「全局 (Global)」里的「椭球惯量」决定。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/inertia + visual/global/ellipsoidinertia —— 「Color of the boxes used to render equivalent body inertias… because it is usually desirable to see the geoms inside the inertia box.」\n【源码】src/engine/engine_vis_visualize.c:1807（mjVIS_INERTIA 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_SCLINERTIA",
+      "table": "kVisTip",
+      "index": 11,
+      "label_en": "Scale Inertia",
+      "zh": "惯量按密度缩放",
+      "audience": "fact",
+      "tip": "惯量按密度缩放 (Scale Inertia)\n\n勾上 = 惯量盒大小**再乘以密度的立方根**。\n\n让「密度都为 1000」的盒/椭球具有相同显示尺寸，\n这样惯量盒大小就只反映**质量分布**，不夹杂体积差异。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:1836（mjVIS_SCLINERTIA 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_PERTFORCE",
+      "table": "kVisTip",
+      "index": 12,
+      "label_en": "Perturb Force",
+      "zh": "扰动力",
+      "audience": "fact",
+      "tip": "扰动力 (Perturb Force)\n\n勾上 = 显示施加在刚体上的外部扰动力。\n\n只画 xfrc_applied 非零的刚体；\n常用于看 Ctrl+右键拖拽施加的推力大小。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/force —— 「The length of the rendered force vector equals the force magnitude multiplied by the value of this attribute and divided by the mean body mass.」\n【源码】src/engine/engine_vis_visualize.c:2791（mjVIS_PERTFORCE 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_PERTOBJ",
+      "table": "kVisTip",
+      "index": 13,
+      "label_en": "Perturb Object",
+      "zh": "扰动对象",
+      "audience": "fact",
+      "tip": "扰动对象 (Perturb Object)\n\n勾上 = 显示**被选中的扰动对象**。\n\n只在有选中对象时出现，会画出平移/旋转的操纵柄。",
+      "provenance": "【官方文档】doc/XMLreference.rst programming/visualization —— 「adding a visual string to denote the positional difference, and a rotating cube to denote the reference orientation of the selected body」\n【源码】src/engine/engine_vis_visualize.c:1873（mjVIS_PERTOBJ 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_CONTACTPOINT",
+      "table": "kVisTip",
+      "index": 14,
+      "label_en": "Contact Point",
+      "zh": "接触点",
+      "audience": "fact",
+      "tip": "接触点 (Contact Point)\n\n勾上 = 显示接触点（画成圆柱）。\n\n官方文档的提示：把圆柱调得**又矮又宽**，\n就会呈现「薄饼 (pancake)」状 —— 正好代表接触处的切平面。\n大小由「缩放」区的接触宽度/高度控制。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/contactwidth —— 「The radius of the cylinders used to render contact points… Making the cylinder short and wide results in a 'pancake' representation of the tangent plane.」\n【源码】src/engine/engine_vis_visualize.c:585（mjVIS_CONTACTPOINT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_ISLAND",
+      "table": "kVisTip",
+      "index": 15,
+      "label_en": "Island",
+      "zh": "约束孤岛",
+      "audience": "fact",
+      "tip": "约束孤岛 (Island)\n\n勾上 = 按**约束孤岛**给接触点上色。\n\n不同孤岛（互不作用的约束/自由度集合）用不同色相，\n用来判断模型的约束是怎么分块的。",
+      "provenance": "【官方文档】doc/XMLreference.rst option/flag/island —— 「The mjVIS_ISLAND enables island visualization」（官方给了演示视频 https://youtu.be/Vc1tq0fFvQA）\n【源码】src/engine/engine_vis_visualize.c:625（mjVIS_ISLAND 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_CONTACTFORCE",
+      "table": "kVisTip",
+      "index": 16,
+      "label_en": "Contact Force",
+      "zh": "接触力",
+      "audience": "fact",
+      "tip": "接触力 (Contact Force)\n\n勾上 = 显示接触力。\n\n从接触点画箭头，长度正比于力的大小。\n默认画**合力**；若同时勾上「分离接触力」则拆成法向和切向两条。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/contactforce —— 「When splitting of contact forces into normal and tangential components is enabled, this color is used to render the normal components.」\n【源码】src/engine/engine_vis_visualize.c:585（mjVIS_CONTACTFORCE 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_CONTACTSPLIT",
+      "table": "kVisTip",
+      "index": 17,
+      "label_en": "Contact Split",
+      "zh": "分离接触力",
+      "audience": "fact",
+      "tip": "分离接触力 (Contact Split)\n\n勾上 = 把接触力**拆成法向力和摩擦力**分别画。\n\n仅对接触维度 > 1（真正有摩擦的接触）生效。\n需要同时勾上「接触力」才看得到。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/rgba/contactfriction —— 「Color of the arrows used to render contact tangential forces, only when splitting is enabled.」\n【源码】src/engine/engine_vis_visualize.c:751（mjVIS_CONTACTSPLIT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_TRANSPARENT",
+      "table": "kVisTip",
+      "index": 18,
+      "label_en": "Transparent",
+      "zh": "动态物体半透明",
+      "audience": "fact",
+      "tip": "动态物体半透明 (Transparent)\n\n勾上 = 让**动态刚体**半透明，静态的保持不变。\n\n官方文档：「所有运动刚体上的 geom 会被变得更透明，\n做法是把各自的 alpha 乘上本参数值」（即「映射」区的 Alpha）。\n用来透过外壳看清内部的关节/接触情况。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/map/alpha —— 「When transparency is turned on in the visualizer, the geoms attached to all moving bodies are made more transparent. This is done by multiplying the geom-specific alpha values by this value.」\n【源码】src/engine/engine_vis_visualize.c:251（mjVIS_TRANSPARENT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_AUTOCONNECT",
+      "table": "kVisTip",
+      "index": 19,
+      "label_en": "Auto Connect",
+      "zh": "自动连线",
+      "audience": "fact",
+      "tip": "自动连线 (Auto Connect)\n\n勾上 = 自动生成骨架线。\n\n官方文档的说法：「连接刚体与关节的胶囊体半径，\n**结果是一副自动生成的骨架**」。\n实现上从每个刚体质心连到它内部的关节中心（不连世界体）。\n粗细由「缩放」区的「连接 (Connect)」控制。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/connect —— 「The radius of the capsules used to connect bodies and joints, resulting in an automatically generated skeleton.」\n【源码】src/engine/engine_vis_visualize.c:2597（mjVIS_AUTOCONNECT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_COM",
+      "table": "kVisTip",
+      "index": 20,
+      "label_en": "Center of Mass",
+      "zh": "质心",
+      "audience": "fact",
+      "tip": "质心 (Center of Mass)\n\n勾上 = 显示每个**运动学树**的质心。\n\n画成球体，每个树只画一个（在其根刚体处）。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/com —— 「The radius of the spheres used to render the centers of mass of kinematic sub-trees.」\n【源码】src/engine/engine_vis_visualize.c:2572（mjVIS_COM 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_SELECT",
+      "table": "kVisTip",
+      "index": 21,
+      "label_en": "Select Point",
+      "zh": "选点",
+      "audience": "fact",
+      "tip": "选点 (Select Point)\n\n勾上 = 显示**选中的点**。\n\n即双击物体后标记的那个点（局部坐标换算到世界坐标），用于确认选中的具体位置。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/scale/selectpoint —— 「i.e., the point where the user left-double-clicked to select a body… the local and global coordinates of this point can be printed in the 3D view」\n【源码】src/engine/engine_vis_visualize.c:1993（mjVIS_SELECT 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_STATIC",
+      "table": "kVisTip",
+      "index": 22,
+      "label_en": "Static Body",
+      "zh": "静态物体",
+      "audience": "fact",
+      "tip": "静态物体 (Static Body)\n\n勾上 = 显示静态刚体（如地面、固定支架）。\n\n官方特别说明：它切换的是**所有**静态刚体，不只是世界体的直接子级。\n取消勾选可把地面等固定物隐藏，方便看机器人本身。",
+      "provenance": "【官方文档】doc/changelog.rst:3033 —— 「mjVIS_STATIC toggles all static bodies, not just direct children of the world.」\n【源码】src/engine/engine_vis_visualize.c:2890（mjVIS_STATIC 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_SKIN",
+      "table": "kVisTip",
+      "index": 23,
+      "label_en": "Skin",
+      "zh": "蒙皮",
+      "audience": "fact",
+      "tip": "蒙皮 (Skin)\n\n勾上 = 显示蒙皮。\n\n蒙皮只用于渲染，不影响物理。受「分组可见性」里 Skin 分组开关的过滤。",
+      "provenance": "【官方文档】doc/overview.rst:402-409 —— 「Skins are purely visualization objects and do not affect the physics」\n【源码】src/engine/engine_vis_visualize.c:907（mjVIS_SKIN 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_FLEXVERT",
+      "table": "kVisTip",
+      "index": 24,
+      "label_en": "Flex Vert",
+      "zh": "柔性体顶点",
+      "audience": "fact",
+      "tip": "柔性体顶点 (Flex Vert)\n\n勾上 = 把柔性体画成**分离的顶点**。\n\n柔性体有四种显示方式（顶点/边/面/平滑蒙皮），\n取决于勾了哪几个，以及柔性体本身的维度。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:814（mjVIS_FLEXVERT 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_FLEXEDGE",
+      "table": "kVisTip",
+      "index": 25,
+      "label_en": "Flex Edge",
+      "zh": "柔性体边",
+      "audience": "fact",
+      "tip": "柔性体边 (Flex Edge)\n\n勾上 = 把柔性体画成**边**（线框）。\n\n适合看一维柔性体（绳子/缆索）。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:814（mjVIS_FLEXEDGE 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_FLEXFACE",
+      "table": "kVisTip",
+      "index": 26,
+      "label_en": "Flex Face",
+      "zh": "柔性体面",
+      "audience": "fact",
+      "tip": "柔性体面 (Flex Face)\n\n勾上 = 把柔性体画成**面**（三角面片）。\n\n适合看二维柔性体（布/膜）。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:815（mjVIS_FLEXFACE 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_FLEXSKIN",
+      "table": "kVisTip",
+      "index": 27,
+      "label_en": "Flex Skin",
+      "zh": "柔性体平滑蒙皮",
+      "audience": "fact",
+      "tip": "柔性体平滑蒙皮 (Flex Skin)\n\n勾上 = 用**平滑蒙皮**渲染柔性体。\n\n官方注释特意说明：勾上它会**取代**「柔性体面 (Flex Face)」，\n即禁用其余三种显示方式（顶点/边/面）。\n三维柔性体还需配合「柔性体图层 (Flex layer)」滑块选层。",
+      "provenance": "【源码】src/engine/engine_vis_visualize.c:815（mjVIS_FLEXSKIN 的分支）（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_BODYBVH",
+      "table": "kVisTip",
+      "index": 28,
+      "label_en": "Body Tree",
+      "zh": "刚体 BVH",
+      "audience": "fact",
+      "tip": "刚体 BVH (Body Tree)\n\n勾上 = 显示静态刚体的 **BVH**（包围体层次树）。\n\n官方述为「刚体惯性坐标系下的静态 AABB 层次树」。\n注意：显示到第几层由「全局」区的「树深度 (Tree depth)」决定 ——\n不调它可能什么都看不到。",
+      "provenance": "【官方文档】doc/changelog.rst:2444-2448 —— 「static AABB bounding volume hierarchy (a BVH binary tree) in the body inertial frame」\n【源码】src/engine/engine_vis_visualize.c:1455（mjVIS_BODYBVH 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_MESHBVH",
+      "table": "kVisTip",
+      "index": 29,
+      "label_en": "Mesh Tree",
+      "zh": "网格 BVH",
+      "audience": "fact",
+      "tip": "网格 BVH (Mesh Tree)\n\n勾上 = 显示网格/柔性体的 **BVH**（动态包围盒）。\n\n官方 changelog：原 `mjVIS_FLEXBVH` 已废弃，功能并入本开关。\n它同时覆盖 SDF 的八叉树显示。\n注意：同样受「全局」区的「树深度」滑块控制。",
+      "provenance": "【官方文档】doc/changelog.rst:907-908 —— 「Removed the mjVIS_FLEXBVH enum value, its functionality is now provided by mjVIS_MESHBVH.」\n【源码】src/engine/engine_vis_visualize.c:1510（mjVIS_MESHBVH 的分支）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjVIS_SDFITER",
+      "table": "kVisTip",
+      "index": 30,
+      "label_en": "SDF iters",
+      "zh": "SDF 迭代",
+      "audience": "fact",
+      "tip": "SDF 迭代 (SDF iters)\n\n勾上 = 显示 **SDF 碰撞检测的梯度下降轨迹**。\n\n这是 SDF 插件的调试功能：\n每步画一个球（**起点蓝、终点红**），中间用渐变色连线。\n只对使用 SDF 几何体的模型有意义。",
+      "provenance": "【官方文档】plugin/sdf/sdf.cc:60 —— 在 SDF 插件里消费；画出梯度下降每一步的位置\n【源码】src/engine/engine_vis_visualize.c（mjVIS_SDFITER）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_SHADOW",
+      "table": "kRndTip",
+      "index": 0,
+      "label_en": "Shadow",
+      "zh": "阴影",
+      "audience": "fact",
+      "tip": "阴影 (Shadow)\n\n勾上 = 开启阴影（关闭/取消勾选即关闭）。\n\n直接控制渲染请求里的 enable_shadows。\n关掉能提升性能，也便于看清暗部细节。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/global/shadowsize + shadowclip —— 阴影贴图尺寸 / 方向光投影范围\n【源码】hal/renderer.cc:261",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_WIREFRAME",
+      "table": "kRndTip",
+      "index": 1,
+      "label_en": "Wireframe",
+      "zh": "线框",
+      "audience": "fact",
+      "tip": "线框 (Wireframe)\n\n勾上 = 用**线框**模式渲染（只画三角形的边）。\n\n取消勾选恢复正常实体渲染。\n注意：和「深度 (Depth)」「分割 (Segment)」是互斥的显示模式。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/global/linewidth —— 「This attribute specifies the line-width in the sense of OpenGL. It affects the rendering in wire-frame mode.」\n【源码】hal/renderer.cc:250",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_REFLECTION",
+      "table": "kRndTip",
+      "index": 2,
+      "label_en": "Reflection",
+      "zh": "反射",
+      "audience": "fact",
+      "tip": "反射 (Reflection)\n\n勾上 = 开启**平面反射**。\n\n官方文档强调的限制：**只有平面 (plane)，以及盒体的 Z+ 面**会被渲染出反射 ——\n其他形状不反射。\n反射强度由各 geom 的 reflectance 属性决定。",
+      "provenance": "【官方文档】doc/overview.rst:443 —— 「Currently reflections are rendered only on planes and on the Z+ faces of boxes.」\n【源码】hal/renderer.cc:262",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_ADDITIVE",
+      "table": "kRndTip",
+      "index": 3,
+      "label_en": "Additive",
+      "zh": "加色混合",
+      "audience": "fact",
+      "tip": "加色混合 (Additive)\n\n勾上 = 半透明物体用**加色混合**绘制（越叠越亮）。\n\n取消勾选用常规的 alpha 混合（越叠越暗/越实）。\n官方实现：勾上时 blended 用 GL_SRC_ALPHA/GL_ONE，\n取消时用 GL_SRC_ALPHA/GL_ONE_MINUS_SRC_ALPHA。\n适合看发光的力矢量、重叠的透明体。",
+      "provenance": "【源码】render/classic/render_gl3.c:1108（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_SKYBOX",
+      "table": "kRndTip",
+      "index": 4,
+      "label_en": "Skybox",
+      "zh": "天空盒",
+      "audience": "fact",
+      "tip": "天空盒 (Skybox)\n\n勾上 = 显示天空盒背景。\n\n取消勾选后背景为纯色。\n天空盒贴图由模型 <asset> 里 type=\"skybox\" 的纹理决定。",
+      "provenance": "【官方文档】doc/overview.rst:430-432 —— 「It is also used to create a skybox.」\n【源码】render/classic/render_gl3.c:1320",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_FOG",
+      "table": "kRndTip",
+      "index": 5,
+      "label_en": "Fog",
+      "zh": "雾",
+      "audience": "fact",
+      "tip": "雾 (Fog)\n\n勾上 = 开启雾效（远处物体渐隐）。\n\n雾的颜色在「颜色 (Colors)」区的「雾」里设置，\n起止距离在模型的 <visual><map> 里（fogstart/fogend）。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/map/fogstart + rgba/fog —— 「The visualizer can simulate linear fog… When fog is enabled, the color of all pixels fades towards the color specified here.」\n【源码】render/classic/render_gl3.c:629",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_HAZE",
+      "table": "kRndTip",
+      "index": 6,
+      "label_en": "Haze",
+      "zh": "霾",
+      "audience": "fact",
+      "tip": "霾 (Haze)\n\n勾上 = 给**无限大平面**（地面）叠加一层「霾」。\n\n官方文档：霾覆盖「到地平线距离」的指定比例，\n**且必须有天空盒 (Skybox) 才会生效**。\n用来让无限地面远处自然融入背景，不出现硬边。",
+      "provenance": "【官方文档】doc/XMLreference.rst visual/map/haze —— 「Proportion of the distance-to-horizon that is covered by haze (when haze rendering is enabled and a skybox is present).」\n【源码】render/classic/render_gl3.c:1352",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_DEPTH",
+      "table": "kRndTip",
+      "index": 7,
+      "label_en": "Depth",
+      "zh": "深度图",
+      "audience": "fact",
+      "tip": "深度图 (Depth)\n\n勾上 = 渲染**深度图**而不是彩色图像。\n\n用途：生成视觉策略的训练数据、做深度相机仿真。\n注意两点：① 与「线框」「分割图」互斥；\n② 开启后会**顺带关掉反射**（render_gl3.c:1031）。",
+      "provenance": "【官方文档】doc/changelog.rst:662 —— 「Added a depth rendering flag.」\n【源码】hal/renderer.cc:248",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_SEGMENT",
+      "table": "kRndTip",
+      "index": 8,
+      "label_en": "Segment",
+      "zh": "分割图",
+      "audience": "fact",
+      "tip": "分割图 (Segment)\n\n勾上 = 渲染**分割图**（segmentation）。\n\n每个物体用不同颜色填充，用于实例/语义分割标注。\n官方文档：渲染分割图时会**自动关闭多重采样**，\n以免把相邻的分割 id 平均掉。\n配色取决于「Id 着色」；与「线框」「深度图」互斥。",
+      "provenance": "【官方文档】doc/changelog.rst:2949-2952 —— 「When rendering segmentation images, multi-sampling is automatically disabled so as not to average segmentation indices.」\n【源码】hal/renderer.cc:242",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_IDCOLOR",
+      "table": "kRndTip",
+      "index": 9,
+      "label_en": "Id Color",
+      "zh": "Id 着色",
+      "audience": "fact",
+      "tip": "Id 着色 (Id Color)\n\n勾上 = 分割图按 **geom 的 id+1** 上色（每 8 位一个通道）。\n\n取消勾选则按**随机颜色**上色。\n只在勾上「分割图 (Segment)」时才有效。\n按 id 着色适合程序化读取；随机色适合人眼区分相邻物体。",
+      "provenance": "【源码】hal/renderer.cc:243（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
+      ]
+    },
+    {
+      "key": "mjRND_CULL_FACE",
+      "table": "kRndTip",
+      "index": 10,
+      "label_en": "Cull Face",
+      "zh": "背面剔除",
+      "audience": "fact",
+      "tip": "背面剔除 (Cull Face)\n\n勾上 = 开启**背面剔除**（不画背对相机的面）。\n\n能提升性能，但前提是模型的法线方向正确 ——\n若模型面片朝向反了，勾上后会看到「破洞」。\n这种情况取消勾选即可正常显示。",
+      "provenance": "【源码】render/classic/render_gl3.c:465（官方文档无对应说明）",
+      "verified": [
+        "『官方文档』句来自官方 rst；『源码』句由分支代码读出"
       ]
     }
   ]
