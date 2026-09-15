@@ -10,10 +10,18 @@
 
 | 能力 | 做法 | 状态 |
 |---|---|---|
-| ① **官方 UI 原生中文** | 拦截 `imgui` 模块的调用，官方 UI 每一处文字自动翻译 | ✅ 已跑通 |
+| ① **官方 UI 原生中文** | 拦截 `imgui` 调用（Python 侧）+ 重编译 `ux.so`（C++ 侧）| ✅ 已跑通 |
 | ② **悬停教学面板** | 追加一个中文面板，鼠标停在控件上 → 弹出「调大/调小会怎样」 | ✅ 已跑通 |
 
-**默认零侵入**：不改官方源码、不 fork、不重编译。装上字体 + 跑一个模块即可，随时可卸载还原。
+**两级用法，按需要选**：
+
+| | 覆盖范围 | 代价 |
+|---|---|---|
+| **基础**（装字体 + 跑模块）| Python 侧 ~23 条 | 零侵入，随时卸载 |
+| **完整**（再重编译 `ux.so`）| 再加 C++ 侧 187 条 | 需 clang + libc++，可一键还原 |
+
+> 基础用法**不改官方任何文件**（除了字体，可还原）。
+> 完整用法会替换 `ux.so`，但原版已自动备份，`build_ux_zh.sh --restore` 一键还原。
 
 **截图**：见 `assets/panel.png`（面板）与 `assets/studio_cjk_verify.png`（官方 UI 中文化）
 
@@ -31,6 +39,18 @@ MUJOCO_PY=/path/to/your/venv/bin/python3
 
 # 2. 跑起来
 PYTHONPATH=$PWD/src $MUJOCO_PY -m mujoco_zh.panel_zh /path/to/your_model.xml
+```
+
+以上是**基础用法**（Python 侧 ~23 条 + 面板）。要连 `ux.so` 里那 187 条
+C++ 字面量一起翻，再加两步：
+
+```bash
+# 3. 装编译依赖（只需一次）
+sudo apt-get install -y clang-15 libc++-15-dev libc++abi-15-dev
+
+# 4. 生成译文 patch 并重编译 ux.so
+python3 scripts/gen_cpp_patch.py
+./scripts/build_ux_zh.sh            # 原版会自动备份；--restore 可还原
 ```
 
 **退出**：终端按 `Ctrl+C`（官方文档说明的方式）
@@ -72,6 +92,10 @@ PYTHON=<你的mujoco解释器> ./scripts/install_font.sh   # 显式指定解释�
 
 ## 中文化是怎么做到的
 
+分**两条路径**，取决于文字在哪：
+
+### ① Python 侧（~23 条）—— monkeypatch
+
 官方 Studio 的界面文字全部通过 `imgui.Begin('Inspector')`、`imgui.Text('...')`
 这样的**调用**产生。所以**包住这一层就能翻译整个官方 UI，零源码改动**。
 
@@ -80,10 +104,35 @@ from mujoco_zh import translate
 translate.install()      # 幂等；必须装在官方 UI 构建之前
 ```
 
-翻译资产用 **GNU gettext**（`locales/zh_CN/LC_MESSAGES/mujoco_zh.po`）——
-白拿 Poedit / Weblate 的译者工作流，`.po` 的 diff 对 Git 也友好。
+### ② C++ 侧（187 条）—— 重编译
 
-界面样式是 **`中文 (English)`** 双语并列，方便你对照官方文档和英文教程。
+`ux.so` 里那部分文字 Python 层够不着（原因见下节「覆盖边界」），
+只能改了源码重编。**一条命令**：
+
+```bash
+python3 scripts/gen_cpp_patch.py    # 从 .po 生成 patch
+./scripts/build_ux_zh.sh            # 编译 + 安装（含 ABI 自检）
+./scripts/build_ux_zh.sh --restore  # 还原官方
+```
+
+⚠️ **必须用 clang + libc++** —— pybind11 的类型注册表按编译器 ABI 隔离，
+用 gcc/libstdc++ 编出来会在运行时报 `incompatible function arguments`。
+详见 → [`docs/重编译覆盖C++字符串.md`](docs/重编译覆盖C++字符串.md)
+
+### 一份译文，两条消费者
+
+`locales/zh_CN/LC_MESSAGES/mujoco_zh.po` **同时喂给两边**：
+
+```
+.po (214 条) ──┬──→ translate.py         (Python 侧，运行时 gettext)
+               └──→ gen_cpp_patch.py → patches/ux-zh.patch → 重编译
+```
+
+**⇒ 改词表只需动 `.po` 一处。**
+
+界面样式统一是 **`中文 (English)`** 双语并列，方便你对照官方文档和英文教程。
+C++ 侧实际写进字面量的是 `中文 (English)##English` ——
+`##` 后缀让 **ImGui 的 widget ID 保持不变**，否则布局 ini 缓存会错乱。
 
 ### ⭐ 三条实测教训（都踩过）
 
@@ -123,11 +172,20 @@ translate.install()      # 幂等；必须装在官方 UI 构建之前
 
 ## 覆盖边界（实测，别期待超出这个范围）
 
-| 位置 | 例子 | 能翻吗 |
+| 位置 | 条数 | 状态 |
 |---|---|---|
-| `viewer_app.py` / `studio_app.py` 的 Python 字面量（~23 条）| `Options` `Inspector` `Physics Settings` `Watch` | ✅ |
-| 编译进 `ux.cpython-*.so` 的 C++ 字符串（**实测 210 条**）| `Algorithmic Parameters` `Timestep` `Viscosity` `Sol Imp` | ⚠️ 需重编译 |
-| `libmujoco.so` 导出的枚举名 | `Fog` `Haze` `Cull Face` `Id Color` | ❌ |
+| `viewer_app.py` / `studio_app.py` 的 Python 字面量 | ~23 | ✅ monkeypatch 自动翻 |
+| `ux.cpython-*.so` 的 C++ 字面量 | **187 / 210** | ✅ 已重编译覆盖 |
+| `libmujoco.so` 导出的枚举名（`Fog` `Haze` `Cull Face` `Id Color`…）| — | ❌ 够不着 |
+| 状态字段标识符（`QPOS` `QVEL` `CTRL` `PGS` `Newton`…）| 23 | ⛔ **刻意不翻** |
+
+**⛔ 那 23 个标识符不翻是有意的**：它们是 `mjData` 的字段名和求解器专名，
+官方文档也用英文，翻了反而对不上。UI 里它们与旁边的说明标签配对出现，只翻标签：
+
+```cpp
+{"QPOS", "位置 (Position)##Position"},    // 标识符原样保留
+{"CTRL", "控制 (Control)##Control"},
+```
 
 **为什么 Python 层翻不了 `ux.so`** —— 这不是 bug，是**设计使然**。四条独立实测证据：
 
@@ -179,7 +237,7 @@ mujoco-zh/
 ├── docs/
 │   ├── 为什么用Studio.md           三条路线的实测证据（含反汇编）
 │   ├── tooltip文案规范.md          写解释文案的规则
-│   └── 重编译覆盖C++字符串.md      ux.so 那些翻不了的字符串怎么办
+│   └── 重编译覆盖C++字符串.md      ux.so 里的 C++ 字符串怎么翻 + 怎么验证
 ├── src/mujoco_zh/
 │   ├── __init__.py
 │   ├── translate.py               ⭐ 官方 UI 中文化（monkeypatch 层）
@@ -188,10 +246,13 @@ mujoco-zh/
 ├── locales/zh_CN/LC_MESSAGES/     gettext 译文（.po / .mo）
 ├── data/
 │   └── ux_strings_audit.json      盘点：ux.so 里 210 条可翻字符串 + 面板归属
+├── patches/
+│   └── ux-zh.patch                译文 patch（由 gen_cpp_patch.py 从 .po 生成）
 ├── scripts/
 │   ├── install_font.sh            字体替换（含 SC face 抽取 + 校验 + 备份）
 │   ├── restore_font.sh            字体还原
 │   ├── extract_sc_font.py         从 TTC 抽简体中文 face（绕开 window.cc 不设 FontNo）
+│   ├── gen_cpp_patch.py           ⭐ .po → C++ 译文 patch
 │   ├── build_ux_zh.sh             ⭐ 重编译 ux.so（clang+libc++，含 ABI 自检 + 还原）
 │   └── compile_mo.sh              .po → .mo
 └── assets/                        截图

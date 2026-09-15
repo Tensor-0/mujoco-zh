@@ -141,7 +141,22 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
         applied.append((en, zh, n))
 
     if text == original:
-        raise SystemExit("⚠️ 没有任何替换生效 —— 检查译文表是否覆盖了 audit 里的串")
+        # 区分「译文表有问题」和「源码已经是译文状态」—— 后者是正常情况
+        # （源码树打完 patch 后没还原，直接再跑一次生成就会走到这）
+        already = sum(1 for en, zh in translations.items()
+                      if en in audit["translatable"]
+                      and f'"{c_escape(zh)} ({c_escape(en)})##' in original)
+        if already:
+            raise SystemExit(
+                f"⚠️ 源码已处于译文状态（检测到 {already} 条已翻译），无需重复生成。\n"
+                f"   现状：{target}\n"
+                f"   要从干净源码重来：删除该源码树后重跑 scripts/build_ux_zh.sh\n"
+                f"   （patch 本身没问题，可以直接用）")
+        raise SystemExit(
+            "❌ 没有任何替换生效，且源码里也找不到译文。\n"
+            "   可能原因：\n"
+            "     1. audit 清单与源码版本不匹配（换过 mujoco 版本？）\n"
+            "     2. 译文表没覆盖 audit 里的串 —— 跑 --list-missing 看看")
 
     # 用 `diff -u` 产出标准 unified diff（git apply 认这个）
     tmp_new = src_dir / (TARGET_FILE + ".zh")
@@ -160,8 +175,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--src", type=Path,
-                    default=Path("/tmp/ux-zh-build/mujoco-src/src"),
-                    help="mujoco 源码根（默认 build_ux_zh.sh 的 WORKDIR）")
+                    default=Path("/tmp/ux-zh-build/mujoco-src"),
+                    help="mujoco 仓库根（含 CMakeLists.txt；默认 build_ux_zh.sh 的 WORKDIR）")
     ap.add_argument("--out", type=Path, default=PATCH)
     ap.add_argument("--check", action="store_true", help="只报告，不写文件")
     ap.add_argument("--list-missing", action="store_true", help="列出缺译文的条目")

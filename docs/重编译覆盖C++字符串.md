@@ -32,12 +32,51 @@ ux.set_imgui_context(ctx)         # 灌进 ux.so 那份   ← 两次调用，因
 
 ## 二、怎么翻：重编译
 
-一条命令：
+**两步**（译文改了只需重跑第一步）：
 
 ```bash
-./scripts/build_ux_zh.sh            # 编译 + 安装（含 ABI 自检）
+python3 scripts/gen_cpp_patch.py    # ① 从 .po 生成译文 patch
+./scripts/build_ux_zh.sh            # ② 编译 + 安装（含 ABI 自检）
 ./scripts/build_ux_zh.sh --restore  # 还原官方
 ```
+
+### 译文怎么进 C++ 源码
+
+`gen_cpp_patch.py` 读 `locales/zh_CN/LC_MESSAGES/mujoco_zh.po`
+（**和 Python 侧 `translate.py` 用的是同一份**，改词表只动一处），
+在 `gui.cc` 上做**完整字面量替换**：
+
+```cpp
+-  SectionHeader("Algorithmic Parameters", ...)
++  SectionHeader("算法参数 (Algorithmic Parameters)##Algorithmic Parameters", ...)
+```
+
+**为什么要 `##English` 后缀**：ImGui 约定 `"显示文本##ID"`，
+不写 `##` 时它拿整个字符串算 widget ID。
+译文一变 ID 就变 → docking 布局的 `.ini` 缓存全部错位。
+加上 `##` 后 ID 恒定，布局不受影响。
+
+**只替换完整字面量** `"<en>"`，不做子串替换 ——
+否则 `"Body"` 会误伤 `"Body "`（尾随空格那个是另一个串）。
+带 `##` 的串直接跳过（那是 ID 后缀，改了会出问题）。
+
+**格式串校验**：`%d` 之类的占位符数量必须两边一致，否则直接报错退出
+（`"joint %d"` → 译文里丢了 `%d` 会让 `snprintf` 读到垃圾）。
+
+### ⚠️ 23 个标识符刻意不翻
+
+`QPOS` `QVEL` `CTRL` `ACT` `WARMSTART` `EQ_ACTIVE` `PGS` `CG` `Newton`
+`RK4` `Dense` `Sparse` `CPU` `FPS` `FOV` …
+
+它们是 **`mjData` 字段名 / 求解器专名 / 单位缩写**，官方文档也用英文。
+UI 里它们与旁边的说明标签**配对出现**，脚本只翻标签那一半：
+
+```cpp
+{"QPOS", "位置 (Position)##Position"},   // ✅
+{"QPOS", "位置 (Position)"},             // ❌ 标识符就丢了
+```
+
+清单在 `gen_cpp_patch.py` 的 `NO_TRANSLATE`。
 
 ### ⚠️ 硬门槛：必须 clang + libc++
 
@@ -137,12 +176,51 @@ grep -ac -- "<串>" ux.cpython-*.so      # ≥1 才说明在 ux.so 里
 
 ---
 
-## 四、验证的坑
+## 四、怎么验证译文真的生效
 
-| 坑 | 后果 |
-|---|---|
-| **靠截图验证** | 若目标面板默认折叠，截图上什么都看不到 → 误判「改动无效」。**N 轮返工都是这么来的** |
-| **`strings` 假阴性** | 见上 |
+**别靠截图。** 两条理由：
 
-**正确做法**：在代码路径上断言 —— 临时在 `gui.cc` 插桩，打印实际传给 ImGui 的字符串，
-比截图可靠得多，也便宜得多（全屏截图一张要上百 k token）。
+1. **目标面板可能默认折叠** → 截图上什么都看不到 → 误判「改动无效」
+   （本项目为此返工了好几轮）
+2. **Python 侧探针也看不到** → `ux.*_gui` 不走 Python，探针只能看到
+   菜单栏那 5 条（`File` / `Help` / `Charts` …），会得出「翻译失败」的错误结论
+
+### ✅ 正确做法：在 `SectionHeader` 里插桩
+
+`gui.cc` 里所有面板标题都走 `SectionHeader()`，在那儿打印收到的 label：
+
+```cpp
+// gui.cc，SectionHeader 函数体开头
+if (std::getenv("UX_ZH_TRACE")) std::fprintf(stderr, "[TRACE] %s\n", label);
+```
+
+重编译后带上环境变量跑：
+
+```bash
+UX_ZH_TRACE=1 python3 -m mujoco_zh.panel_zh <model.xml> 2>&1 | grep TRACE
+```
+
+实测输出（**这就是「成功」的样子**）：
+
+```
+[TRACE] SectionHeader: 算法参数 (Algorithmic Parameters)##Algorithmic Parameters
+[TRACE] SectionHeader: 物理参数 (Physical Parameters)##Physical Parameters
+[TRACE] SectionHeader: 接触覆盖 (Contact Override)##Contact Override
+[TRACE] SectionHeader: 执行器分组 (Actuator Groups)##Actuator Groups
+[TRACE] SectionHeader: 开关 (Flags)##Flags
+```
+
+⚠️ 验证完记得把插桩去掉再重编一次（或从源码 tarball 重新解压）。
+
+### 二进制的快速自查（更省事）
+
+```bash
+UX=<site-packages>/mujoco/experimental/studio/ux.cpython-*.so
+grep -ac -- "算法参数 (Algorithmic Parameters)" "$UX"    # 应为 1
+grep -ac -- "UX_ZH_TRACE" "$UX"                          # 应为 0（无残留插桩）
+```
+
+⚠️ **必须用 `grep -ac`，别用 `strings | grep`**：
+`strings` 默认只输出 ASCII，中文串（以 `0xFF` 开头）会被**整个跳过**，
+返回 0 会让你误判「译文没编进去」。
+

@@ -110,10 +110,14 @@ done
 echo "编译器:   $CLANG"
 
 WORK="${WORKDIR:-/tmp/ux-zh-build}"
-# ⚠️ `tar --strip-components=1` 解压后，源码根是 <mujoco-src>/src/ 下面那一层，
-#    即 <mujoco-src>/src 才是「仓库根」，C++ 在 <仓库根>/src/experimental/...
-#    （踩过：这里写成 $WORK/mujoco-src/src 又拼 $SRC/src/... 会多一层 src）
-REPO_SRC="$WORK/mujoco-src/src"
+# tarball 顶层是 mujoco-<ver>/，`--strip-components=1` 后
+# **<mujoco-src> 本身就是仓库根**（含 CMakeLists.txt / src/ / include/ / model/）
+#   C++ 源码根 = <mujoco-src>/src   （gui.cc 在 src/experimental/platform/ux/）
+#   Python 侧   = <mujoco-src>/python/mujoco/
+# ⚠️ 踩过：曾被一个自己污染的目录（里面多套了一层 src/）误导，
+#    把这里写成 $WORK/mujoco-src/src 并让编译命令再拼 /src/experimental，
+#    结果对干净环境反而路径错误。**路径以干净 tarball 的布局为准。**
+REPO_SRC="$WORK/mujoco-src"
 SRC="$REPO_SRC/src"
 mkdir -p "$WORK"
 
