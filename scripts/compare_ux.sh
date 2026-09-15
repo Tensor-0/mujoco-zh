@@ -52,7 +52,16 @@ compare_ux.sh —— 原版 vs 汉化版 Studio 并排对比
   ./scripts/compare_ux.sh <model.xml>
 
 例:
-  ./scripts/compare_ux.sh ~/UniLab/src/unilab/assets/robots/dm10/dm10.xml
+  ./scripts/compare_ux.sh ~/UniLab/src/unilab/assets/robots/dm10/scene_flat.xml
+  ./scripts/compare_ux.sh ~/UniLab/src/unilab/assets/robots/stewart/scene.xml
+
+⚠️ **挑模型只影响观感，不影响对比结果** —— 但别用「纯机器人」文件：
+   `robots/dm10/dm10.xml` 里**没有地面**（地面在 `scene_flat.xml`），
+   自由基座的机器人会**无限下坠**（实测 5 秒掉到 z=−121），看着像 bug。
+   挑 `<robot>/scene*.xml`，或干脆用不会动的 `stewart/scene.xml`。
+
+⚠️ 人形模型没有控制器时**会自己倒**（dm10 从 qpos0 起能站住，
+   但按 State→Home 切到屈膝关键帧后 5 秒内必倒）—— 这是物理，不是汉化的锅。
 
 环境变量:
   PYTHON              装了 mujoco 的解释器（默认自动探测）
