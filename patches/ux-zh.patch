@@ -212,7 +212,7 @@
    const mjtNum* value = static_cast<const mjtNum*>(
        GetValue(model, data, field_name, field_index));
  
-@@ -971,12 +971,12 @@
+@@ -971,18 +971,64 @@
    if (value) {
      char buf[100];
      int size = std::snprintf(buf, sizeof(buf), "%0.3f", *value);
@@ -227,7 +227,59 @@
      ImGui::EndDisabled();
    }
  
-@@ -994,35 +994,35 @@
+   ImGui::PopItemWidth();
+ }
+ 
++// ══ mujoco-zh 开关悬停说明（由 scripts/gen_cpp_patch.py 生成，勿手改）══
++// 数据源：data/tooltips_flags.json（26 条）
++namespace {
++constexpr const char* kDisableTip[] = {
++    /* 0*/ "约束 (Constraint)\n\n取消勾选 = 关掉整个约束求解器，不再施加任何约束力。\n\n官方原文：这个开关管「全部约束」，下面四个（等式/摩擦损失/限位/接触）各管一类。\n某一类要生效，本级和分类开关必须同时开着。",
++    /* 1*/ "等式约束 (Equality)\n\n取消勾选 = 关掉所有等式约束的计算。\n\n（须「约束 (Constraint)」也开着，这类约束才生效）",
++    /* 2*/ "摩擦损失约束 (Frictionloss)\n\n取消勾选 = 关掉所有 friction loss 约束的计算。\n\n（须「约束 (Constraint)」也开着，这类约束才生效）",
++    /* 3*/ "限位 (Limit)\n\n取消勾选 = 关掉关节和肌腱的活动范围限制约束。",
++    /* 4*/ "接触 (Contact)\n\n取消勾选 = 关掉碰撞检测，以及所有接触约束的计算。",
++    /* 5*/ "弹簧 (Spring)\n\n取消勾选 = 关掉模型里所有被动的关节/肌腱弹簧。\n\n官方原文补充：若「阻尼 (Damper)」也取消勾选，则**所有被动力**都没了 ——\n包括重力补偿、流体阻力、mjcb_passive 回调算的力、以及插件的被动力。",
++    /* 6*/ "阻尼 (Damper)\n\n取消勾选 = 关掉模型里所有被动的关节/肌腱阻尼器。\n\n官方原文补充：与「弹簧 (Spring)」同 —— 两者都取消勾选时所有被动力都没了。",
++    /* 7*/ "重力 (Gravity)\n\n取消勾选 = 关掉重力。\n\n官方原文：重力向量在运行时被替换成 (0 0 0)，但 mjOption 里存的值不变 ——\n重新勾选就立刻恢复原值。",
++    /* 8*/ "控制量钳制 (Clampctrl)\n\n取消勾选 = 关掉对所有执行器控制输入的钳制。\n\n官方原文强调：**即使**各执行器自己的属性里设了要钳制，也会被这个开关覆盖。",
++    /* 9*/ "热启动 (Warmstart)\n\n取消勾选 = 关掉热启动。\n\n官方原文：默认求解器用上一时间步的解（约束力）作为迭代初值。\n评估一批**不构成轨迹**的离散状态时应关掉 —— 那时热启动无意义且拖慢求解。",
++    /*10*/ "父子体接触过滤 (Filterparent)\n\n取消勾选 = 关掉「父子刚体之间的接触过滤」。\n\n官方原文：默认会过滤掉「两个 geom 分属父刚体和子刚体」的接触对。\n参考：官方文档 Computation 章的 contact selection。",
++    /*11*/ "执行器 (Actuation)\n\n取消勾选 = 关掉所有跟执行器力有关的计算，包括执行器动力学。\n\n官方原文：结果是仿真中不再施加任何执行器力。",
++    /*12*/ "参考安全 (Refsafe)\n\n取消勾选 = 关掉这个安全机制（默认开）。\n\n官方原文：它防止 solref[0] 相对时间步长过小导致的约束不稳定。\nsolref[0] 是约束稳定化所用虚拟弹簧-阻尼器的刚度。\n启用时求解器对每个活动约束用 max(solref[0], 2×timestep) 替代 solref[0]。",
++    /*13*/ "传感器 (Sensor)\n\n取消勾选 = 关掉所有传感器相关的计算。\n\n官方原文：关掉后传感器值会保持不动 —— 启动时就关 → 一直是 0；\n跑一段时间才关 → 卡在最后一次算出的值。",
++    /*14*/ "中段碰撞筛选 (Midphase)\n\n取消勾选 = 关掉「中段」碰撞筛选。\n\n官方原文：默认用一棵静态 AABB 层次树（BVH 二叉树）做预筛。\n关掉后，所有「理论上允许碰撞」的物体对都会被逐个检查。",
++    /*15*/ "欧拉阻尼 (Eulerdamp)\n\n取消勾选 = 关掉对关节阻尼的隐式积分。\n\n官方原文：这个开关控制的是 Euler 积分器里关节阻尼是否用隐式积分。",
++    /*16*/ "自动重置 (AutoReset)\n\n取消勾选 = 关掉「检测到数值问题时自动重置仿真状态」。",
++    /*17*/ "原生 CCD (NativeCCD)\n\n取消勾选 = 关掉原生凸碰撞检测管线，改用 libccd 库。\n\n官方原文：该开关作用是「启用原生管线」（默认 enable）。\n细节见官方文档 convex collisions 一节。",
++    /*18*/ "约束孤岛 (Island)\n\n取消勾选 = 关掉约束孤岛的发现与构建。\n\n官方原文：孤岛 = 互不作用的约束/自由度集合，可独立求解。\n注意：PGS 求解器尚不支持孤岛。\n想「看」孤岛可打开 Rendering 里的 mjVIS_ISLAND。",
++    /*19*/ "多点碰撞 (MultiCCD)\n\n取消勾选 = 关掉多点接触检测。\n\n官方原文：对「通用凸-凸碰撞器」（如网格 vs 网格），\n平面接触时单个接触点不足以准确表达面接触，会导致不稳定 ——\n典型表现是滑动或抖动。开启后生成多个接触点。",
++};
++// ⚠️ 这条 static_assert **不能省** —— 数组声明成 [] 由初始化列表定长，
++//    MuJoCo 升级后枚举变长而这边没跟上就会**编译失败**（响亮地失败）。
++//    若改成显式定长 kDisableTip[mjNDISABLE]，则会**静默错位**（下标合法但挂错开关）。
++static_assert(sizeof(kDisableTip) / sizeof(kDisableTip[0]) == mjNDISABLE,
++              "kDisableTip 与 mjtDisableBit 不同步 —— 需更新 data/tooltips_flags.json");
++constexpr const char* kEnableTip[] = {
++    /* 0*/ "接触覆盖 (Override)\n\n勾上 = 启用 Contact override 机制（默认关）。\n\n注意：官方原文只有一句「enables the Contact override mechanism」，无更多说明。\n具体行为请查官方文档 COverride 一节。",
++    /* 1*/ "能量 (Energy)\n\n勾上 = 打开能量计算（默认关）。\n\n官方原文：计算势能与动能，存入 mjData.energy[0]、[1] 并显示在信息栏。\n势能含重力势能（对所有刚体求和）与关节/肌腱/柔性体里弹簧存的能量；\n动能 = ½vᵀMv（v 速度，M 质量矩阵）。\n注意：约束里的势能/动能**未被计入**。",
++    /* 2*/ "正逆动力学对比 (Fwdinv)\n\n勾上 = 打开对比（默认关）。\n\n官方原文：开启后每次 forward 后会再跑一次 inverse，\n把两者算出的力之差记入 mjData.solver_fwdinv[2] ——\n[0] 关节空间的相对误差范数，[1] 约束空间的相对误差范数。",
++    /* 3*/ "离散逆动力学 (InvDiscrete)\n\n勾上 = 打开（默认关）。\n\n官方原文：对所有非 RK4 的积分器，mj_inverse 使用离散时间逆动力学。\n背景：Euler/implicit/implicitfast 会把质量矩阵改成 M → M−hD，\n导致有限差分加速度与连续时间加速度 mjData.qacc 对不上；\n开启后 mj_inverse 会把 qacc 理解为两步速度差并撤销该修改。",
++    /* 4*/ "休眠 (Sleep)\n\n勾上 = 启用休眠（默认关）。取消勾选会把正在休眠的树唤醒。\n\n注意：官方原文特别提醒（与其他 flag 都不同）：\n这个 flag 在 **mjData 初始化时**（mj_makeData / mj_resetData）就起作用 ——\n  1. 必须在初始化时设好，sleep-init 策略才生效\n  2. 必须在初始化时设好，静态量才会被计算",
++    /* 5*/ "精确对角 (DiagExact)\n\n勾上 = 打开（默认关）。\n\n官方原文：用精确方法计算约束空间惯量矩阵的对角线 A = J·M⁻¹·Jᵀ，\n替代默认的「基于刚体的近似」。由白化雅可比 Y = J·M^(-1/2) 算出 Aᵢᵢ = ‖Yᵢ‖²。\n好处：阻抗计算更准，运动学耦合复杂的模型可提升求解质量。\n代价：每条活动约束行多做一次质量矩阵 Cholesky 回代；\n用对偶求解器（PGS / NoSlip）时 Y 本来就要算，代价可忽略。",
++};
++// ⚠️ 这条 static_assert **不能省** —— 数组声明成 [] 由初始化列表定长，
++//    MuJoCo 升级后枚举变长而这边没跟上就会**编译失败**（响亮地失败）。
++//    若改成显式定长 kEnableTip[mjNENABLE]，则会**静默错位**（下标合法但挂错开关）。
++static_assert(sizeof(kEnableTip) / sizeof(kEnableTip[0]) == mjNENABLE,
++              "kEnableTip 与 mjtEnableBit 不同步 —— 需更新 data/tooltips_flags.json");
++
++}  // namespace
++// ══ end mujoco-zh ══
+ void PhysicsGui(mjModel* model, float min_width) {
+   const float available_width =
+       GetStableAvailWidth() - ImGui::GetTreeNodeToLabelSpacing();
+@@ -994,35 +1040,35 @@
  
    auto& opt = model->opt;
  
@@ -284,7 +336,7 @@
      // Viscous posing mode toggle: disables gravity and passive springs, adds
      // viscosity. All changes are directly visible in the parameters below.
      {
-@@ -1030,7 +1030,7 @@
+@@ -1030,7 +1076,7 @@
        bool active = (opt.disableflags & mjDSBL_GRAVITY) &&
                      (opt.disableflags & mjDSBL_SPRING) &&
                      (opt.viscosity >= kPosingViscosity);
@@ -293,12 +345,12 @@
          if (active) {
            opt.disableflags |= mjDSBL_GRAVITY;
            opt.disableflags |= mjDSBL_SPRING;
-@@ -1043,20 +1043,20 @@
+@@ -1043,51 +1089,55 @@
        }
        ImGui::SetItemTooltip(
            "Disable gravity and passive springs,\n"
 -          "add viscosity for easier posing.");
-+          "增加粘度以便摆姿更轻松。 (add viscosity for easier posing.)##add viscosity for easier posing.");
++          "增加粘度以便摆姿更轻松。 (add viscosity for easier posing.)");
      }
      ImGui::Spacing();
  
@@ -322,7 +374,21 @@
      if (ImGui::BeginTable("##PhysicsFlagsTable", num_cols)) {
        const ImVec2 size = GetFlexElementSize(num_cols);
        for (int i = 0; i < mjNDISABLE; ++i) {
-@@ -1074,20 +1074,20 @@
+         ImGui::TableNextColumn();
+         int flipped = ~opt.disableflags;
+         ImGui_BitToggle(mjDISABLESTRING[i], &flipped, 1 << i, size);
++        // mujoco-zh: 悬停说明（生成物，勿手改）
++        if (kDisableTip[i]) ImGui::SetItemTooltip("%s", kDisableTip[i]);
+         opt.disableflags = ~flipped;
+       }
+       for (int i = 0; i < mjNENABLE; ++i) {
+         ImGui::TableNextColumn();
+         ImGui_BitToggle(mjENABLESTRING[i], &opt.enableflags, 1 << i, size);
++        // mujoco-zh: 悬停说明（生成物，勿手改）
++        if (kEnableTip[i]) ImGui::SetItemTooltip("%s", kEnableTip[i]);
+       }
+       ImGui::EndTable();
+     }
      ImGui::TreePop();
    }
  
@@ -350,7 +416,7 @@
          ImGui::TableNextColumn();
          int flipped = ~opt.disableactuator;
          ImGui_BitToggle(label, &flipped, 1 << i, size);
-@@ -1109,100 +1109,100 @@
+@@ -1109,100 +1159,100 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -526,7 +592,7 @@
      ImGui::TreePop();
    }
  
-@@ -1216,7 +1216,7 @@
+@@ -1216,7 +1266,7 @@
    const int num_cols = std::clamp(
        static_cast<int>(std::floor(available_width / min_width)), 1, 6);
  
@@ -535,7 +601,7 @@
      if (ImGui::BeginTable("##ModelElementsTable", num_cols)) {
        const ImVec2 size = GetFlexElementSize(num_cols);
        for (int i = 0; i < mjNVISFLAG; ++i) {
-@@ -1228,7 +1228,7 @@
+@@ -1228,7 +1278,7 @@
      ImGui::TreePop();
    }
  
@@ -544,7 +610,7 @@
      if (ImGui::BeginTable("##RenderFlagsTable", num_cols)) {
        const ImVec2 size = GetFlexElementSize(num_cols);
        for (int i = 0; i < mjNRNDFLAG; ++i) {
-@@ -1269,13 +1269,13 @@
+@@ -1269,13 +1319,13 @@
      }
    };
  
@@ -565,7 +631,7 @@
  }
  
  void NoiseGui(StepControl* step_control) {
-@@ -1283,8 +1283,8 @@
+@@ -1283,8 +1333,8 @@
    step_control->GetNoiseParameters(noise_scale, noise_rate);
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
@@ -576,7 +642,7 @@
    ImGui::PopItemWidth();
    step_control->SetNoiseParameters(noise_scale, noise_rate);
  }
-@@ -1309,7 +1309,7 @@
+@@ -1309,7 +1359,7 @@
      if (jnt_name) {
        std::snprintf(name, sizeof(name), "%s", jnt_name);
      } else {
@@ -585,7 +651,7 @@
      }
  
      double min = -1.0;
-@@ -1328,7 +1328,7 @@
+@@ -1328,7 +1378,7 @@
      const int data_adr = model->jnt_qposadr[i];
      ImGui_Slider(name, &data->qpos[data_adr], min, max);
      if (ImGui::BeginPopupContextItem()) {
@@ -594,7 +660,7 @@
          data->qpos[data_adr] = model->qpos0[data_adr];
        }
        ImGui::EndPopup();
-@@ -1343,7 +1343,7 @@
+@@ -1343,7 +1393,7 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -603,7 +669,7 @@
      mj_resetCtrl(model, data);
    }
  
-@@ -1373,7 +1373,7 @@
+@@ -1373,7 +1423,7 @@
        } else if (act_name) {
          std::snprintf(name, sizeof(name), "%s", act_name);
        } else {
@@ -612,7 +678,7 @@
        }
  
        double min = -1.0;
-@@ -1385,7 +1385,7 @@
+@@ -1385,7 +1435,7 @@
        }
        ImGui_Slider(name, &data->ctrl[j], min, max);
        if (ImGui::BeginPopupContextItem()) {
@@ -621,7 +687,7 @@
            data->ctrl[j] = mju_clip(0.0, min, max);
          }
          ImGui::EndPopup();
-@@ -1413,7 +1413,7 @@
+@@ -1413,7 +1463,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -630,7 +696,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1433,7 +1433,7 @@
+@@ -1433,7 +1483,7 @@
            mjMIN(mjMIN(data->solver_niter[k], mjNSOLVER), mjMAXLINEPNT);
  
        ImPlot::PlotLineG(
@@ -639,7 +705,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1448,7 +1448,7 @@
+@@ -1448,7 +1498,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -648,7 +714,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1459,7 +1459,7 @@
+@@ -1459,7 +1509,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -657,7 +723,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1482,7 +1482,7 @@
+@@ -1482,7 +1532,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -666,7 +732,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1502,7 +1502,7 @@
+@@ -1502,7 +1552,7 @@
        int nefc = nisland == 1 ? data->nefc : data->island_nefc[k];
  
        ImPlot::PlotLineG(
@@ -675,7 +741,7 @@
            +[](int i, void* user_data) {
              const float x = static_cast<float>(i);
              const float y = *(static_cast<int*>(user_data));
-@@ -1511,7 +1511,7 @@
+@@ -1511,7 +1561,7 @@
            &nefc, npoints);
  
        ImPlot::PlotLineG(
@@ -684,7 +750,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1522,7 +1522,7 @@
+@@ -1522,7 +1572,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -693,7 +759,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1537,7 +1537,7 @@
+@@ -1537,7 +1587,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -702,7 +768,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1552,7 +1552,7 @@
+@@ -1552,7 +1602,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -711,7 +777,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1599,20 +1599,20 @@
+@@ -1599,20 +1649,20 @@
    ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.4f);
    ImGui::SetColumnWidth(1, ImGui::GetWindowWidth() * 0.6f);
  

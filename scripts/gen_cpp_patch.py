@@ -31,6 +31,7 @@ REPO = HERE.parent
 PO = REPO / "locales/zh_CN/LC_MESSAGES/mujoco_zh.po"
 AUDIT = REPO / "data/ux_strings_audit.json"
 PATCH = REPO / "patches/ux-zh.patch"
+TOOLTIPS = REPO / "data/tooltips_flags.json"
 
 #: C++ 源码里要改的目标文件（相对 mujoco 源码根）
 #:
@@ -173,20 +174,232 @@ CONCAT_HELPERS: tuple[str, ...] = (
 IDX_RE = re.compile(r"%[-#0-9.]*[dsfegx]")
 
 
-def _needs_no_wrap(line: str) -> bool:
+def _needs_no_wrap(line: str, stmt: str = "") -> bool:
     """这一行上的字符串字面量能不能安全地加 `##` 后缀？
 
-    两类危险：
+    三类危险：
       ① 本行内就在拼接/格式化/当显示文本（`NOWRAP_GUARDS`）
       ② 本行把字面量传给了「内部会拼接它」的辅助函数（`CONCAT_HELPERS`）
          —— 这一行本身看着无害，危险在被调函数体内
+      ③ ⚠️ **跨行字面量**（`stmt` 派上用场）—— 见下面的长注释
+
+    ### ⚠️ 为什么需要 `stmt`（第三个参数）—— 踩过的第四个变体
+
+    上游有这样的**跨行**写法（`gui.cc`，原版）：
+
+        ImGui::SetItemTooltip(                        // ← SetItemTooltip 在这一行
+            "Disable gravity and passive springs,\\n"  // ← 续行，本行没有 SetItemTooltip
+            "add viscosity for easier posing.");       // ← 字面量在这一行 ← 误判！
+
+    **只看 `line` 会漏**：第 3 行里没有 `SetItemTooltip` 字样，
+    于是被判为「可以加 `##`」⇒ 生成
+    `"增加粘度… (add viscosity for easier posing.)##add viscosity for easier posing."`
+    ⇒ **用户悬停时看到尾巴上挂着一坨 `##...`**
+    （`TextEx` 明确不剥 `##`：imgui_widgets.cpp:190
+      *"we don't hide text after ## in this end-user function"*）。
+
+    ⇒ 所以要把判断提升到**语句级**：`stmt` 是「本行所属的完整语句」
+    （由调用方用括号配平切出来），只要语句里出现过 guard 就算危险。
+
+    ⚠️ 这已经是我踩的**第四个** `##` 误用变体了。根本教训：
+    **行级启发式在 C++ 上是不可靠的** —— 想彻底避免，就别让文案经过这条路
+    （tooltip 那批就是这么设计的：生成器对它只做原样输出）。
     """
-    if any(g in line for g in NOWRAP_GUARDS):
-        return True
-    return any(re.search(rf'\b{h}\s*\(', line) for h in CONCAT_HELPERS)
+    for text in (line, stmt):
+        if not text:
+            continue
+        if any(g in text for g in NOWRAP_GUARDS):
+            return True
+        if any(re.search(rf'\b{h}\s*\(', text) for h in CONCAT_HELPERS):
+            return True
+    return False
 
 
-def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]:
+def _statement_spans(lines: list[str]) -> list[str]:
+    """把源码按「语句」切分，返回**与 `lines` 等长**的列表。
+
+    每个元素是该行所属语句的全文（用于 `_needs_no_wrap` 的跨行判断）。
+    切分规则很粗但够用：以 `;` 结尾且括号已配平的算一条语句结束。
+
+    ⚠️ 不需要精确解析 C++ —— 只要求「跨行字面量所在的整条语句」能被看见。
+    """
+    out: list[str] = []
+    buf: list[str] = []
+    depth = 0
+    for ln in lines:
+        buf.append(ln)
+        # 粗略配平：只数圆括号（字符串内的括号会让计数偏移，但我们的目标是
+        # 让「同一条语句」聚合在一起，多聚合一点是安全的，少聚合才危险）
+        depth += ln.count("(") - ln.count(")")
+        stripped = ln.split("//")[0].rstrip()
+        if depth <= 0 and (stripped.endswith(";") or stripped.endswith("{")):
+            blk = "".join(buf)
+            out.extend([blk] * len(buf))
+            buf, depth = [], 0
+    if buf:                       # 收尾：未闭合的残余
+        blk = "".join(buf)
+        out.extend([blk] * len(buf))
+    return out[:len(lines)]
+
+
+# ══════════════════════════════════════════════════════════════════
+# tooltip（悬停说明）—— 与 label 替换**共用一条流水线**
+# ══════════════════════════════════════════════════════════════════
+#
+# 数据在 data/tooltips_flags.json，由**另一条路**（不是 .po）维护：
+# 这 26 个开关的标签来自 libmujoco.so 的 mjDISABLESTRING/mjENABLESTRING，
+# **ux.so 里一个字符串字面量都没有** ⇒ `.po` 那条「替换已存在字面量」的
+# 机制物理上做不到，只能新增 C++ 数组 + 调用点。
+
+GUI_CC = "src/experimental/platform/ux/gui.cc"
+
+#: 注入锚点 —— 必须**早于**所有用到这些数组的函数
+#: ⚠️ 不能锚在 RenderingGui（1212）之前：kDisableTip 在 PhysicsGui（986）里就要用
+INJECT_ANCHOR = "void PhysicsGui(mjModel* model, float min_width) {"
+
+#: 调用点：循环变量名 → tooltip 数组名
+#: ⚠️ 只有 kDisableTip / kEnableTip 两处 —— Rendering 的 42 个开关这次不做
+CALL_SITES: tuple[tuple[str, str, str], ...] = (
+    ("for (int i = 0; i < mjNDISABLE; ++i)", "mjDISABLESTRING[i]", "kDisableTip"),
+    ("for (int i = 0; i < mjNENABLE; ++i)",  "mjENABLESTRING[i]",  "kEnableTip"),
+)
+
+#: 生成 C++ 数组时用的类型 —— `const char*` 而非 `std::string`：
+#: 全是编译期常量，且 SetItemTooltip 收 const char*。
+ARRAY_TMPL = """// ══ mujoco-zh 开关悬停说明（由 scripts/gen_cpp_patch.py 生成，勿手改）══
+// 数据源：data/tooltips_flags.json（{n} 条）
+namespace {{
+{tables}
+}}  // namespace
+// ══ end mujoco-zh ══
+"""
+
+TABLE_TMPL = """constexpr const char* {name}[] = {{
+{items}
+}};
+// ⚠️ 这条 static_assert **不能省** —— 数组声明成 [] 由初始化列表定长，
+//    MuJoCo 升级后枚举变长而这边没跟上就会**编译失败**（响亮地失败）。
+//    若改成显式定长 {name}[{count}]，则会**静默错位**（下标合法但挂错开关）。
+static_assert(sizeof({name}) / sizeof({name}[0]) == {count},
+              "{name} 与 {enum} 不同步 —— 需更新 data/tooltips_flags.json");
+"""
+
+
+def load_tooltips(path: Path) -> dict[str, dict]:
+    """读 tooltips JSON 并**逐条校验**，返回 {表名: {index: tip}}。
+
+    ⚠️ 校验不是可选项 —— 开发期间这份数据连错过 3 次
+    （字段名 prov/der、MultiCCD 放错表、key 前缀），**每次都是校验抓出来的**。
+    """
+    if not path.is_file():
+        return {}
+    d = json.loads(path.read_text(encoding="utf-8"))
+
+    tables: dict[str, dict[int, str]] = {}
+    expect = {k: v["count"] for k, v in d["tables"].items()}
+    for e in d["entries"]:
+        t, i = e["table"], e["index"]
+        if t not in expect:
+            raise SystemExit(f"❌ tooltip: 未知表 {t!r}（{e['key']}）")
+        if not e.get("tip"):
+            continue                       # 故意留空
+        if not e.get("provenance"):
+            raise SystemExit(f"❌ tooltip: {e['key']} 有 tip 但缺 provenance")
+        if "##" in e["tip"]:
+            # ⚠️ tooltip 是**显示文本**，`##` 之后的内容会被 ImGui 吃掉
+            raise SystemExit(f"❌ tooltip: {e['key']} 的 tip 含 `##` —— 会被 ImGui 当 ID 吃掉")
+        if t in tables and i in tables[t]:
+            raise SystemExit(f"❌ tooltip: {t}[{i}] 重复（{e['key']}）")
+        tables.setdefault(t, {})[i] = e["tip"]
+
+    # index 必须连续 0..n-1 —— 缺一个就会错位
+    for t, cnt in expect.items():
+        got = sorted(tables.get(t, {}))
+        if got != list(range(cnt)):
+            raise SystemExit(
+                f"❌ tooltip: {t} 的 index 不是连续 0..{cnt-1}\n"
+                f"   实际: {got}\n"
+                f"   （缺 index 会导致 C++ 数组长度对不上，static_assert 会报错）")
+    return tables
+
+
+def _cpp_str(s: str) -> str:
+    """转成 C++ 字符串字面量内容（转义 \\ 和 "，换行写 \\n）。"""
+    return (s.replace("\\", "\\\\").replace('"', '\\"')
+             .replace("\n", "\\n"))
+
+
+def _render_tables(tables: dict[str, dict[int, str]]) -> str:
+    """渲染成 C++ 数组块。"""
+    # 表名 → 官方枚举常量名（static_assert 用）
+    enum_of = {
+        "kDisableTip": ("mjNDISABLE", "mjtDisableBit"),
+        "kEnableTip":  ("mjNENABLE",  "mjtEnableBit"),
+    }
+    blocks = []
+    for name in ("kDisableTip", "kEnableTip"):
+        if name not in tables:
+            continue
+        tips = tables[name]
+        cnt, enum = enum_of[name]
+        items = "\n".join(f'    /*{i:>2}*/ "{_cpp_str(tips[i])}",' for i in sorted(tips))
+        blocks.append(TABLE_TMPL.format(name=name, items=items, count=cnt, enum=enum))
+    return ARRAY_TMPL.format(n=sum(len(v) for v in tables.values()),
+                             tables="".join(blocks))
+
+
+def _inject_tooltips(lines: list[str], tables: dict[str, dict[int, str]]
+                     ) -> tuple[list[str], list[tuple]]:
+    """把 C++ 数组块 + SetItemTooltip 调用插进 gui.cc 的行列表。"""
+    src = "".join(lines)
+
+    # ① 数组块 —— 插在 PhysicsGui 之前
+    if INJECT_ANCHOR not in src:
+        raise SystemExit(
+            f"❌ tooltip: 找不到注入锚点\n   {INJECT_ANCHOR}\n"
+            f"   ⚠️ 宁可报错也不要静默跳过 —— 静默跳过会编出「看着成功、\n"
+            f"   实际一个 tooltip 都没加」的 .so（本项目踩过同类坑）")
+    block = _render_tables(tables)
+    src = src.replace(INJECT_ANCHOR, block + INJECT_ANCHOR, 1)
+
+    # ② 调用点 —— 紧跟在 ImGui_BitToggle 之后
+    #    ⚠️ tooltip 附着的是「上一个 item」，中间不能插任何 ImGui 调用
+    inserted = []
+    for loop, label_expr, table in CALL_SITES:
+        if table not in tables:
+            continue
+        if loop not in src:
+            raise SystemExit(f"❌ tooltip: 找不到调用点循环\n   {loop}")
+        # 找到该循环内 ImGui_BitToggle(...) 那一行，在它后面插一行
+        pat = re.compile(
+            r"( *)(for \(int i = 0; i < mjN\w+; \+\+i\) \{\n"
+            r"(?:[^\n]*\n)*?"
+            r" *ImGui_BitToggle\([^;]*?\);\n)")
+        m = pat.search(src)
+        # 逐个匹配，找到含目标 label_expr 的那个循环
+        for m in pat.finditer(src):
+            seg = m.group(2)
+            if label_expr not in seg:
+                continue
+            indent = re.search(r"^( *)ImGui_BitToggle", seg, re.M).group(1)
+            call = (f'{indent}// mujoco-zh: 悬停说明（生成物，勿手改）\n'
+                    f'{indent}if ({table}[i]) '
+                    f'ImGui::SetItemTooltip("%s", {table}[i]);\n')
+            src = src[:m.end(2)] + call + src[m.end(2):]
+            inserted.append((table, label_expr))
+            break
+        else:
+            raise SystemExit(
+                f"❌ tooltip: 在循环 `{loop}` 里找不到 ImGui_BitToggle({label_expr})\n"
+                f"   源码结构可能变了")
+
+    return src.splitlines(keepends=True), [
+        (f"tooltip:{t}", "C++ 悬停说明", GUI_CC, 1) for t, _ in inserted
+    ]
+
+
+def build_patch(translations: dict[str, str], src_dir: Path,
+                tooltips: dict[str, dict] | None = None) -> tuple[str, dict]:
     """在源码副本上做替换，返回 (unified diff, 统计)。
 
     支持**多文件** —— 界面文字散在 gui.cc / gui_spec.cc / sim_profiler.cc，
@@ -209,6 +422,9 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
 
         original = target.read_text(encoding="utf-8")
         lines = original.splitlines(keepends=True)
+        # ⚠️ 语句级上下文 —— 用于 `_needs_no_wrap` 的**跨行字面量**判断。
+        #    每次替换后 line 数不变（只改行内内容），所以这份映射一直有效。
+        stmts = _statement_spans(lines)
         text = original
 
         for en in todo:
@@ -240,10 +456,12 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
             wrapped = f'{plain[:-1]}##{c_escape(en)}"'
 
             out_lines, hits = [], 0
-            for ln in lines:
+            for idx, ln in enumerate(lines):
                 if needle in ln:
                     hits += ln.count(needle)
-                    if _needs_no_wrap(ln):
+                    # ⚠️ 传 idx 对应的**语句全文**，不是只传本行 ——
+                    #    跨行字面量的续行上没有 SetItemTooltip（见函数注释）
+                    if _needs_no_wrap(ln, stmts[idx]):
                         out_lines.append(ln.replace(needle, plain))
                         nowrapped.append((en, zh, rel))
                     else:
@@ -256,6 +474,14 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
             text = "".join(out_lines)
             applied.append((en, zh, rel, hits))
 
+        # ── tooltip 注入（只对 gui.cc）────────────────────────────
+        # ⚠️ 必须和 label 替换**生成进同一个 patch**：现有 patch 的 hunk
+        #    上下文已经包含那两个 for 循环，另出一个 patch 会交叉，而
+        #    build_ux_zh.sh 按 glob 顺序应用 —— 顺序不可依赖。
+        if rel == GUI_CC and tooltips:
+            lines, tips_applied = _inject_tooltips(lines, tooltips)
+            text = "".join(lines)
+            applied.extend(tips_applied)
         # 汇总是按「条目」算的，某条可能已在别的文件里替换过
         if text != original:
             touched_files.append(rel)
@@ -321,7 +547,18 @@ def main() -> int:
     translations = parse_po(PO)
     print(f"读入 .po: {len(translations)} 条译文")
 
-    diff, st = build_patch(translations, args.src)
+    # tooltip 数据（独立于 .po —— 见 TOOLTIPS 附近的说明）
+    try:
+        tooltips = load_tooltips(TOOLTIPS)
+        if tooltips:
+            tot = sum(len(v) for v in tooltips.values())
+            print(f"读入 tooltip: {tot} 条 -> "
+                  + ", ".join(f"{k}({len(v)})" for k, v in tooltips.items()))
+    except SystemExit as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+    diff, st = build_patch(translations, args.src, tooltips)
 
     print(f"\n替换生效: {len(st['applied'])} 处，分布：")
     for rel, n in sorted(st["by_file"].items()):
