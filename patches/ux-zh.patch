@@ -201,7 +201,7 @@
        ImGui::TableSetupScrollFreeze(0, 1);
        ImGui::TableHeadersRow();
  
-@@ -960,8 +960,8 @@
+@@ -960,8 +960,10 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -209,10 +209,12 @@
 -  ImGui::InputInt("Index", &field_index);
 +  ImGui::InputText("场 (Field)##Field", field_name, field_len);
 +  ImGui::InputInt("索引 (Index)##Index", &field_index);
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "序号 (Index)\n\n要监视的状态量在列表里的下标。改它切换「看第几个」。\n\n官方原文：（Studio 自带标签，官方文档无独立说明）");
    const mjtNum* value = static_cast<const mjtNum*>(
        GetValue(model, data, field_name, field_index));
  
-@@ -971,18 +971,120 @@
+@@ -971,18 +973,187 @@
    if (value) {
      char buf[100];
      int size = std::snprintf(buf, sizeof(buf), "%0.3f", *value);
@@ -230,6 +232,73 @@
    ImGui::PopItemWidth();
  }
  
++// ══ mujoco-zh 循环型控件悬停说明（由 scripts/gen_cpp_patch.py 生成，勿手改）══
++// 数据源：data/tooltips_controls.json 的 loop 类条目（48 条）
++// 用法：`Act Group %d` / GroupGui 的 `%s %d` 是 snprintf 拼出来的完整标签，
++//       这里按**拼好的完整字符串**查表。
++// ⚠️ 返回的是纯显示文本，**绝不能含 `##`**（ImGui::Text 不剥 `##`）。
++namespace {
++struct ZhLoopTipEntry { const char* label; const char* tip; };
++constexpr ZhLoopTipEntry kZhLoopTips[] = {
++    {"Act Group 0", "Act Group 0\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Act Group 1", "Act Group 1\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Act Group 2", "Act Group 2\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Act Group 3", "Act Group 3\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Act Group 4", "Act Group 4\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Act Group 5", "Act Group 5\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」"},
++    {"Geoms 0", "Geoms 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Geoms 1", "Geoms 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Geoms 2", "Geoms 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Geoms 3", "Geoms 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Geoms 4", "Geoms 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Geoms 5", "Geoms 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 0", "Sites 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 1", "Sites 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 2", "Sites 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 3", "Sites 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 4", "Sites 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Sites 5", "Sites 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 0", "Joints 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 1", "Joints 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 2", "Joints 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 3", "Joints 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 4", "Joints 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Joints 5", "Joints 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 0", "Tendons 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 1", "Tendons 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 2", "Tendons 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 3", "Tendons 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 4", "Tendons 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Tendons 5", "Tendons 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 0", "Actuators 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 1", "Actuators 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 2", "Actuators 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 3", "Actuators 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 4", "Actuators 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Actuators 5", "Actuators 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 0", "Flexes 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 1", "Flexes 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 2", "Flexes 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 3", "Flexes 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 4", "Flexes 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Flexes 5", "Flexes 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 0", "Skins 0\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 1", "Skins 1\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 2", "Skins 2\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 3", "Skins 3\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 4", "Skins 4\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++    {"Skins 5", "Skins 5\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」"},
++};
++
++inline const char* ZhLoopTip(const char* label) {
++  const std::string_view key(label);
++  for (const ZhLoopTipEntry& e : kZhLoopTips) {
++    if (key == e.label) return e.tip;
++  }
++  return nullptr;
++}
++}  // namespace
++// ══ end mujoco-zh ══
 +// ══ mujoco-zh 开关悬停说明（由 scripts/gen_cpp_patch.py 生成，勿手改）══
 +// 数据源：data/tooltips_flags.json（68 条）
 +namespace {
@@ -335,29 +404,36 @@
  void PhysicsGui(mjModel* model, float min_width) {
    const float available_width =
        GetStableAvailWidth() - ImGui::GetTreeNodeToLabelSpacing();
-@@ -994,35 +1096,35 @@
+@@ -994,35 +1165,55 @@
  
    auto& opt = model->opt;
  
 -  const char* opts0[] = {"Euler", "RK4", "implicit", "implicitfast"};
 -  ImGui::Combo("Integrator", &opt.integrator, opts0, IM_ARRAYSIZE(opts0));
-+  const char* opts0[] = {"Euler", "RK4", "隐式 (implicit)##implicit", "快速隐式 (implicitfast)##implicitfast"};
-+  ImGui::Combo("积分器 (Integrator)##Integrator", &opt.integrator, opts0, IM_ARRAYSIZE(opts0));
- 
+-
 -  const char* opts1[] = {"Pyramidal", "Elliptic"};
 -  ImGui::Combo("Cone", &opt.cone, opts1, IM_ARRAYSIZE(opts1));
-+  const char* opts1[] = {"金字塔 (Pyramidal)##Pyramidal", "椭圆锥 (Elliptic)##Elliptic"};
-+  ImGui::Combo("锥形 (Cone)##Cone", &opt.cone, opts1, IM_ARRAYSIZE(opts1));
- 
+-
 -  const char* opts2[] = {"Dense", "Sparse", "Auto"};
 -  ImGui::Combo("Jacobian", &opt.jacobian, opts2, IM_ARRAYSIZE(opts2));
++  const char* opts0[] = {"Euler", "RK4", "隐式 (implicit)##implicit", "快速隐式 (implicitfast)##implicitfast"};
++  ImGui::Combo("积分器 (Integrator)##Integrator", &opt.integrator, opts0, IM_ARRAYSIZE(opts0));
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "积分器 (Integrator)\n\n物理引擎用什么方法把加速度积分成位置/速度。\nEuler：半隐式欧拉，最快，绝大多数场景够用（默认）。\nRK4：四阶龙格-库塔，更准但慢很多，适合对精度敏感的小场景。\nimplicit / implicitfast：对速度做隐式积分 —— 关节阻尼或弹簧很硬时更稳，但更慢；implicitfast 不做 rne 导数，比 implicit 快。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjINT_EULER — semi-implicit Euler / mjINT_RK4 — 4th-order Runge Kutta / mjINT_IMPLICIT — implicit in velocity / mjINT_IMPLICITFAST — implicit in velocity, no rne derivative」");
++
++  const char* opts1[] = {"金字塔 (Pyramidal)##Pyramidal", "椭圆锥 (Elliptic)##Elliptic"};
++  ImGui::Combo("锥形 (Cone)##Cone", &opt.cone, opts1, IM_ARRAYSIZE(opts1));
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "摩擦锥 (Cone)\n\n摩擦锥用哪种形状近似。\nPyramidal（金字塔形，默认）：把圆摩擦锥近似成四面体，求解快，但滑动方向会有细微的各向异性。\nElliptic（椭圆）：真正的圆摩擦锥，更物理正确，但更慢。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjCONE_PYRAMIDAL — pyramidal / mjCONE_ELLIPTIC — elliptic」");
++
 +  const char* opts2[] = {"Dense", "Sparse", "自动 (Auto)##Auto"};
 +  ImGui::Combo("雅可比 (Jacobian)##Jacobian", &opt.jacobian, opts2, IM_ARRAYSIZE(opts2));
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "约束雅可比 (Jacobian)\n\n约束雅可比矩阵用稠密还是稀疏存储。\nDense：稠密，小模型更快；Sparse：稀疏，大模型省内存也更快；\nAuto（默认）：自由度 nv < 60 时用稠密，否则用稀疏。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjJAC_DENSE — dense / mjJAC_SPARSE — sparse / mjJAC_AUTO — dense if nv<60, sparse otherwise」");
  
    const char* opts3[] = {"PGS", "CG", "Newton"};
 -  ImGui::Combo("Solver", &opt.solver, opts3, IM_ARRAYSIZE(opts3));
-+  ImGui::Combo("求解器 (Solver)##Solver", &opt.solver, opts3, IM_ARRAYSIZE(opts3));
- 
+-
 -  if (SectionHeader("Algorithmic Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
 -    ImGui_Input("Timestep", &opt.timestep, {0, 1, 0.01, 0.1});
 -    ImGui_Input("Iterations", &opt.iterations, {0, 1000, 1, 10});
@@ -371,19 +447,35 @@
 -    ImGui_Input("Sleep Tol", &opt.sleep_tolerance, {0, 1, 0.01, 0.1});
 -    ImGui_Input("SDF Iter", &opt.sdf_iterations, {1, 20, 1, 10});
 -    ImGui_Input("SDF Init", &opt.sdf_initpoints, {1, 100, 1, 10});
++  ImGui::Combo("求解器 (Solver)##Solver", &opt.solver, opts3, IM_ARRAYSIZE(opts3));
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "求解器 (Solver)\n\n约束求解用什么算法。\nPGS（默认）：投影高斯-赛德尔，逐约束迭代，快且稳，机器人仿真最常用。\nCG：共轭梯度，收敛更快但每步更贵。\nNewton：牛顿法，收敛最快但每步最贵，适合约束耦合强的场景。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjSOL_PGS — PGS (dual) / mjSOL_CG — CG (primal) / mjSOL_NEWTON — Newton (primal)」");
++
 +  if (SectionHeader("算法参数 (Algorithmic Parameters)##Algorithmic Parameters", ImGuiTreeNodeFlags_DefaultOpen)) {
-+    ImGui_Input("时间步长 (Timestep)##Timestep", &opt.timestep, {0, 1, 0.01, 0.1});
-+    ImGui_Input("迭代次数 (Iterations)##Iterations", &opt.iterations, {0, 1000, 1, 10});
-+    ImGui_Input("容差 (Tolerance)##Tolerance", &opt.tolerance, {0, 1, 1e-7, 1e-6});
-+    ImGui_Input("线搜索迭代 (LS Iter)##LS Iter", &opt.ls_iterations, {0, 100, 1, 0.1});
-+    ImGui_Input("线搜索容差 (LS Tol)##LS Tol", &opt.ls_tolerance, {0, 0.1, 0.01, 0.1});
-+    ImGui_Input("无滑移迭代 (Noslip Iter)##Noslip Iter", &opt.noslip_iterations, {0, 1000, 1, 100});
-+    ImGui_Input("无滑移容差 (Noslip Tol)##Noslip Tol", &opt.noslip_tolerance, {0, 1, 0.01, 0.1});
-+    ImGui_Input("CCD 迭代 (CCD Iter)##CCD Iter", &opt.ccd_iterations, {0, 1000, 1, 100});
-+    ImGui_Input("CCD 容差 (CCD Tol)##CCD Tol", &opt.ccd_tolerance, {0, 1, 0.01, 0.1});
-+    ImGui_Input("休眠容差 (Sleep Tol)##Sleep Tol", &opt.sleep_tolerance, {0, 1, 0.01, 0.1});
-+    ImGui_Input("SDF 迭代 (SDF Iter)##SDF Iter", &opt.sdf_iterations, {1, 20, 1, 10});
-+    ImGui_Input("SDF 初始 (SDF Init)##SDF Init", &opt.sdf_initpoints, {1, 100, 1, 10});
++    ImGui_Input("时间步长 (Timestep)##Timestep", &opt.timestep, {0, 1, 0.01, 0.1},
++        "仿真步长 (Timestep)\n\n物理计算每次往前推进多少秒。这是最要紧的一个参数：\n调小 → 更准更稳，但一步算得慢；调大 → 快，但可能穿透、抖动、甚至「爆炸」。\n机器人仿真常用 0.001~0.005 秒。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「timestep」");
++    ImGui_Input("迭代次数 (Iterations)##Iterations", &opt.iterations, {0, 1000, 1, 10},
++        "主求解器迭代次数 (Iterations)\n\n主求解器最多迭代多少轮。调大 → 约束满足得更准（接触更实、不易穿透），但更慢。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of main solver iterations」");
++    ImGui_Input("容差 (Tolerance)##Tolerance", &opt.tolerance, {0, 1, 1e-7, 1e-6},
++        "主求解器容差 (Tolerance)\n\n主求解器提前收敛的阈值：迭代改善量小于它就停。调大 → 更快停、但结果粗。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「main solver tolerance」");
++    ImGui_Input("线搜索迭代 (LS Iter)##LS Iter", &opt.ls_iterations, {0, 100, 1, 0.1},
++        "线搜索迭代次数 (LS Iter)\n\nCG / Newton 求解器里「线搜索」的最大迭代次数。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of CG/Newton linesearch iterations」");
++    ImGui_Input("线搜索容差 (LS Tol)##LS Tol", &opt.ls_tolerance, {0, 0.1, 0.01, 0.1},
++        "线搜索容差 (LS Tol)\n\nCG / Newton 求解器线搜索的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「CG/Newton linesearch tolerance」");
++    ImGui_Input("无滑移迭代 (Noslip Iter)##Noslip Iter", &opt.noslip_iterations, {0, 1000, 1, 100},
++        "无滑移迭代次数 (Noslip Iter)\n\n无滑移（noslip）求解器的最大迭代次数。它专门修掉接触点上残余的切向滑移。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of noslip solver iterations」");
++    ImGui_Input("无滑移容差 (Noslip Tol)##Noslip Tol", &opt.noslip_tolerance, {0, 1, 0.01, 0.1},
++        "无滑移容差 (Noslip Tol)\n\n无滑移求解器的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「noslip solver tolerance」");
++    ImGui_Input("CCD 迭代 (CCD Iter)##CCD Iter", &opt.ccd_iterations, {0, 1000, 1, 100},
++        "CCD 迭代次数 (CCD Iter)\n\n凸碰撞检测（CCD）求解器的最大迭代次数。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of convex collision solver iterations」");
++    ImGui_Input("CCD 容差 (CCD Tol)##CCD Tol", &opt.ccd_tolerance, {0, 1, 0.01, 0.1},
++        "CCD 容差 (CCD Tol)\n\n凸碰撞检测求解器的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「convex collision solver tolerance」");
++    ImGui_Input("休眠容差 (Sleep Tol)##Sleep Tol", &opt.sleep_tolerance, {0, 1, 0.01, 0.1},
++        "休眠容差 (Sleep Tol)\n\n速度低于这个阈值就允许刚体「休眠」（停算，省 CPU）。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「sleep velocity tolerance」");
++    ImGui_Input("SDF 迭代 (SDF Iter)##SDF Iter", &opt.sdf_iterations, {1, 20, 1, 10},
++        "SDF 迭代次数 (SDF Iter)\n\nSDF 碰撞检测做梯度下降时最多迭代多少轮。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「max number of iterations for gradient descent」");
++    ImGui_Input("SDF 初始 (SDF Init)##SDF Init", &opt.sdf_initpoints, {1, 100, 1, 10},
++        "SDF 起始点个数 (SDF Init)\n\nSDF 梯度下降从几个起始点开始找最近点。调大 → 更不容易陷在局部极小，但更慢。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「number of starting points for gradient descent」");
      ImGui::TreePop();
    }
  
@@ -392,7 +484,7 @@
      // Viscous posing mode toggle: disables gravity and passive springs, adds
      // viscosity. All changes are directly visible in the parameters below.
      {
-@@ -1030,7 +1132,7 @@
+@@ -1030,7 +1221,7 @@
        bool active = (opt.disableflags & mjDSBL_GRAVITY) &&
                      (opt.disableflags & mjDSBL_SPRING) &&
                      (opt.viscosity >= kPosingViscosity);
@@ -401,7 +493,7 @@
          if (active) {
            opt.disableflags |= mjDSBL_GRAVITY;
            opt.disableflags |= mjDSBL_SPRING;
-@@ -1043,51 +1145,55 @@
+@@ -1043,54 +1234,70 @@
        }
        ImGui::SetItemTooltip(
            "Disable gravity and passive springs,\n"
@@ -416,12 +508,18 @@
 -    ImGui_Input("Density", &opt.density, {.min = 0.0});
 -    ImGui_Input("Viscosity", &opt.viscosity, {.min = 0.0});
 -    ImGui_Input("Imp Ratio", &opt.impratio, {.min = 0.0});
-+    ImGui_InputN("重力 (Gravity)##Gravity", opt.gravity, 3);
-+    ImGui_InputN("风 (Wind)##Wind", opt.wind, 3);
-+    ImGui_InputN("磁力 (Magnetic)##Magnetic", opt.magnetic, 3);
-+    ImGui_Input("密度 (Density)##Density", &opt.density, {.min = 0.0});
-+    ImGui_Input("粘度 (Viscosity)##Viscosity", &opt.viscosity, {.min = 0.0});
-+    ImGui_Input("阻抗比 (Imp Ratio)##Imp Ratio", &opt.impratio, {.min = 0.0});
++    ImGui_InputN("重力 (Gravity)##Gravity", opt.gravity, 3,
++        {}, "重力 (Gravity)\n\n重力加速度向量，单位 m/s²。默认 0 0 -9.81（Z 轴朝上）。\n机器人仿真一般不动它；想让模型「变轻」应该调质量或加重力补偿，而不是改这里。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「gravitational acceleration」");
++    ImGui_InputN("风 (Wind)##Wind", opt.wind, 3,
++        {}, "风 (Wind)\n\n风速向量。影响三件事：升力、阻力、以及介质粘度对物体的作用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「wind (for lift, drag and viscosity)」");
++    ImGui_InputN("磁力 (Magnetic)##Magnetic", opt.magnetic, 3,
++        {}, "磁场 (Magnetic)\n\n全局磁通量向量。给磁力相关的传感器/执行器用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「global magnetic flux」");
++    ImGui_Input("密度 (Density)##Density", &opt.density, {.min = 0.0},
++        "介质密度 (Density)\n\n周围介质的密度（默认 0 = 真空）。配合下面的粘度，能让几何体在「水里」受浮力和阻力。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「density of medium」");
++    ImGui_Input("粘度 (Viscosity)##Viscosity", &opt.viscosity, {.min = 0.0},
++        "介质粘度 (Viscosity)\n\n周围介质的粘度（默认 0）。与密度一起决定流体的粘滞阻力。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「viscosity of medium」");
++    ImGui_Input("阻抗比 (Imp Ratio)##Imp Ratio", &opt.impratio, {.min = 0.0},
++        "阻抗比 (Imp Ratio)\n\n约束求解器里，摩擦方向与法线方向的约束阻抗之比。默认 1（两者相等）。调大 = 摩擦相对更难滑。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「ratio of friction-to-normal contact impedance」");
      ImGui::TreePop();
    };
  
@@ -454,10 +552,14 @@
 -    ImGui_InputN("Sol Ref", opt.o_solref, 2, {.format = "%0.3f"});
 -    ImGui_InputN("Friction", opt.o_friction, 5, {.format = "%.3f"});
 +  if (SectionHeader("接触覆盖 (Contact Override)##Contact Override")) {
-+    ImGui_Input("余量 (Margin)##Margin", &opt.o_margin, {.min = 0.0});
-+    ImGui_InputN("求解器阻抗 (Sol Imp)##Sol Imp", opt.o_solimp, 5, {.format = "%0.3f"});
-+    ImGui_InputN("求解器参考 (Sol Ref)##Sol Ref", opt.o_solref, 2, {.format = "%0.3f"});
-+    ImGui_InputN("摩擦 (Friction)##Friction", opt.o_friction, 5, {.format = "%.3f"});
++    ImGui_Input("余量 (Margin)##Margin", &opt.o_margin, {.min = 0.0},
++        "接触边距 (Margin)\n\n全局默认的接触检测边距：两个几何体表面距离小于它就开始产生接触力。可以理解成把表面「膨胀」了一圈。单个几何体可以用自己的 margin 覆盖这个默认值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「margin」；说明见 doc/computation.rst 的 Constraint solver 一节");
++    ImGui_InputN("求解器阻抗 (Sol Imp)##Sol Imp", opt.o_solimp, 5, {.format = "%0.3f"},
++        "求解器阻抗 (Sol Imp)\n\n约束求解器的阻抗参数（5 个数）。它同时描述约束有多「软」、以及软硬程度随约束力/距离怎么变化 —— 决定了接触和限位的手感。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「solimp」");
++    ImGui_InputN("求解器参考 (Sol Ref)##Sol Ref", opt.o_solref, 2, {.format = "%0.3f"},
++        "求解器参考 (Sol Ref)\n\n约束求解器的参考参数（2 个数）：第一个是时间常数（约束多快被满足），第二个是阻尼比（1 = 临界阻尼，不振荡）。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「solref」");
++    ImGui_InputN("摩擦 (Friction)##Friction", opt.o_friction, 5, {.format = "%.3f"},
++        "摩擦系数 (Friction)\n\n全局默认的接触摩擦系数（5 个数），依次是：滑动摩擦（两个切向）、扭转摩擦、滚动摩擦（两个切向）。单个几何体可以用自己的 friction 覆盖。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「friction」");
      ImGui::TreePop();
    }
  
@@ -472,39 +574,62 @@
          ImGui::TableNextColumn();
          int flipped = ~opt.disableactuator;
          ImGui_BitToggle(label, &flipped, 1 << i, size);
-@@ -1109,100 +1215,100 @@
++        // mujoco-zh: 悬停说明（生成物，勿手改）
++        if (const char* _t = ZhLoopTip(label)) ImGui::SetItemTooltip("%s", _t);
+         opt.disableactuator = ~flipped;
+       }
+       ImGui::EndTable();
+@@ -1109,100 +1316,198 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
 -  ImGui::SliderInt("Tree depth", &vis_options->bvh_depth, 0, 20);
 -  ImGui::SliderInt("Flex layer", &vis_options->flex_layer, 0, 10);
-+  ImGui::SliderInt("树深度 (Tree depth)##Tree depth", &vis_options->bvh_depth, 0, 20);
-+  ImGui::SliderInt("柔性体图层 (Flex layer)##Flex layer", &vis_options->flex_layer, 0, 10);
- 
+-
 -  if (SectionHeader("Headlight")) {
 -    ImGui_SwitchToggle("Active", &vis.headlight.active);
 -    ImGui::ColorEdit3("Ambient", vis.headlight.ambient);
 -    ImGui::ColorEdit3("Diffuse", vis.headlight.diffuse);
 -    ImGui::ColorEdit3("Specular", vis.headlight.specular);
++  ImGui::SliderInt("树深度 (Tree depth)##Tree depth", &vis_options->bvh_depth, 0, 20);
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "树深度 (Tree depth)\n\n可视化 BVH（包围体层次）时往下画几层。只影响显示，不影响碰撞检测精度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「depth of the bounding volume hierarchy to be visualized」");
++  ImGui::SliderInt("柔性体图层 (Flex layer)##Flex layer", &vis_options->flex_layer, 0, 10);
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "柔性体图层 (Flex layer)\n\n三维柔性体显示到第几层元素。编译器把每个四面体按「到表面的图距离」分层：贴表面的第 0 层，邻居第 1 层，依此类推。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「element layer to be visualized for 3D flex」");
++
 +  if (SectionHeader("头灯 (Headlight)##Headlight")) {
-+    ImGui_SwitchToggle("显示 (Active)##Active", &vis.headlight.active);
++    ImGui_SwitchToggle("显示 (Active)##Active", &vis.headlight.active,
++        {}, "显示 (Active)\n\n是否开启头灯。头灯是从相机方向打过来的一盏灯，保证转视角时场景始终看得见。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「is headlight active」");
 +    ImGui::ColorEdit3("环境光 (Ambient)##Ambient", vis.headlight.ambient);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "环境光 (Ambient)\n\n头灯的环境光颜色。环境光是「无方向的基础亮度」，最暗处也能看到的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「ambient rgb (alpha=1)」");
 +    ImGui::ColorEdit3("漫反射 (Diffuse)##Diffuse", vis.headlight.diffuse);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "漫反射 (Diffuse)\n\n头灯的漫反射颜色，也就是物体的主色调来源。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「diffuse rgb (alpha=1)」");
 +    ImGui::ColorEdit3("高光 (Specular)##Specular", vis.headlight.specular);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "高光 (Specular)\n\n头灯的高光颜色，决定物体表面反光点的亮度和颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「specular rgb (alpha=1)」");
      ImGui::TreePop();
    }
 -  if (SectionHeader("Free Camera")) {
 -    ImGui_SwitchToggle("Orthographic", &vis.global.orthographic);
-+  if (SectionHeader("自由相机 (Free Camera)##Free Camera")) {
-+    ImGui_SwitchToggle("正交投影 (Orthographic)##Orthographic", &vis.global.orthographic);
-     ImGui_Input("FOV", &vis.global.fovy, {.format = "%0.2f"});
+-    ImGui_Input("FOV", &vis.global.fovy, {.format = "%0.2f"});
 -    ImGui_InputN("Center", stat.center, 3, {.format = "%0.2f"});
 -    ImGui_Input("Azimuth", &vis.global.azimuth, {.format = "%0.2f"});
 -    ImGui_Input("Elevation", &vis.global.elevation, {.format = "%0.2f"});
 -    if (ImGui::Button("Align")) {
-+    ImGui_InputN("中心 (Center)##Center", stat.center, 3, {.format = "%0.2f"});
-+    ImGui_Input("方位角 (Azimuth)##Azimuth", &vis.global.azimuth, {.format = "%0.2f"});
-+    ImGui_Input("仰角 (Elevation)##Elevation", &vis.global.elevation, {.format = "%0.2f"});
++  if (SectionHeader("自由相机 (Free Camera)##Free Camera")) {
++    ImGui_SwitchToggle("正交投影 (Orthographic)##Orthographic", &vis.global.orthographic,
++        {}, "正交投影 (Orthographic)\n\n自由相机是否用正交投影。关掉 = 透视投影（近大远小，符合直觉）；打开 = 正交投影（平行线不收敛，适合看尺寸对比）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「is the free camera orthographic (0: no, 1: yes)」");
++    ImGui_Input("FOV", &vis.global.fovy, {.format = "%0.2f"},
++        "垂直视场角 (FOV)\n\n相机的垂直视野角度。注意：正交投影时这个值不是角度而是长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「y field-of-view of free camera (orthographic ? length : degree)」");
++    ImGui_InputN("中心 (Center)##Center", stat.center, 3, {.format = "%0.2f"},
++        "中心 (Center)\n\n相机围绕旋转的中心点（世界坐标）。改它就等于把视角「看向」别处。\n\n官方原文：include/mujoco/mjmodel.h 的 mjStatistic「center」—— 自由相机绕它旋转（doc/computation.rst 的 Free camera 小节）");
++    ImGui_Input("方位角 (Azimuth)##Azimuth", &vis.global.azimuth, {.format = "%0.2f"},
++        "方位角 (Azimuth)\n\n相机绕中心点的水平旋转角，单位度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「initial azimuth of free camera (degrees)」");
++    ImGui_Input("仰角 (Elevation)##Elevation", &vis.global.elevation, {.format = "%0.2f"},
++        "仰角 (Elevation)\n\n相机绕中心点的俯仰角，单位度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「initial elevation of free camera (degrees)」");
 +    if (ImGui::Button("对齐 (Align)##Align")) {
        mjv_defaultFreeCamera(model, camera);
      }
@@ -515,11 +640,14 @@
 -    const char* opts[] = {"Box", "Ellipsoid"};
 -    ImGui::SliderInt("Inertia", &vis.global.ellipsoidinertia, 0, 1,
 +  if (SectionHeader("全局 (Global)##Global")) {
-+    ImGui_Input("范围 (Extent)##Extent", &stat.extent);
++    ImGui_Input("范围 (Extent)##Extent", &stat.extent,
++        {}, "范围 (Extent)\n\n场景的参考尺寸（米）。它是个「尺度基准」：很多其他参数是相对它算的 —— 比如雾的起止、近远裁剪面、阴影范围都要乘它。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 ——  的 mjStatistic「extent」；mjModel.stat.extent 是场景的参考尺度，fogstart/fogend/znear/zfar/shadowclip 都相对它定义");
 +    const char* opts[] = {"盒体 (Box)##Box", "椭球 (Ellipsoid)##Ellipsoid"};
 +    ImGui::SliderInt("惯量 (Inertia)##Inertia", &vis.global.ellipsoidinertia, 0, 1,
                       opts[vis.global.ellipsoidinertia]);
 -    ImGui_ButtonToggle("BVH active", &vis.global.bvactive);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "惯量 (Inertia)\n\n惯量显示成盒体还是椭球。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「geom for inertia visualization (0: box, 1: ellipsoid)」");
 +    ImGui_ButtonToggle("BVH 显示 (BVH active)##BVH active", &vis.global.bvactive);
      ImGui::TreePop();
    }
@@ -538,18 +666,30 @@
 -    ImGui_Input("Haze", &vis.map.haze);
 -    ImGui_Input("Shadow clip", &vis.map.shadowclip);
 -    ImGui_Input("Shadow scale", &vis.map.shadowscale);
-+    ImGui_Input("刚度 (Stiffness)##Stiffness", &vis.map.stiffness);
-+    ImGui_Input("旋转刚度 (Rot stiffness)##Rot stiffness", &vis.map.stiffnessrot);
-+    ImGui_Input("力 (Force)##Force", &vis.map.force);
-+    ImGui_Input("力矩 (Torque)##Torque", &vis.map.torque);
-+    ImGui_Input("透明度 (Alpha)##Alpha", &vis.map.alpha);
-+    ImGui_Input("雾起点 (Fog start)##Fog start", &vis.map.fogstart);
-+    ImGui_Input("雾终点 (Fog end)##Fog end", &vis.map.fogend);
-+    ImGui_Input("近裁剪面 (Z near)##Z near", &vis.map.znear);
-+    ImGui_Input("远裁剪面 (Z far)##Z far", &vis.map.zfar);
-+    ImGui_Input("霾 (Haze)##Haze", &vis.map.haze);
-+    ImGui_Input("阴影裁剪 (Shadow clip)##Shadow clip", &vis.map.shadowclip);
-+    ImGui_Input("阴影缩放 (Shadow scale)##Shadow scale", &vis.map.shadowscale);
++    ImGui_Input("刚度 (Stiffness)##Stiffness", &vis.map.stiffness,
++        {}, "刚度 (Stiffness)\n\n用鼠标拖拽扰动模型时，弹簧的线性刚度（位移 → 力）。调大 = 更硬、拖不动。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「mouse perturbation stiffness (space->force)」");
++    ImGui_Input("旋转刚度 (Rot stiffness)##Rot stiffness", &vis.map.stiffnessrot,
++        {}, "旋转刚度 (Rot stiffness)\n\n用鼠标拖拽扰动模型时，弹簧的旋转刚度（转角 → 力矩）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「mouse perturbation stiffness (space->torque)」");
++    ImGui_Input("力 (Force)##Force", &vis.map.force,
++        {}, "力 (Force)\n\n把「力」的单位换算成视口里显示单位的比例。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「from force units to space units」");
++    ImGui_Input("力矩 (Torque)##Torque", &vis.map.torque,
++        {}, "力矩 (Torque)\n\n把「力矩」的单位换算成视口里显示单位的比例。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「from torque units to space units」");
++    ImGui_Input("透明度 (Alpha)##Alpha", &vis.map.alpha,
++        {}, "透明度 (Alpha)\n\n开启透明显示时，几何体透明度的缩放系数。调小 = 更透明。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「scale geom alphas when transparency is enabled」");
++    ImGui_Input("雾起点 (Fog start)##Fog start", &vis.map.fogstart,
++        {}, "雾起点 (Fog start)\n\n雾从多远开始。这个值要乘以「范围 (Extent)」才是实际距离。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「OpenGL fog starts at fogstart * mjModel.stat.extent」");
++    ImGui_Input("雾终点 (Fog end)##Fog end", &vis.map.fogend,
++        {}, "雾终点 (Fog end)\n\n雾到多远达到最浓。这个值要乘以「范围 (Extent)」才是实际距离。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「OpenGL fog ends at fogend * mjModel.stat.extent」");
++    ImGui_Input("近裁剪面 (Z near)##Z near", &vis.map.znear,
++        {}, "近裁剪面 (Z near)\n\n比这个距离更近的东西不渲染。要乘以「范围 (Extent)」。 调太小会浪费深度精度、出现 z-fighting（面片闪烁）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「near clipping plane = znear * mjModel.stat.extent」");
++    ImGui_Input("远裁剪面 (Z far)##Z far", &vis.map.zfar,
++        {}, "远裁剪面 (Z far)\n\n比这个距离更远的东西不渲染。要乘以「范围 (Extent)」。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「far clipping plane = zfar * mjModel.stat.extent」");
++    ImGui_Input("霾 (Haze)##Haze", &vis.map.haze,
++        {}, "霾 (Haze)\n\n霾的浓度比例。让远处的物体染上一层灰，增强距离感。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「haze ratio」");
++    ImGui_Input("阴影裁剪 (Shadow clip)##Shadow clip", &vis.map.shadowclip,
++        {}, "阴影裁剪 (Shadow clip)\n\n平行光阴影贴图覆盖的范围。要乘以「范围 (Extent)」。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「directional light: shadowclip * mjModel.stat.extent」");
++    ImGui_Input("阴影缩放 (Shadow scale)##Shadow scale", &vis.map.shadowscale,
++        {}, "阴影缩放 (Shadow scale)\n\n聚光灯阴影贴图的覆盖范围。要乘以光源的截止角 (cutoff)。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「spot light: shadowscale * light.cutoff」");
      ImGui::PopItemWidth();
      ImGui::TreePop();
    }
@@ -573,23 +713,40 @@
 -    ImGui_Input("Frame width", &vis.scale.framewidth);
 -    ImGui_Input("Constraint", &vis.scale.constraint);
 -    ImGui_Input("Slider-crank", &vis.scale.slidercrank);
-+    ImGui_Input("全部（按尺寸） (All (meansize))##All (meansize)", &stat.meansize, {.format = "%0.3f"});
-+    ImGui_Input("力矢量宽度 (Force width)##Force width", &vis.scale.forcewidth);
-+    ImGui_Input("接触宽度 (Contact width)##Contact width", &vis.scale.contactwidth);
-+    ImGui_Input("接触高度 (Contact height)##Contact height", &vis.scale.contactheight);
-+    ImGui_Input("连接 (Connect)##Connect", &vis.scale.connect);
-+    ImGui_Input("质心 (Com)##Com", &vis.scale.com);
-+    ImGui_Input("相机 (Camera)##Camera", &vis.scale.camera);
-+    ImGui_Input("光源 (Light)##Light", &vis.scale.light);
-+    ImGui_Input("选点 (Select point)##Select point", &vis.scale.selectpoint);
-+    ImGui_Input("关节长度 (Joint length)##Joint length", &vis.scale.jointlength);
-+    ImGui_Input("关节宽度 (Joint width)##Joint width", &vis.scale.jointwidth);
-+    ImGui_Input("执行器长度 (Actuator length)##Actuator length", &vis.scale.actuatorlength);
-+    ImGui_Input("执行器宽度 (Actuator width)##Actuator width", &vis.scale.actuatorwidth);
-+    ImGui_Input("坐标系长度 (Frame length)##Frame length", &vis.scale.framelength);
-+    ImGui_Input("坐标系宽度 (Frame width)##Frame width", &vis.scale.framewidth);
-+    ImGui_Input("约束 (Constraint)##Constraint", &vis.scale.constraint);
-+    ImGui_Input("曲柄滑块 (Slider-crank)##Slider-crank", &vis.scale.slidercrank);
++    ImGui_Input("全部（按尺寸） (All (meansize))##All (meansize)", &stat.meansize, {.format = "%0.3f"},
++        "全部（按尺寸） (All (meansize))\n\n「平均刚体尺寸」，用来自动定出下面这些可视化元素该多大。改它会按比例缩放所有还没单独设过的尺寸。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 ——  的 mjStatistic「mean body size」");
++    ImGui_Input("力矢量宽度 (Force width)##Force width", &vis.scale.forcewidth,
++        {}, "力矢量宽度 (Force width)\n\n画外力/接触力箭头时的线条宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「width of force arrow」");
++    ImGui_Input("接触宽度 (Contact width)##Contact width", &vis.scale.contactwidth,
++        {}, "接触宽度 (Contact width)\n\n画接触点时那段的宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact width」");
++    ImGui_Input("接触高度 (Contact height)##Contact height", &vis.scale.contactheight,
++        {}, "接触高度 (Contact height)\n\n画接触点时那段的高度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact height」");
++    ImGui_Input("连接 (Connect)##Connect", &vis.scale.connect,
++        {}, "连接 (Connect)\n\n「自动连接 (Auto Connect)」画出来的骨架线有多粗。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「autoconnect capsule width」");
++    ImGui_Input("质心 (Com)##Com", &vis.scale.com,
++        {}, "质心 (Com)\n\n质心标记的半径。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「com radius」");
++    ImGui_Input("相机 (Camera)##Camera", &vis.scale.camera,
++        {}, "相机 (Camera)\n\n相机图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「camera object」");
++    ImGui_Input("光源 (Light)##Light", &vis.scale.light,
++        {}, "光源 (Light)\n\n光源图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「light object」");
++    ImGui_Input("选点 (Select point)##Select point", &vis.scale.selectpoint,
++        {}, "选点 (Select point)\n\n鼠标选点标记的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「selection point」");
++    ImGui_Input("关节长度 (Joint length)##Joint length", &vis.scale.jointlength,
++        {}, "关节长度 (Joint length)\n\n关节坐标轴的长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint length」");
++    ImGui_Input("关节宽度 (Joint width)##Joint width", &vis.scale.jointwidth,
++        {}, "关节宽度 (Joint width)\n\n关节坐标轴的粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint width」");
++    ImGui_Input("执行器长度 (Actuator length)##Actuator length", &vis.scale.actuatorlength,
++        {}, "执行器长度 (Actuator length)\n\n执行器图标的长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator length」");
++    ImGui_Input("执行器宽度 (Actuator width)##Actuator width", &vis.scale.actuatorwidth,
++        {}, "执行器宽度 (Actuator width)\n\n执行器图标的宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator width」");
++    ImGui_Input("坐标系长度 (Frame length)##Frame length", &vis.scale.framelength,
++        {}, "坐标系长度 (Frame length)\n\n刚体坐标系三轴的箭头长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bodyframe axis length」");
++    ImGui_Input("坐标系宽度 (Frame width)##Frame width", &vis.scale.framewidth,
++        {}, "坐标系宽度 (Frame width)\n\n刚体坐标系三轴的箭头粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bodyframe axis width」");
++    ImGui_Input("约束 (Constraint)##Constraint", &vis.scale.constraint,
++        {}, "约束 (Constraint)\n\n约束力的显示粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「constraint width」");
++    ImGui_Input("曲柄滑块 (Slider-crank)##Slider-crank", &vis.scale.slidercrank,
++        {}, "曲柄滑块 (Slider-crank)\n\n曲柄滑块传动机构的显示粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「slidercrank width」");
      ImGui::PopItemWidth();
      ImGui::TreePop();
    }
@@ -621,34 +778,84 @@
 -    ImGui::ColorEdit4("BV Active", vis.rgba.bvactive);
 +  if (ImGui::TreeNodeEx("颜色 (Colors)##Colors")) {
 +    ImGui::ColorEdit4("雾 (Fog)##Fog", vis.rgba.fog);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "雾 (Fog)\n\n雾的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「fog」");
 +    ImGui::ColorEdit4("霾 (Haze)##Haze", vis.rgba.haze);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "霾 (Haze)\n\n霾的浓度比例。让远处的物体染上一层灰，增强距离感。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「haze ratio」");
 +    ImGui::ColorEdit4("力 (Force)##Force", vis.rgba.force);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "力 (Force)\n\n把「力」的单位换算成视口里显示单位的比例。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「from force units to space units」");
 +    ImGui::ColorEdit4("惯量 (Inertia)##Inertia", vis.rgba.inertia);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "惯量 (Inertia)\n\n惯量显示成盒体还是椭球。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「geom for inertia visualization (0: box, 1: ellipsoid)」");
 +    ImGui::ColorEdit4("关节 (Joint)##Joint", vis.rgba.joint);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "关节 (Joint)\n\n关节坐标轴的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint」");
 +    ImGui::ColorEdit4("执行器 (Actuator)##Actuator", vis.rgba.actuator);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "执行器 (Actuator)\n\n执行器图标的颜色（中性状态）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, neutral」");
 +    ImGui::ColorEdit4("负向激励 (Act. Negative)##Act. Negative", vis.rgba.actuatornegative);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "负向激励 (Act. Negative)\n\n执行器处于负向饱和时显示的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, negative limit」");
 +    ImGui::ColorEdit4("正向激励 (Act. Positive)##Act. Positive", vis.rgba.actuatorpositive);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "正向激励 (Act. Positive)\n\n执行器处于正向饱和时显示的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, positive limit」");
 +    ImGui::ColorEdit4("质心 (Center of Mass)##Center of Mass", vis.rgba.com);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "质心 (Center of Mass)\n\n质心标记的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「center of mass」");
 +    ImGui::ColorEdit4("相机 (Camera)##Camera", vis.rgba.camera);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "相机 (Camera)\n\n相机图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「camera object」");
 +    ImGui::ColorEdit4("光源 (Light)##Light", vis.rgba.light);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "光源 (Light)\n\n光源图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「light object」");
 +    ImGui::ColorEdit4("选点 (Select Point)##Select Point", vis.rgba.selectpoint);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "选点 (Select Point)\n\n鼠标选点标记的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「selection point」");
 +    ImGui::ColorEdit4("自动连接 (Auto Connect)##Auto Connect", vis.rgba.connect);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "自动连接 (Auto Connect)\n\n自动生成的骨架线的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「auto connect」");
 +    ImGui::ColorEdit4("接触点 (Contact Point)##Contact Point", vis.rgba.contactpoint);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "接触点 (Contact Point)\n\n接触点的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact point」");
 +    ImGui::ColorEdit4("接触力 (Contact Force)##Contact Force", vis.rgba.contactforce);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "接触力 (Contact Force)\n\n接触力的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact force」");
 +    ImGui::ColorEdit4("接触摩擦 (Contact Friction)##Contact Friction", vis.rgba.contactfriction);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "接触摩擦 (Contact Friction)\n\n接触摩擦力矢量的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact friction force」");
 +    ImGui::ColorEdit4("接触力矩 (Contact Torque)##Contact Torque", vis.rgba.contacttorque);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "接触力矩 (Contact Torque)\n\n接触力矩的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact torque」");
 +    ImGui::ColorEdit4("接触间隙 (Contact Gap)##Contact Gap", vis.rgba.contactgap);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "接触间隙 (Contact Gap)\n\n处于「检测到但还没产生力」这段间隙里的接触点颜色（对应 gap 参数的区间）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact point in gap」");
 +    ImGui::ColorEdit4("测距仪 (Range Finder)##Range Finder", vis.rgba.rangefinder);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "测距仪 (Range Finder)\n\n测距仪射线的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「rangefinder ray」");
 +    ImGui::ColorEdit4("约束 (Constraint)##Constraint", vis.rgba.constraint);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "约束 (Constraint)\n\n约束力的显示粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「constraint width」");
 +    ImGui::ColorEdit4("曲柄滑块 (Slider Crank)##Slider Crank", vis.rgba.slidercrank);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "曲柄滑块 (Slider Crank)\n\n曲柄滑块的显示颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「slidercrank」");
 +    ImGui::ColorEdit4("曲柄断裂 (Crank Broken)##Crank Broken", vis.rgba.crankbroken);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "曲柄断裂 (Crank Broken)\n\n曲柄被拉伸到超过极限而「断裂」时用的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「used when crank must be stretched/broken」");
 +    ImGui::ColorEdit4("视锥体 (Frustum)##Frustum", vis.rgba.frustum);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "视锥体 (Frustum)\n\n相机视锥体（能看到的空间范围）的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「camera frustum」");
 +    ImGui::ColorEdit4("包围体 (Bounding Vol.)##Bounding Vol.", vis.rgba.bv);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "包围体 (Bounding Vol.)\n\n包围体的颜色（加速碰撞检测用的层次包围盒）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bounding volume」");
 +    ImGui::ColorEdit4("包围体显示 (BV Active)##BV Active", vis.rgba.bvactive);
++    // mujoco-zh: 悬停说明（生成物，勿手改）
++    ImGui::SetItemTooltip("%s", "包围体显示 (BV Active)\n\n当前活跃包围体的高亮颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「active bounding volume」");
      ImGui::TreePop();
    }
  
-@@ -1216,24 +1322,28 @@
+@@ -1216,24 +1521,28 @@
    const int num_cols = std::clamp(
        static_cast<int>(std::floor(available_width / min_width)), 1, 6);
  
@@ -679,7 +886,16 @@
        }
        ImGui::EndTable();
      }
-@@ -1269,13 +1379,13 @@
+@@ -1261,6 +1570,8 @@
+           ImGui::TableNextColumn();
+           std::snprintf(label, sizeof(label), "%s %d", name, i);
+           ImGui_ButtonToggle(label, &group[i], size);
++          // mujoco-zh: 悬停说明（生成物，勿手改）
++          if (const char* _t = ZhLoopTip(label)) ImGui::SetItemTooltip("%s", _t);
+         }
+ 
+         ImGui::EndTable();
+@@ -1269,13 +1580,13 @@
      }
    };
  
@@ -700,18 +916,22 @@
  }
  
  void NoiseGui(StepControl* step_control) {
-@@ -1283,8 +1393,8 @@
+@@ -1283,8 +1594,12 @@
    step_control->GetNoiseParameters(noise_scale, noise_rate);
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
 -  ImGui::SliderFloat("Noise scale", &noise_scale, 0, 1);
 -  ImGui::SliderFloat("Noise rate", &noise_rate, 0, 4);
 +  ImGui::SliderFloat("噪声强度 (Noise scale)##Noise scale", &noise_scale, 0, 1);
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "噪声强度 (Noise scale)\n\n给控制信号叠加噪声的标准差。0 = 不加噪声。\n用途：测试控制器在真实传感器/执行器噪声下的鲁棒性。\n\n官方原文：src/experimental/platform/sim/step_control.cc: InjectNoise() —— ctrl_noise_std_ 即本值；scale = ctrl_noise_std_ * sqrt(1 - rate*rate)");
 +  ImGui::SliderFloat("噪声速率 (Noise rate)##Noise rate", &noise_rate, 0, 4);
++  // mujoco-zh: 悬停说明（生成物，勿手改）
++  ImGui::SetItemTooltip("%s", "噪声相关时间 (Noise rate)\n\n噪声的时间相关尺度（秒）。实现是 Ornstein–Uhlenbeck 过程：rate = exp(-timestep / ctrl_noise_rate_)。值越大噪声变化越慢（越「黏」），越小越接近逐帧独立的白噪声。\n\n官方原文：src/experimental/platform/sim/step_control.cc: InjectNoise() —— 「convert rate and scale to discrete time (Ornstein–Uhlenbeck)」");
    ImGui::PopItemWidth();
    step_control->SetNoiseParameters(noise_scale, noise_rate);
  }
-@@ -1309,7 +1419,7 @@
+@@ -1309,7 +1624,7 @@
      if (jnt_name) {
        std::snprintf(name, sizeof(name), "%s", jnt_name);
      } else {
@@ -720,7 +940,7 @@
      }
  
      double min = -1.0;
-@@ -1328,7 +1438,7 @@
+@@ -1328,7 +1643,7 @@
      const int data_adr = model->jnt_qposadr[i];
      ImGui_Slider(name, &data->qpos[data_adr], min, max);
      if (ImGui::BeginPopupContextItem()) {
@@ -729,7 +949,7 @@
          data->qpos[data_adr] = model->qpos0[data_adr];
        }
        ImGui::EndPopup();
-@@ -1343,7 +1453,7 @@
+@@ -1343,7 +1658,7 @@
    const float item_width = ImGui::GetWindowWidth() * .6f;
    ImGui::PushItemWidth(item_width);
  
@@ -738,7 +958,7 @@
      mj_resetCtrl(model, data);
    }
  
-@@ -1373,7 +1483,7 @@
+@@ -1373,7 +1688,7 @@
        } else if (act_name) {
          std::snprintf(name, sizeof(name), "%s", act_name);
        } else {
@@ -747,7 +967,7 @@
        }
  
        double min = -1.0;
-@@ -1385,7 +1495,7 @@
+@@ -1385,7 +1700,7 @@
        }
        ImGui_Slider(name, &data->ctrl[j], min, max);
        if (ImGui::BeginPopupContextItem()) {
@@ -756,7 +976,7 @@
            data->ctrl[j] = mju_clip(0.0, min, max);
          }
          ImGui::EndPopup();
-@@ -1413,7 +1523,7 @@
+@@ -1413,7 +1728,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -765,7 +985,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1433,7 +1543,7 @@
+@@ -1433,7 +1748,7 @@
            mjMIN(mjMIN(data->solver_niter[k], mjNSOLVER), mjMAXLINEPNT);
  
        ImPlot::PlotLineG(
@@ -774,7 +994,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1448,7 +1558,7 @@
+@@ -1448,7 +1763,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -783,7 +1003,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1459,7 +1569,7 @@
+@@ -1459,7 +1774,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -792,7 +1012,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1482,7 +1592,7 @@
+@@ -1482,7 +1797,7 @@
    int xlim = GetPlotXLimit(data);
    ImPlotFlags flags =
        ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
@@ -801,7 +1021,7 @@
      ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
      ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
      ImPlot::SetupAxisLimits(ImAxis_X1, 0, xlim, ImPlotCond_Always);
-@@ -1502,7 +1612,7 @@
+@@ -1502,7 +1817,7 @@
        int nefc = nisland == 1 ? data->nefc : data->island_nefc[k];
  
        ImPlot::PlotLineG(
@@ -810,7 +1030,7 @@
            +[](int i, void* user_data) {
              const float x = static_cast<float>(i);
              const float y = *(static_cast<int*>(user_data));
-@@ -1511,7 +1621,7 @@
+@@ -1511,7 +1826,7 @@
            &nefc, npoints);
  
        ImPlot::PlotLineG(
@@ -819,7 +1039,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1522,7 +1632,7 @@
+@@ -1522,7 +1837,7 @@
            stats, npoints);
  
        ImPlot::PlotLineG(
@@ -828,7 +1048,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1537,7 +1647,7 @@
+@@ -1537,7 +1852,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -837,7 +1057,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1552,7 +1662,7 @@
+@@ -1552,7 +1867,7 @@
        }
  
        ImPlot::PlotLineG(
@@ -846,7 +1066,7 @@
            +[](int i, void* user_data) {
              const mjSolverStat* stats =
                  static_cast<const mjSolverStat*>(user_data);
-@@ -1599,20 +1709,20 @@
+@@ -1599,20 +1914,20 @@
    ImGui::SetColumnWidth(0, ImGui::GetWindowWidth() * 0.4f);
    ImGui::SetColumnWidth(1, ImGui::GetWindowWidth() * 0.6f);
  
@@ -908,7 +1128,7 @@
      BodyChildrenGui("Lights", mjOBJ_LIGHT, element, body, editor);
      BodyChildrenGui("Cameras", mjOBJ_CAMERA, element, body, editor);
      ImGui::TreePop();
-@@ -242,29 +242,29 @@
+@@ -242,35 +242,236 @@
    ImGui::PushID("$spec$");
  
    // Non-tree elements.
@@ -956,6 +1176,1110 @@
      ImGui::TreePop();
    }
  
+   ImGui::PopID();
+ }
+ 
++// ══ mujoco-zh 属性名（由 scripts/gen_cpp_patch.py 生成，勿手改）══
++// 数据源：data/tooltips_fields.json 的 labels（179 条）
++// 用法：FIELD/QFIELD 宏把 `#NAME` 包成 `SpecFieldLabel(#NAME)`。
++// ⚠️ 返回的是 `中文 (字段名)` 这种**纯显示文本** —— 它进的是 ImGui::Text，
++//    而 Text **不剥 `##`**（imgui_widgets.cpp:190），所以这里绝不能有 `##`。
++namespace {
++struct ZhFieldLabel { const char* field; const char* label; };
++constexpr ZhFieldLabel kZhFieldLabels[] = {
++    {"act", "驱动状态 (act)"},
++    {"actdim", "驱动状态维度 (actdim)"},
++    {"actearly", "提前激活 (actearly)"},
++    {"actfrclimited", "驱动力限幅 (actfrclimited)"},
++    {"actfrcrange", "驱动力范围 (actfrcrange)"},
++    {"actgravcomp", "驱动重力补偿 (actgravcomp)"},
++    {"active", "启用 (active)"},
++    {"activelayers", "激活层 (activelayers)"},
++    {"actlimited", "驱动器力限幅 (actlimited)"},
++    {"actrange", "驱动器范围 (actrange)"},
++    {"align", "对齐 (align)"},
++    {"ambient", "环境光 (ambient)"},
++    {"armature", "电枢惯量 (armature)"},
++    {"attenuation", "衰减 (attenuation)"},
++    {"axis", "轴 (axis)"},
++    {"biasprm", "偏置参数 (biasprm)"},
++    {"biastype", "偏置类型 (biastype)"},
++    {"bodyname1", "刚体 1 名称 (bodyname1)"},
++    {"bodyname2", "刚体 2 名称 (bodyname2)"},
++    {"builtin", "内建类型 (builtin)"},
++    {"bulbradius", "灯泡半径 (bulbradius)"},
++    {"castshadow", "投射阴影 (castshadow)"},
++    {"childclass", "子类 (childclass)"},
++    {"colorspace", "色彩空间 (colorspace)"},
++    {"conaffinity", "接触亲和力 (conaffinity)"},
++    {"condim", "接触维度 (condim)"},
++    {"content_type", "内容类型 (content_type)"},
++    {"contype", "接触类型 (contype)"},
++    {"cranklength", "曲柄长度 (cranklength)"},
++    {"ctrl", "控制量 (ctrl)"},
++    {"ctrllimited", "控制量限幅 (ctrllimited)"},
++    {"ctrlrange", "控制量范围 (ctrlrange)"},
++    {"cubefiles", "立方体贴图文件 (cubefiles)"},
++    {"cutoff", "截断距离 (cutoff)"},
++    {"damping", "阻尼 (damping)"},
++    {"data", "数据 (data)"},
++    {"datatype", "数据类型 (datatype)"},
++    {"delay", "延迟 (delay)"},
++    {"density", "密度 (density)"},
++    {"diffuse", "漫反射 (diffuse)"},
++    {"dim", "维度 (dim)"},
++    {"dir", "方向 (dir)"},
++    {"dynprm", "动力学参数 (dynprm)"},
++    {"dyntype", "动力学类型 (dyntype)"},
++    {"edgedamping", "边阻尼 (edgedamping)"},
++    {"edgestiffness", "边刚度 (edgestiffness)"},
++    {"elastic2d", "2D 弹性 (elastic2d)"},
++    {"emission", "自发光 (emission)"},
++    {"explicitinertial", "显式惯量 (explicitinertial)"},
++    {"exponent", "指数 (exponent)"},
++    {"file", "文件 (file)"},
++    {"fitscale", "拟合缩放 (fitscale)"},
++    {"flatskin", "扁平蒙皮 (flatskin)"},
++    {"fluid_coefs", "流体系数 (fluid_coefs)"},
++    {"fluid_ellipsoid", "流体椭球 (fluid_ellipsoid)"},
++    {"focal_length", "焦距 (focal_length)"},
++    {"focal_pixel", "像素焦距 (focal_pixel)"},
++    {"forcelimited", "力限幅 (forcelimited)"},
++    {"forcerange", "力范围 (forcerange)"},
++    {"fovy", "垂直视场角 (fovy)"},
++    {"friction", "摩擦系数 (friction)"},
++    {"frictionloss", "摩擦损耗 (frictionloss)"},
++    {"fromto", "起止点 (fromto)"},
++    {"fullinertia", "完整惯量矩阵 (fullinertia)"},
++    {"gainprm", "增益参数 (gainprm)"},
++    {"gaintype", "增益类型 (gaintype)"},
++    {"gap", "间隙 (gap)"},
++    {"gear", "传动比 (gear)"},
++    {"geomname1", "几何体 1 名称 (geomname1)"},
++    {"geomname2", "几何体 2 名称 (geomname2)"},
++    {"gravcomp", "重力补偿 (gravcomp)"},
++    {"gridlayout", "网格排布 (gridlayout)"},
++    {"gridsize", "网格尺寸 (gridsize)"},
++    {"group", "分组 (group)"},
++    {"height", "高度 (height)"},
++    {"hfieldname", "高度场名称 (hfieldname)"},
++    {"hflip", "水平翻转 (hflip)"},
++    {"inertia", "惯量 (inertia)"},
++    {"inflate", "膨胀量 (inflate)"},
++    {"info", "备注 (info)"},
++    {"inheritrange", "继承控制范围 (inheritrange)"},
++    {"intensity", "强度 (intensity)"},
++    {"internal", "内部 (internal)"},
++    {"interp", "插值 (interp)"},
++    {"interval", "采样间隔 (interval)"},
++    {"intprm", "整数参数 (intprm)"},
++    {"intrinsic", "内参 (intrinsic)"},
++    {"ipd", "瞳距 (ipd)"},
++    {"ipos", "惯量系位置 (ipos)"},
++    {"iquat", "惯量系姿态 (iquat)"},
++    {"lengthrange", "长度范围 (lengthrange)"},
++    {"limited", "启用限幅 (limited)"},
++    {"margin", "检测边距 (margin)"},
++    {"mark", "标记 (mark)"},
++    {"markrgb", "标记颜色 (markrgb)"},
++    {"mass", "质量 (mass)"},
++    {"material", "材质 (material)"},
++    {"maxhullvert", "凸包最大顶点数 (maxhullvert)"},
++    {"meshname", "网格名称 (meshname)"},
++    {"metallic", "金属度 (metallic)"},
++    {"mocap", "动捕 (mocap)"},
++    {"mode", "模式 (mode)"},
++    {"mpos", "动捕位置 (mpos)"},
++    {"mquat", "动捕姿态 (mquat)"},
++    {"name", "名称 (name)"},
++    {"name1", "名称 1 (name1)"},
++    {"name2", "名称 2 (name2)"},
++    {"nchannel", "通道数 (nchannel)"},
++    {"ncol", "列数 (ncol)"},
++    {"needsdf", "需要 SDF (needsdf)"},
++    {"needstage", "所需阶段 (needstage)"},
++    {"noise", "噪声 (noise)"},
++    {"nrow", "行数 (nrow)"},
++    {"nsample", "采样点数 (nsample)"},
++    {"objname", "对象名称 (objname)"},
++    {"objprm", "对象参数 (objprm)"},
++    {"objtype", "对象类型 (objtype)"},
++    {"output", "输出 (output)"},
++    {"passive", "被动 (passive)"},
++    {"plugin_name", "插件名称 (plugin_name)"},
++    {"poisson", "泊松比 (poisson)"},
++    {"pos", "位置 (pos)"},
++    {"principal_length", "主点长度 (principal_length)"},
++    {"principal_pixel", "主点像素 (principal_pixel)"},
++    {"priority", "优先级 (priority)"},
++    {"proj", "投影 (proj)"},
++    {"qpos", "位置 (qpos)"},
++    {"quat", "姿态 (quat)"},
++    {"qvel", "速度 (qvel)"},
++    {"radius", "半径 (radius)"},
++    {"random", "随机种子 (random)"},
++    {"range", "范围 (range)"},
++    {"ref", "弹簧参考 (ref)"},
++    {"reflectance", "反射率 (reflectance)"},
++    {"refname", "参考对象名称 (refname)"},
++    {"refpos", "参考位置 (refpos)"},
++    {"refquat", "参考姿态 (refquat)"},
++    {"refsite", "参考站点 (refsite)"},
++    {"reftype", "参考类型 (reftype)"},
++    {"resolution", "分辨率 (resolution)"},
++    {"rgb1", "颜色 1 (rgb1)"},
++    {"rgb2", "颜色 2 (rgb2)"},
++    {"rgba", "颜色 (rgba)"},
++    {"roughness", "粗糙度 (roughness)"},
++    {"scale", "缩放 (scale)"},
++    {"selfcollide", "自碰撞 (selfcollide)"},
++    {"sensor_size", "传感器尺寸 (sensor_size)"},
++    {"shininess", "光泽度 (shininess)"},
++    {"size", "尺寸 (size)"},
++    {"sleep", "休眠策略 (sleep)"},
++    {"slidersite", "滑块站点 (slidersite)"},
++    {"smoothnormal", "平滑法线 (smoothnormal)"},
++    {"solimp", "求解器阻抗 (solimp)"},
++    {"solimp_friction", "摩擦求解器阻抗 (solimp_friction)"},
++    {"solimp_limit", "限位求解器阻抗 (solimp_limit)"},
++    {"solmix", "求解器混合 (solmix)"},
++    {"solref", "求解器参考 (solref)"},
++    {"solref_friction", "摩擦求解器参考 (solref_friction)"},
++    {"solref_limit", "限位求解器参考 (solref_limit)"},
++    {"solreffriction", "摩擦求解器参考 (solreffriction)"},
++    {"specular", "镜面反射 (specular)"},
++    {"springdamper", "弹簧阻尼 (springdamper)"},
++    {"springlength", "弹簧原长 (springlength)"},
++    {"springref", "弹簧平衡点 (springref)"},
++    {"stiffness", "刚度 (stiffness)"},
++    {"target", "目标 (target)"},
++    {"targetbody", "目标刚体 (targetbody)"},
++    {"texrepeat", "纹理重复 (texrepeat)"},
++    {"texture", "纹理 (texture)"},
++    {"textures", "纹理集 (textures)"},
++    {"texuniform", "纹理均匀 (texuniform)"},
++    {"thickness", "厚度 (thickness)"},
++    {"time", "时间 (time)"},
++    {"trntype", "传动类型 (trntype)"},
++    {"type", "类型 (type)"},
++    {"typeinertia", "惯量类型 (typeinertia)"},
++    {"vflip", "垂直翻转 (vflip)"},
++    {"width", "宽度 (width)"},
++    {"young", "杨氏模量 (young)"},
++};
++// 这条 static_assert 不能省：数组长度与数据文件脱节时要**编译失败**，而不是静默回退英文。
++static_assert(sizeof(kZhFieldLabels) / sizeof(kZhFieldLabels[0]) == 179,
++              "kZhFieldLabels 与 data/tooltips_fields.json 不同步");
++
++const char* SpecFieldLabel(const char* name) {
++  const std::string_view key(name);
++  for (const ZhFieldLabel& e : kZhFieldLabels) {
++    if (key == e.field) return e.label;
++  }
++  return name;  // 查不到就原样返回 —— 生成器离线已断言 296 个字段名全部命中
++}
++}  // namespace
++// ══ end mujoco-zh ══
+ void ElementSpecGui(mjsElement* element, SpecEditor* editor) {
+   if (element == nullptr) {
+     return;
+@@ -279,429 +480,429 @@
+   // if editor, assert that element == editor->GetActiveElement();
+   mjsElement* ref_element = editor ? editor->GetRefElement() : element;
+ 
+-#define FIELD(NAME, TIP) table(#NAME, elem->NAME, ref->NAME, TIP);
++#define FIELD(NAME, TIP) table(SpecFieldLabel(#NAME), elem->NAME, ref->NAME, TIP);
+ #define QFIELD(NAME, ALT, TIP) \
+-  table(#NAME, #ALT, elem->NAME, ref->NAME, elem->ALT, ref->ALT, TIP);
++  table(SpecFieldLabel(#NAME), #ALT, elem->NAME, ref->NAME, elem->ALT, ref->ALT, TIP);
+ 
+   ImGui_SpecElementTable table(editor == nullptr);
+   switch (element->elemtype) {
+     case mjOBJ_BODY: {
+       mjsBody* elem = mjs_asBody(element);
+       mjsBody* ref = mjs_asBody(ref_element);
+-      FIELD(childclass, "childclass name");
+-      FIELD(pos, "frame position");
+-      QFIELD(quat, alt, "frame orientation");
+-      FIELD(ipos, "inertial frame position");
+-      QFIELD(iquat, ialt, "inertial frame orientation");
+-      FIELD(mass, "mass");
+-      FIELD(inertia, "diagonal inertia (in i-frame)");
+-      FIELD(fullinertia, "non-axis-aligned inertia matrix");
+-      FIELD(mocap, "is this a mocap body");
+-      FIELD(gravcomp, "gravity compensation");
++      FIELD(childclass, "子类 (childclass)\n\n给所有后代元素指定默认类（defaults class）。除非后代自己指定了 class，或中途又遇到带 childclass 的 body/frame，否则一路继承下去。\n\n官方原文：If this attribute is present, all descendant elements that admit a defaults class will use the class specified here, unless they specify their own class or another body or frame with a childclass attribute is encountered along the chain of nested bodies and frames.");
++      FIELD(pos, "位置 (pos)\n\n刚体坐标系在父坐标系中的三维位置。不填默认 (0, 0, 0)。\n\n官方原文：The 3D position of the body frame, in the parent coordinate frame. If undefined it defaults to (0,0,0).");
++      QFIELD(quat, alt, "姿态 (quat)\n\n刚体坐标系在父坐标系中的姿态。四元数会被归一化到单位长度后存进 mjModel。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(ipos, "惯量系位置 (ipos)\n\n惯量系的位置。必填 —— 只要写了 inertial 元素，就关掉了「从几何体自动推断惯量」的机制。\n\n官方原文：Position of the inertial frame. This attribute is required even when the inertial properties can be inferred from geoms. This is because the presence of the inertial element itself disables the automatic inference mechanism.");
++      QFIELD(iquat, ialt, "惯量系姿态 (iquat)\n\n惯量系（i-frame）的姿态。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(mass, "质量 (mass)\n\n刚体的质量，不能为负。\n\n官方原文：Mass of the body. Negative values are not allowed.（官方 tooltip 只写了 \"mass\"，与属性名复读；释义取自官方文档 body-inertial-mass）");
++      FIELD(inertia, "惯量 (inertia)\n\n刚体在惯量系 (i-frame) 下的对角惯量 (Ixx, Iyy, Izz)。\n\n官方原文：diagonal inertia (in i-frame)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(fullinertia, "完整惯量矩阵 (fullinertia)\n\n完整惯量矩阵 M。因为是 3×3 对称阵，只需 6 个数，顺序为 M(1,1), M(2,2), M(3,3), M(1,2), M(1,3), M(2,3)。编译器会对 M 做特征分解，据此定出惯量系朝向和对角惯量；若出现非正特征值（M 非正定）则编译报错。\n\n官方原文：Full inertia matrix M. Since M is 3-by-3 and symmetric, it is specified using only 6 numbers in the following order: M(1,1), M(2,2), M(3,3), M(1,2), M(1,3), M(2,3). The compiler computes the eigenvalue decomposition of M and sets the frame orientation and diagonal inertia accordingly. If non-positive eigenvalues are encountered (i.e., if M is not positive definite) a compile error is generated.");
++      FIELD(mocap, "动捕 (mocap)\n\n是否为动捕（mocap）刚体。只允许 world 直属、且不含关节的刚体。这类刚体不参与动力学，但每步前向运动学会把 mjData.mocap_pos / mocap_quat 里的值直接当作它的位姿。\n\n官方原文：If this attribute is \"true\", the body is labeled as a mocap body. This is allowed only for bodies that are children of the world body and have no joints. Such bodies are fixed from the viewpoint of the dynamics, but nevertheless the forward kinematics set their position and orientation from the fields mjData.mocap_{pos,quat} at each time step.");
++      FIELD(gravcomp, "重力补偿 (gravcomp)\n\n重力补偿力，按体重的一定比例给出。0.5 = 托住一半重量；1 = 正好抵消重力（悬浮）；大于 1 会产生净向上的力。\n\n官方原文：Gravity compensation force, specified as fraction of body weight. As an example, a value of 1 creates an upward force equal to the body's weight and compensates for gravity exactly. Values greater than 1 will create a net upwards force or buoyancy effect.");
+       FIELD(explicitinertial,
+-            "whether to save the body with explicit inertial clause");
+-      FIELD(sleep, "sleep policy");
+-      FIELD(info, "message appended to compiler errors");
++            "显式惯量 (explicitinertial)\n\n保存模型时是否为该刚体写出显式的 inertial 子句（而不是让它从几何体推断）。\n\n官方原文：whether to save the body with explicit inertial clause（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(sleep, "休眠策略 (sleep)\n\n该刚体所在运动学树的休眠策略。只对作为树根的可动刚体有效。默认 auto 时编译器按规则决定：例如受执行器影响的树不允许休眠（可覆盖）。\n\n官方原文：Sleep policy for the tree under this body. This attribute is only supported by moving bodies which are the root of a kinematic tree. For the default auto, the compiler will set the sleep policy as follows: A tree which is affected by actuators is not allowed to sleep (overridable).");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_JOINT: {
+       mjsJoint* elem = mjs_asJoint(element);
+       mjsJoint* ref = mjs_asJoint(ref_element);
+-      FIELD(pos, "anchor position");
+-      FIELD(axis, "joint axis");
+-      FIELD(ref, "value at reference configuration: qpos0");
+-      FIELD(align, "align free joint with body com (mjtAlignFree)");
+-      FIELD(stiffness, "stiffness coefficient");
+-      FIELD(springref, "spring reference value: qpos_spring");
+-      FIELD(springdamper, "timeconst, dampratio");
+-      FIELD(limited, "does joint have limits (mjtLimited)");
+-      FIELD(range, "joint limits");
+-      FIELD(margin, "margin value for joint limit detection");
+-      FIELD(solref_limit, "solver reference: joint limits");
+-      FIELD(solimp_limit, "solver impedance: joint limits");
+-      FIELD(actfrclimited, "are actuator forces on joint limited (mjtLimited)");
+-      FIELD(actfrcrange, "actuator force limits");
+-      FIELD(armature, "armature inertia (mass for slider)");
+-      FIELD(damping, "damping coefficient");
+-      FIELD(frictionloss, "friction loss");
+-      FIELD(solref_friction, "solver reference: dof friction");
+-      FIELD(solimp_friction, "solver impedance: dof friction");
+-      FIELD(group, "group");
+-      FIELD(actgravcomp, "is gravcomp force applied via actuators");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(pos, "位置 (pos)\n\n关节的位置，在定义该关节的那个刚体的坐标系里给出。自由关节忽略此属性。\n\n官方原文：Position of the joint, specified in the frame of the body where the joint is defined. For free joints this attribute is ignored.");
++      FIELD(axis, "轴 (axis)\n\n铰链关节的转轴、滑轨关节的平移方向。自由关节和球关节忽略此属性。只要长度大于 10E-14 就会自动归一化成单位向量，否则编译报错。\n\n官方原文：This attribute specifies the axis of rotation for hinge joints and the direction of translation for slide joints. It is ignored for free and ball joints. The vector specified here is automatically normalized to unit length as long as its length is greater than 10E-14; otherwise a compile error is generated.");
++      FIELD(ref, "弹簧参考 (ref)\n\n关节的参考位置/角度，只对滑轨和铰链关节有效。它定义的是初始模型构型对应的关节取值 —— 注意初始构型本身不变，变的只是「这个构型下关节读作多少」。运行时关节施加的空间变换量 = 当前关节值 − 这里的参考值。\n\n官方原文：The reference position or angle of the joint. This attribute is only used for slide and hinge joints. It defines the joint value corresponding to the initial model configuration. Note that the initial configuration itself is unmodified, only the value of the joint at this configuration.");
++      FIELD(align, "对齐 (align)\n\n自由关节是否自动对齐到刚体的质心。\n\n官方原文：align free joint with body com（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(stiffness, "刚度 (stiffness)\n\n关节刚度系数 a, b, c。a 为正时产生标准线性回复弹簧力 f = -a·x（x 是相对 springref 平衡位置的位移）。若给了第二、三个分量，则是非线性多项式弹簧力 f(x) = -(a x + b x² + c x³)。\n\n官方原文：Joint stiffness coefficients a, b, c. A positive a produces the standard restorative linear spring force f = -a x, where x is the joint displacement from equilibrium given by springref. If the optional second and third components are set, they define a nonlinear polynomial spring force f(x) = -(a x + b x^2 + c x^3).");
++      FIELD(springref, "弹簧平衡点 (springref)\n\n关节弹簧的平衡位置 —— 即弹簧力为零时该关节的取值。它和上面的 ref 类似：ref 存进 mjModel.qpos0，而这里存进 mjModel.qpos_spring。\n\n官方原文：The joint position or angle in which the joint spring (if any) achieves equilibrium. Similar to the vector mjModel.qpos0 which stores all joint reference values specified with the ref attribute above, all spring reference values specified with this attribute are stored in the vector mjModel.qpos_spring.");
++      FIELD(springdamper, "弹簧阻尼 (springdamper)\n\n两个数都给正数时，编译器会覆盖下面 stiffness 和 damping 的设定，自动算出让这个关节的弹簧-阻尼器具有指定时间常数（第一个数）和阻尼比（第二个数）的取值 —— 计算时会考虑关节在参考构型下的惯量。\n\n官方原文：When both numbers are positive, the compiler will override any stiffness and damping values specified with the attributes below, and will instead set them automatically so that the resulting mass-spring-damper for this joint has the desired time constant (first value) and damping ratio (second value). This is done by taking into account the joint inertia in the model reference configuration.");
++      FIELD(limited, "启用限幅 (limited)\n\n该关节是否启用限位。true=启用，false=禁用，auto=当编译器开了 autolimits 且定义了 range 时自动启用。\n\n官方原文：This attribute specifies if the joint has limits. If this attribute is \"false\", joint limits are disabled. If this attribute is \"true\", joint limits are enabled. If this attribute is \"auto\", and autolimits is set in compiler, joint limits will be enabled if range is defined.");
++      FIELD(range, "范围 (range)\n\n关节的限位范围。除自由关节外都可设。铰链和球关节的单位是度或弧度（由 compiler 的 angle 属性决定）。球关节限制的是转角大小，与转轴无关。\n\n官方原文：The joint limits. Limits can be imposed on all joint types except for free joints. For hinge and ball joints, the range is specified in degrees or radians depending on the angle attribute of compiler. For ball joints, the limit is imposed on the angle of rotation (relative to the reference configuration) regardless of the axis of rotation.");
++      FIELD(margin, "检测边距 (margin)\n\n限位在距离多远时就进入激活状态。配合 solreflimit / solimplimit 可以做出「软限位」。\n\n官方原文：The distance threshold below which limits become active. This attribute together with solreflimit and solimplimit can be used to model a soft joint limit.");
++      FIELD(solref_limit, "限位求解器参考 (solref_limit)\n\n模拟关节限位的求解器参考参数。\n\n官方原文：solver reference: joint limits（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solimp_limit, "限位求解器阻抗 (solimp_limit)\n\n模拟关节限位的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for simulating joint limits.");
++      FIELD(actfrclimited, "驱动力限幅 (actfrclimited)\n\n是否对作用在该关节上的执行器力设限。\n\n官方原文：are actuator forces on joint limited (mjtLimited)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(actfrcrange, "驱动力范围 (actfrcrange)\n\n该关节上执行器力的上下限（配合「驱动器力限幅」使用）。\n\n官方原文：actuator force limits（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(armature, "电枢惯量 (armature)\n\n关节自身的额外惯量，与刚体质量无关。通常来自电机转子经减速器放大后的等效惯量；对滑轨关节相当于附加质量。\n\n官方原文：Additional inertia associated with movement of the joint that is not due to body mass. This added inertia is usually due to a rotor (a.k.a armature) spinning faster than the joint itself due to a geared transmission.");
++      FIELD(damping, "阻尼 (damping)\n\n阻尼系数。正值 a 产生线性耗散力 f(v) = -a·v（v 是关节速度）。阻尼过大会让积分器不稳定 —— MuJoCo 的 Euler 积分器对阻尼做了隐式处理来缓解。\n\n官方原文：Damping coefficients a, b, c. A positive a produces the standard dissipative linear damping force f(v) = -a v, where v is the joint velocity. Despite its simplicity, larger damping values can make numerical integrators unstable.");
++      FIELD(frictionloss, "摩擦损耗 (frictionloss)\n\n干摩擦造成的损耗。该关节产生的每个自由度都适用同一个值。自由关节在语义上不该有摩擦损耗（但编译器不拦）。设为正值才生效。\n\n官方原文：Friction loss due to dry friction. This value is the same for all degrees of freedom created by this joint. Semantically friction loss does not make sense for free joints, but the compiler allows it. To enable friction loss, set this attribute to a positive value.");
++      FIELD(solref_friction, "摩擦求解器参考 (solref_friction)\n\n模拟自由度干摩擦的求解器参考参数。\n\n官方原文：solver reference: dof friction（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solimp_friction, "摩擦求解器阻抗 (solimp_friction)\n\n模拟干摩擦的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for simulating dry friction.");
++      FIELD(group, "分组 (group)\n\n整数分组号，可当自定义标签用。可视化里也用它成组地开关显示。\n\n官方原文：Integer group to which the joint belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of joints.");
++      FIELD(actgravcomp, "驱动重力补偿 (actgravcomp)\n\n重力补偿力是否通过执行器施加（而不是直接作用在刚体上）。\n\n官方原文：is gravcomp force applied via actuators（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_ACTUATOR: {
+       mjsActuator* elem = mjs_asActuator(element);
+       mjsActuator* ref = mjs_asActuator(ref_element);
+-      FIELD(gaintype, "gain type");
+-      FIELD(gainprm, "gain parameters");
+-      FIELD(biastype, "bias type");
+-      FIELD(biasprm, "bias parameters");
+-      FIELD(dyntype, "dynamics type");
+-      FIELD(dynprm, "dynamics parameters");
+-      FIELD(actdim, "number of activation variables");
+-      FIELD(actearly, "apply next activations to qfrc");
+-      FIELD(trntype, "transmission type");
+-      FIELD(gear, "length and transmitted force scaling");
+-      FIELD(target, "name of transmission target");
+-      FIELD(refsite, "reference site, for site transmission");
+-      FIELD(slidersite, "site defining cylinder, for slider-crank");
+-      FIELD(cranklength, "crank length, for slider-crank");
+-      FIELD(lengthrange, "transmission length range");
++      FIELD(gaintype, "增益类型 (gaintype)\n\n增益项的形式，与偏置项一起决定执行器的出力。公式为 标量力 = 增益项 ×(act 或 ctrl) + 偏置项（有激活态时用 act，否则用 ctrl）。\n\n官方原文：The gain and bias together determine the output of the force generation mechanism. The general formula is: scalar_force = gain_term * (act or ctrl) + bias_term. The formula uses the activation state when present, and the control otherwise.");
++      FIELD(gainprm, "增益参数 (gainprm)\n\n增益项参数。内置增益类型（muscle 除外）只用第一个；解析器不强制长度，可按需多写。默认值与肌肉（muscle）执行器不兼容。\n\n官方原文：Gain parameters. The built-in gain types (except for muscle) use only the first parameter, but we provide additional parameters in case user callbacks implement a more elaborate model. The length of this array is not enforced by the parser.");
++      FIELD(biastype, "偏置类型 (biastype)\n\n偏置项的形式。none：bias_term = 0；affine：bias_term = biasprm[0] + biasprm[1]*length + biasprm[2]*velocity；muscle：mju_muscleBias(...)；so3：姿态测地伺服的阻尼项。\n\n官方原文：The keywords have the following meaning: none — bias_term = 0; affine — bias_term = biasprm[0] + biasprm[1]*length + biasprm[2]*velocity; muscle — bias_term = mju_muscleBias(...); so3 — damping term of the geodesic orientation servo.");
++      FIELD(biasprm, "偏置参数 (biasprm)\n\n偏置项参数。仿射偏置（affine）用三个：biasprm[0] + biasprm[1]*长度 + biasprm[2]*速度。解析器不强制长度，可按需多写。默认值与肌肉（muscle）执行器不兼容。\n\n官方原文：Bias parameters. The affine bias type uses three parameters. The length of this array is not enforced by the parser, so the user can enter as many parameters as needed.");
++      FIELD(dyntype, "动力学类型 (dyntype)\n\n执行器激活态的演化方式（filter、integrator、muscle…）。只要不是 none，该执行器就会多出一个激活变量。\n\n官方原文：Activation dynamics type for the actuator. If dyntype is not \"none\", an activation variable will be added to the actuator. This variable will be added after any activation state computed by the plugin.");
++      FIELD(dynprm, "动力学参数 (dynprm)\n\n激活态动力学（dyntype）的参数，例如 filter / integrator 的时间常数、muscle 的动力学参数。\n\n官方原文：dynamics parameters（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(actdim, "驱动状态维度 (actdim)\n\n该执行器的激活变量个数（由 dyntype 和插件共同决定）。\n\n官方原文：number of activation variables（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(actearly, "提前激活 (actearly)\n\n提前一步把下一次的激活量作用到广义力上（用于消除执行器延迟）。\n\n官方原文：apply next activations to qfrc（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(trntype, "传动类型 (trntype)\n\n传动类型：joint（直接驱动关节）、jointinparent、slider-crank、tendon、site、body、bodyinparent、fixed。\n\n官方原文：transmission type（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(gear, "传动比 (gear)\n\n传动比。对滑轨关节：关节位移 × gear = 执行器长度；对铰链：转角（弧度）× gear = 长度。同时它也是力的放大倍数 —— 执行器力 × gear 才是作用到关节上的力。\n\n官方原文：length and transmitted force scaling（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(target, "目标 (target)\n\n传动目标的名字（关节名 / 肌腱名 / 站点名等，取决于传动类型）。\n\n官方原文：name of transmission target（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(refsite, "参考站点 (refsite)\n\n参考站点。site 传动时用它做参考。\n\n官方原文：reference site, for site transmission（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(slidersite, "滑块站点 (slidersite)\n\n定义曲柄圆柱的站点。仅用于 slider-crank 传动。\n\n官方原文：site defining cylinder, for slider-crank（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(cranklength, "曲柄长度 (cranklength)\n\n曲柄长度。仅用于 slider-crank（曲柄滑块）传动。\n\n官方原文：crank length, for slider-crank（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(lengthrange, "长度范围 (lengthrange)\n\n传动长度的范围（执行器长度超出就会被截断）。\n\n官方原文：transmission length range（Studio 自带 tooltip，官方文档无独立说明）");
+       FIELD(inheritrange,
+-            "automatic range setting for position and intvelocity");
+-      FIELD(ctrllimited, "are control limits defined (mjtLimited)");
+-      FIELD(ctrlrange, "control range");
+-      FIELD(forcelimited, "are force limits defined (mjtLimited)");
+-      FIELD(forcerange, "force range");
+-      FIELD(actlimited, "are activation limits defined (mjtLimited)");
+-      FIELD(actrange, "activation range");
+-      FIELD(group, "group");
+-      FIELD(nsample, "number of samples in history buffer");
+-      FIELD(interp, "interpolation order (0=ZOH, 1=linear, 2=cubic)");
+-      FIELD(delay, "delay time in seconds; 0: no delay");
+-      FIELD(info, "message appended to compiler errors");
++            "继承控制范围 (inheritrange)\n\n自动把控制量范围设成与传动目标的 range 一致。默认值表示禁用。正值 X 表示以目标范围的中点为心、按 X 缩放设定控制量范围。\n\n官方原文：Automatically set the actuator's ctrlrange to match the transmission target's range. The default value means \"disabled\". A positive value X sets the ctrlrange around the midpoint of the target range, scaled by X.");
++      FIELD(ctrllimited, "控制量限幅 (ctrllimited)\n\n是否启用控制量限幅（作用范围见「控制量范围」）。\n\n官方原文：are control limits defined (mjtLimited)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(ctrlrange, "控制量范围 (ctrlrange)\n\n控制量的范围。仅在「控制量限幅」开启时生效。\n\n官方原文：control range（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(forcelimited, "力限幅 (forcelimited)\n\n是否启用执行器力限幅（作用范围见「力范围」）。\n\n官方原文：are force limits defined (mjtLimited)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(forcerange, "力范围 (forcerange)\n\n执行器输出力的范围。仅在「力限幅」开启时生效。\n\n官方原文：force range（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(actlimited, "驱动器力限幅 (actlimited)\n\n是否启用激活量限幅（作用范围见「驱动器范围」）。\n\n官方原文：are activation limits defined (mjtLimited)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(actrange, "驱动器范围 (actrange)\n\n驱动器激活量（activation）的钳位范围。插件算出的激活量不受此限制。第一个值不能大于第二个值。\n\n官方原文：Range for clamping the activation state associated with this actuator's dyntype. The limit doesn't apply to activations computed by the plugin. The first value must be no greater than the second value.");
++      FIELD(group, "分组 (group)\n\n整数分组号，可当自定义标签用。可视化里也用它成组地开关显示。\n\n官方原文：Integer group to which the joint belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of joints.");
++      FIELD(nsample, "采样点数 (nsample)\n\n该执行器的历史缓冲区里保留多少个采样点（配合 delay 使用 —— 要模拟 T 秒延迟，缓冲区至少要能存 T 秒）。\n\n官方原文：number of samples in history buffer（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(interp, "插值 (interp)\n\n控制量序列的插值方式：0=零阶保持，1=线性，2=三次。\n\n官方原文：interpolation order (0=ZOH, 1=linear, 2=cubic)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(delay, "延迟 (delay)\n\n该执行器的延迟时间，单位秒。0 表示无延迟。\n\n官方原文：delay time in seconds; 0: no delay（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_SENSOR: {
+       mjsSensor* elem = mjs_asSensor(element);
+       mjsSensor* ref = mjs_asSensor(ref_element);
+-      FIELD(type, "type of sensor");
+-      FIELD(objtype, "type of sensorized object");
+-      FIELD(objname, "name of sensorized object");
+-      FIELD(reftype, "type of referenced object");
+-      FIELD(refname, "name of referenced object");
+-      FIELD(intprm, "integer parameters");
+-      FIELD(datatype, "data type for sensor measurement");
+-      FIELD(needstage, "compute stage needed to simulate sensor");
+-      FIELD(dim, "number of scalar outputs");
+-      FIELD(cutoff, "cutoff for real and positive datatypes");
+-      FIELD(noise, "noise stdev");
+-      FIELD(nsample, "number of samples in history buffer");
+-      FIELD(interp, "interpolation order (0=ZOH, 1=linear, 2=cubic)");
+-      FIELD(delay, "delay time in seconds");
+-      FIELD(interval, "[period, time_prev] in seconds");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(type, "类型 (type)\n\n传感器类型（touch / accelerometer / gyro / framepos / …）。它决定这个传感器还需要哪些参数、以及输出多少维。\n\n官方原文：type of sensor（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(objtype, "对象类型 (objtype)\n\n该传感器所依附对象的类型。它与 objname 一起确定具体是哪个对象；不指定则按 mjOBJ_UNKNOWN 处理。\n\n官方原文：Type of the MuJoCo object to which the sensor is attached. This together with the objname attribute determines the actual object. If unspecified, will be mjOBJ_UNKNOWN.");
++      FIELD(objname, "对象名称 (objname)\n\n该传感器所依附的 MuJoCo 对象的名字。\n\n官方原文：Name of the MuJoCo object to which the sensor is attached.");
++      FIELD(reftype, "参考类型 (reftype)\n\n被参考对象的类型。\n\n官方原文：type of referenced object（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(refname, "参考对象名称 (refname)\n\n被参考对象的名字（例如传感器测量的参考系）。\n\n官方原文：name of referenced object（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(intprm, "整数参数 (intprm)\n\n传给该传感器的整数参数（含义由具体传感器类型决定）。\n\n官方原文：integer parameters（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(datatype, "数据类型 (datatype)\n\n传感器输出的数据类型，决定加噪声时如何保持数值合法：axis = 单位长度 3D 向量，quat = 单位四元数，real = 普通实数数组（各分量独立加噪）。\n\n官方原文：The type of output generated by this sensor. \"axis\" means a unit-length 3D vector. \"quat\" means a unit quaternion. These need to be declared because when MuJoCo adds noise, it must respect the vector normalization.");
++      FIELD(needstage, "所需阶段 (needstage)\n\n该传感器需要仿真推进到哪个阶段，用户回调 mjcb_sensor() 才能取到有效输出。\n\n官方原文：The MuJoCo computation stage that must be completed before the user callback mjcb_sensor() is able to evaluate the output of this sensor.");
++      FIELD(dim, "维度 (dim)\n\n该传感器的标量输出个数（= 它的维度）。\n\n官方原文：Number of scalar outputs of this sensor.");
++      FIELD(cutoff, "截断距离 (cutoff)\n\n对 real 与 positive 类型的传感器输出做截断的上限（超过就按这个值算）。\n\n官方原文：cutoff for real and positive datatypes（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(noise, "噪声 (noise)\n\n传感器输出上叠加的高斯噪声标准差。\n\n官方原文：noise stdev（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(nsample, "采样点数 (nsample)\n\n该执行器的历史缓冲区里保留多少个采样点（配合 delay 使用 —— 要模拟 T 秒延迟，缓冲区至少要能存 T 秒）。\n\n官方原文：number of samples in history buffer（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(interp, "插值 (interp)\n\n控制量序列的插值方式：0=零阶保持，1=线性，2=三次。\n\n官方原文：interpolation order (0=ZOH, 1=linear, 2=cubic)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(delay, "延迟 (delay)\n\n该传感器的延迟时间，单位秒（模拟真实传感器的响应滞后）。\n\n官方原文：delay time in seconds（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(interval, "采样间隔 (interval)\n\n传感器采样间隔 [周期, 上次采样时刻]，单位秒。\n\n官方原文：[period, time_prev] in seconds（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_SITE: {
+       mjsSite* elem = mjs_asSite(element);
+       mjsSite* ref = mjs_asSite(ref_element);
+-      FIELD(pos, "position");
+-      QFIELD(quat, alt, "orientation");
+-      FIELD(fromto, "alternative for capsule, cylinder, box, ellipsoid");
+-      FIELD(size, "geom size");
+-      FIELD(type, "geom type");
+-      FIELD(material, "name of material");
+-      FIELD(group, "group");
+-      FIELD(rgba, "rgba when material is omitted");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(pos, "位置 (pos)\n\n该元素坐标系在父坐标系中的三维位置。\n\n官方原文：A spatial frame is defined by its position and orientation.（doc/modeling.rst COrientation）");
++      QFIELD(quat, alt, "姿态 (quat)\n\n该元素坐标系在父坐标系中的姿态。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(fromto, "起止点 (fromto)\n\n另一种写法：直接给起点和终点，代替「位置 + 姿态 + 长度」。只能用于 capsule / cylinder / ellipsoid / box。六个数是第一个点的 3D 坐标加第二个点的 3D 坐标。\n\n官方原文：This attribute can only be used with capsule, cylinder, ellipsoid and box sites. It provides an alternative specification of the site length as well as the frame position and orientation. The six numbers are the 3D coordinates of one point followed by the 3D coordinates of another point.");
++      FIELD(size, "尺寸 (size)\n\n该 site 的可视化几何形状的尺寸。\n\n⚠️ 官方 tooltip 在 Site 分支写作 \"geom size\"（疑为从 Geom 分支复制的笔误）；释义按官方文档 body-site-size：「Sizes of the geometric shape representing the site.」");
++      FIELD(type, "类型 (type)\n\n该 site 的可视化形状类型（sphere / capsule / ellipsoid / cylinder / box）。它同时决定 touch 传感器的有效感应区。\n\n⚠️ 官方 tooltip 在 Site 分支写作 \"geom type\"（疑为从 Geom 分支复制的笔误）；释义按官方文档 body-site-type：「Type of geometric shape. This is used for rendering, and also determines the active sensor zone for touch sensors.」");
++      FIELD(material, "材质 (material)\n\n该元素使用的材质（决定外观）。\n\n官方原文：Material used to specify the visual properties of the site.");
++      FIELD(group, "分组 (group)\n\n整数分组号，可当自定义标签用。可视化里也用它成组地开关显示。\n\n官方原文：Integer group to which the joint belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of joints.");
++      FIELD(rgba, "颜色 (rgba)\n\n颜色与透明度。只要与内部默认值不同，就会覆盖对应材质里的同名属性。\n\n官方原文：Color and transparency. If this value is different from the internal default, it overrides the corresponding material properties.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_FRAME: {
+       mjsFrame* elem = mjs_asFrame(element);
+       mjsFrame* ref = mjs_asFrame(ref_element);
+-      FIELD(childclass, "childclass name");
+-      FIELD(pos, "position");
+-      QFIELD(quat, alt, "orientation");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(childclass, "子类 (childclass)\n\n给所有后代元素指定默认类（defaults class）。除非后代自己指定了 class，或中途又遇到带 childclass 的 body/frame，否则一路继承下去。\n\n官方原文：If this attribute is present, all descendant elements that admit a defaults class will use the class specified here, unless they specify their own class or another body or frame with a childclass attribute is encountered along the chain of nested bodies and frames.");
++      FIELD(pos, "位置 (pos)\n\n该元素坐标系在父坐标系中的三维位置。\n\n官方原文：A spatial frame is defined by its position and orientation.（doc/modeling.rst COrientation）");
++      QFIELD(quat, alt, "姿态 (quat)\n\n该元素坐标系在父坐标系中的姿态。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_GEOM: {
+       mjsGeom* elem = mjs_asGeom(element);
+       mjsGeom* ref = mjs_asGeom(ref_element);
+-      FIELD(type, "geom type");
+-      FIELD(pos, "position");
+-      QFIELD(quat, alt, "orientation");
+-      FIELD(fromto, "alternative for capsule, cylinder, box, ellipsoid");
+-      FIELD(size, "type-specific size");
+-      FIELD(contype, "contact type");
+-      FIELD(conaffinity, "contact affinity");
+-      FIELD(condim, "contact dimensionality");
+-      FIELD(priority, "contact priority");
+-      FIELD(friction, "one-sided friction coefficients: slide, roll, spin");
+-      FIELD(solmix, "solver mixing for contact pairs");
+-      FIELD(solref, "solver reference");
+-      FIELD(solimp, "solver impedance");
+-      FIELD(margin, "margin for contact detection");
+-      FIELD(gap, "additional contact detection buffer");
+-      FIELD(mass, "used to compute density");
+-      FIELD(density, "used to compute mass and inertia from volume or surface");
+-      FIELD(typeinertia, "selects between surface and volume inertia");
+-      FIELD(fluid_ellipsoid, "whether ellipsoid-fluid model is active");
+-      FIELD(fluid_coefs, "ellipsoid-fluid interaction coefs");
+-      FIELD(material, "name of material");
+-      FIELD(rgba, "rgba when material is omitted");
+-      FIELD(group, "group");
+-      FIELD(hfieldname, "heightfield attached to geom");
+-      FIELD(meshname, "mesh attached to geom");
+-      FIELD(fitscale, "scale mesh uniformly");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(type, "类型 (type)\n\n该几何体的形状类型（plane / hfield / sphere / capsule / ellipsoid / cylinder / box / mesh / sdf）。\n\n官方原文：Type of geometric shape.（doc/XMLreference.rst body-geom-type —— 只此一句，具体类型含义见官方 Geometry 一节）");
++      FIELD(pos, "位置 (pos)\n\n该元素坐标系在父坐标系中的三维位置。\n\n官方原文：A spatial frame is defined by its position and orientation.（doc/modeling.rst COrientation）");
++      QFIELD(quat, alt, "姿态 (quat)\n\n该元素坐标系在父坐标系中的姿态。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(fromto, "起止点 (fromto)\n\n另一种写法：直接给起点和终点，代替「位置 + 姿态 + 长度」。只能用于 capsule / cylinder / ellipsoid / box。六个数是第一个点的 3D 坐标加第二个点的 3D 坐标。\n\n官方原文：This attribute can only be used with capsule, cylinder, ellipsoid and box sites. It provides an alternative specification of the site length as well as the frame position and orientation. The six numbers are the 3D coordinates of one point followed by the 3D coordinates of another point.");
++      FIELD(size, "尺寸 (size)\n\n几何体的尺寸参数。需要几个数、各是什么含义，都由上面的 type 决定（官方文档在 type 属性下逐个列出了）。所有必需的尺寸参数必须为正。\n\n官方原文：Geom size parameters. The number of required parameters and their meaning depends on the geom type as documented under the type attribute. All required size parameters must be positive.（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(contype, "接触类型 (contype)\n\n接触过滤用的 32 位掩码之一。两个几何体能否碰撞，取决于一方的 contype 与另一方的 conaffinity 是否有共同位同时为 1（反过来也一样）。\n\n官方原文：This attribute and the next specify 32-bit integer bitmasks used for contact filtering of dynamically generated contact pairs. Two geoms can collide if the contype of one geom is compatible with the conaffinity of the other geom or vice versa. Compatible means that the two bitmasks have a common bit set to 1.");
++      FIELD(conaffinity, "接触亲和力 (conaffinity)\n\n接触过滤用的 32 位掩码之一。两个几何体能否碰撞，取决于一方的 contype 与另一方的 conaffinity 是否有共同位同时为 1（反过来也一样）。\n\n官方原文：Bitmask for contact filtering; see contype above. Two geoms can collide if the contype of one geom is compatible with the conaffinity of the other geom or vice versa.");
++      FIELD(condim, "接触维度 (condim)\n\n接触空间的维度，取两个碰撞几何体中较大的那个 condim。\n\n官方原文：The dimensionality of the contact space for a dynamically generated contact pair is set to the maximum of the condim values of the two participating geoms. The allowed values and their meaning are: 1 = Frictionless contact. 3 = Regular frictional contact, opposing slip in the tangent plane. 4 = Frictional contact, opposing slip in the tangent plane and rotation around the contact normal.");
++      FIELD(priority, "优先级 (priority)\n\n接触优先级，决定两个几何体的属性如何合并成接触的属性。与「求解器混合 (solmix)」配合使用。\n\n官方原文：The geom priority determines how the properties of two colliding geoms are combined to form the properties of the contact. This interacts with the solmix attribute.");
++      FIELD(friction, "摩擦系数 (friction)\n\n接触摩擦系数，依次是滑动摩擦、滚动摩擦、自旋（扭转）摩擦。\n\n官方原文：Contact friction parameters for dynamically generated contact pairs. The first number is the sliding friction, acting along both axes of the tangent plane. The second number is the torsional friction, acting around the contact normal. The third number is the rolling friction, acting around both axes of the tangent plane.");
++      FIELD(solmix, "求解器混合 (solmix)\n\n接触参数的加权平均权重，与 priority 属性配合决定两个几何体的参数怎么合并。\n\n官方原文：This attribute specifies the weight used for averaging of contact parameters, and interacts with the priority attribute.");
++      FIELD(solref, "求解器参考 (solref)\n\n求解器参考参数（决定约束的刚度与阻尼）。含义与几何体的同名属性一致。\n\n官方原文：Same meaning as regular geom attributes.");
++      FIELD(solimp, "求解器阻抗 (solimp)\n\n接触仿真的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for contact simulation.");
++      FIELD(margin, "检测边距 (margin)\n\n把几何体表面「膨胀」多少来提前产生接触力。两个表面距离小于 margin 就算激活、开始出力。求解器阻抗可以是距离的函数，作用于「两几何体距离减去 margin」。\n\n官方原文：Geometric inflation of the geom surface for the purpose of contact force generation. When the distance between two geom surfaces is below margin, the contact is considered active and contact forces are generated. The constraint impedance can be a function of distance.");
++      FIELD(gap, "间隙 (gap)\n\n在 margin 之外再多探一段的缓冲距离。为正时：距离 margin+gap 就开始检测，但只有到了 margin 才真正产生力。夹在两者之间的接触以「非激活接触」形式记录在 mjData.contact 里（efc_address = -1），可供自定义计算使用。\n\n官方原文：Additional contact detection buffer beyond margin. When this value is positive, contacts are detected at distance margin + gap but forces are only generated at distance margin.");
++      FIELD(mass, "质量 (mass)\n\n该几何体的质量。填了它，下面的 density 就被忽略 —— 编译器改用这个质量和几何形状反推密度，再由密度得到惯量。注意几何体的质量和惯量只在编译期用来推断刚体属性，运行时只有刚体惯量起作用。\n\n官方原文：If this attribute is specified, the density attribute below is ignored and the geom density is computed from the given mass, using the geom shape and the assumption of uniform density. The computed density is then used to obtain the geom inertia.");
++      FIELD(density, "密度 (density)\n\n材料密度，用来算几何体的质量和惯量（按几何形状、假设密度均匀）。内置默认值 1000 是 SI 单位下水的密度。只有在上面没给 mass 时才用这个属性。\n\n官方原文：Material density used to compute the geom mass and inertia. The computation is based on the geom shape and the assumption of uniform density. The internal default of 1000 is the density of water in SI units. This attribute is used only when the mass attribute above is unspecified.");
++      FIELD(typeinertia, "惯量类型 (typeinertia)\n\n几何体惯量按表面算还是按体积算（对薄壳类几何体影响很大）。\n\n官方原文：selects between surface and volume inertia（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(fluid_ellipsoid, "流体椭球 (fluid_ellipsoid)\n\n是否启用椭球-流体相互作用模型（让几何体在流体中受到阻力/浮力）。\n\n官方原文：whether ellipsoid-fluid model is active（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(fluid_coefs, "流体系数 (fluid_coefs)\n\n椭球-流体相互作用模型的无量纲系数。\n\n官方原文：Dimensionless coefficients of fluid interaction model, as follows: 0 = Blunt drag coefficient, 1 = Slender drag coefficient, 2 = Angular drag coefficient.");
++      FIELD(material, "材质 (material)\n\n该元素使用的材质（决定外观）。\n\n官方原文：Material used to specify the visual properties of the site.");
++      FIELD(rgba, "颜色 (rgba)\n\n颜色与透明度。只要与内部默认值不同，就会覆盖对应材质里的同名属性。\n\n官方原文：Color and transparency. If this value is different from the internal default, it overrides the corresponding material properties.");
++      FIELD(group, "分组 (group)\n\n整数分组号，可当自定义标签用。可视化里也用它成组地开关显示。\n\n官方原文：Integer group to which the joint belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of joints.");
++      FIELD(hfieldname, "高度场名称 (hfieldname)\n\n该几何体使用的高度场。\n\n官方原文：heightfield attached to geom（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(meshname, "网格名称 (meshname)\n\n该几何体使用的网格。\n\n官方原文：mesh attached to geom（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(fitscale, "拟合缩放 (fitscale)\n\n只在「把基本几何体拟合到网格」时使用。这里的缩放是相对于自动拟合结果的：1 = 不变，2 = 拟合出的几何体所有尺寸放大一倍。\n\n官方原文：This attribute is used only when a primitive geometric type is being fitted to a mesh asset. The scale specified here is relative to the output of the automated fitting procedure. The default value of 1 leaves the result unchanged, a value of 2 makes all sizes of the fitted geom two times larger.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_LIGHT: {
+       mjsLight* elem = mjs_asLight(element);
+       mjsLight* ref = mjs_asLight(ref_element);
+-      FIELD(pos, "position");
+-      FIELD(dir, "direction");
+-      FIELD(mode, "tracking mode");
+-      FIELD(targetbody, "target body for targeting");
+-      FIELD(active, "is light active");
+-      FIELD(type, "type of light");
+-      FIELD(texture, "texture name for image lights");
+-      FIELD(castshadow, "does light cast shadows");
+-      FIELD(bulbradius, "bulb radius, for soft shadows");
+-      FIELD(intensity, "intensity, in candelas");
+-      FIELD(range, "range of effectiveness");
+-      FIELD(attenuation, "OpenGL attenuation (quadratic model)");
+-      FIELD(cutoff, "OpenGL cutoff");
+-      FIELD(exponent, "OpenGL exponent");
+-      FIELD(ambient, "ambient color");
+-      FIELD(diffuse, "diffuse color");
+-      FIELD(specular, "specular color");
+-      FIELD(info, "message appended to compiler errorsx");
++      FIELD(pos, "位置 (pos)\n\n该元素坐标系在父坐标系中的三维位置。\n\n官方原文：A spatial frame is defined by its position and orientation.（doc/modeling.rst COrientation）");
++      FIELD(dir, "方向 (dir)\n\n光源的照射方向。\n\n官方原文：Direction of the light.");
++      FIELD(mode, "模式 (mode)\n\n与相机（camera）的同名属性完全一致：决定光源的位置和姿态在前向运动学里怎么算（从而决定它照亮哪里）。\n\n官方原文：This is identical to the mode attribute of camera above. It specifies the how the light position and orientation in world coordinates are computed in forward kinematics (which in turn determine what the light illuminates).");
++      FIELD(targetbody, "目标刚体 (targetbody)\n\n与相机（camera）的同名属性完全一致：在 targetbody / targetbodycom 模式下指定被对准的刚体。\n\n官方原文：This is identical to the target attribute of camera above. It specifies which body should be targeted in \"targetbody\" and \"targetbodycom\" modes.");
++      FIELD(active, "启用 (active)\n\n该光源是否点亮。可以在运行时用它开关灯。\n\n官方原文：The light is active if this attribute is \"true\". This can be used at runtime to turn lights on and off.");
++      FIELD(type, "类型 (type)\n\n光源类型（directional / spot / point / area 等）。注意某些渲染器不支持全部类型 —— 例如默认的原生渲染器只支持聚光灯和平行光。\n\n官方原文：Determines the type of light. Note that some light types may not be supported by some renderers (e.g. only spot and directional lights are supported by the default native renderer).");
++      FIELD(texture, "纹理 (texture)\n\n基于图像的光照所用的纹理。默认的 Phong 光照模型不使用它。\n\n官方原文：The texture to use for image-based lighting. This is unused by the default Phong lighting model.");
++      FIELD(castshadow, "投射阴影 (castshadow)\n\n该光源是否投射阴影。注意：阴影是光源的属性，不是几何体的。每多一个投影光源就多一遍全场景渲染，慎用。阴影质量由全局 shadowsize 决定。\n\n官方原文：If this attribute is \"true\" the light will cast shadows. More precisely, the geoms illuminated by the light will cast shadows, however this is a property of lights rather than geoms. Since each shadow-casting light causes one extra rendering pass through all geoms, this attribute should be used with caution.");
++      FIELD(bulbradius, "灯泡半径 (bulbradius)\n\n光源半径，影响阴影的柔和程度（取决于渲染器）。仅对聚光灯有效。\n\n官方原文：The radius of the light source which can affect shadow softness depending on the renderer. This only applies to spotlights.");
++      FIELD(intensity, "强度 (intensity)\n\n光源强度，单位坎德拉，用于基于物理的光照模型。默认的 Phong 模型不使用它。\n\n官方原文：The intensity of the light source, measured in candela, used for physically-based lighting models. This is unused by the default Phong lighting model.");
++      FIELD(range, "范围 (range)\n\n光源的有效距离。离光源位置超过这个距离的物体不会被照亮。仅对聚光灯有效。\n\n官方原文：The effective range of the light. Objects further than this distance from the light position will not be illuminated by this light. This only applies to spotlights.");
++      FIELD(attenuation, "衰减 (attenuation)\n\n光照随距离衰减的三个系数：常数项、一次项、二次项。默认值表示不衰减。\n\n官方原文：These are the constant, linear and quadratic attenuation coefficients for Phong lighting. The default corresponds to no attenuation.");
++      FIELD(cutoff, "截断距离 (cutoff)\n\n聚光灯的截止角。单位始终是度，不受全局角度设置影响。\n\n官方原文：Cutoff angle for spotlights, always in degrees regardless of the global angle setting.");
++      FIELD(exponent, "指数 (exponent)\n\n聚光灯的指数，控制光斑边缘的柔和程度。\n\n官方原文：Exponent for spotlights. This setting controls the softness of the spotlight cutoff.");
++      FIELD(ambient, "环境光 (ambient)\n\n光源的环境光颜色，用于默认的 Phong 光照模型。\n\n官方原文：The ambient color of the light, used by the default Phong lighting model.");
++      FIELD(diffuse, "漫反射 (diffuse)\n\n光源的颜色。在默认的 Phong 光照模型里，这一项就是光源的漫反射色。\n\n官方原文：The color of the light. For the Phong (default) lighting model, this defines the diffuse color of the light.");
++      FIELD(specular, "镜面反射 (specular)\n\n光源的镜面反射色，用于默认的 Phong 光照模型。\n\n官方原文：The specular color of the light, used by the default Phong lighting model.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n⚠️ 官方 tooltip 在此处写作 \"...errorsx\"（末尾多一个 x，全文件仅此一处），疑为笔误；其余 18 个元素都写作 \"message appended to compiler errors\"。");
+       break;
+     }
+     case mjOBJ_CAMERA: {
+       mjsCamera* elem = mjs_asCamera(element);
+       mjsCamera* ref = mjs_asCamera(ref_element);
+-      FIELD(pos, "position");
+-      QFIELD(quat, alt, "orientation");
+-      FIELD(mode, "tracking mode");
+-      FIELD(targetbody, "target body for tracking/targeting");
+-      FIELD(proj, "camera projection type");
+-      FIELD(resolution, "resolution (pixel)");
+-      FIELD(output, "bit flags for output type");
+-      FIELD(fovy, "y-field of view");
+-      FIELD(ipd, "inter-pupillary distance");
+-      FIELD(intrinsic, "camera intrinsics (length)");
+-      FIELD(sensor_size, "sensor size (length)");
+-      FIELD(focal_length, "focal length (length)");
+-      FIELD(focal_pixel, "focal length (pixel)");
+-      FIELD(principal_length, "principal point (length)");
+-      FIELD(principal_pixel, "principal point (pixel)");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(pos, "位置 (pos)\n\n该元素坐标系在父坐标系中的三维位置。\n\n官方原文：A spatial frame is defined by its position and orientation.（doc/modeling.rst COrientation）");
++      QFIELD(quat, alt, "姿态 (quat)\n\n该元素坐标系在父坐标系中的姿态。\n\n官方原文：No matter which mechanism the user chooses, the frame orientation is always converted internally to a unit quaternion.（doc/modeling.rst COrientation）");
++      FIELD(mode, "模式 (mode)\n\n与相机（camera）的同名属性完全一致：决定光源的位置和姿态在前向运动学里怎么算（从而决定它照亮哪里）。\n\n官方原文：This is identical to the mode attribute of camera above. It specifies the how the light position and orientation in world coordinates are computed in forward kinematics (which in turn determine what the light illuminates).");
++      FIELD(targetbody, "目标刚体 (targetbody)\n\n当相机模式为 targetbody 或 targetbodycom 时必填 —— 指定被对准的刚体。其它模式下忽略此属性。\n\n官方原文：When the camera mode is \"targetbody\" or \"targetbodycom\", this attribute becomes required. It specifies which body should be targeted by the camera. In all other modes this attribute is ignored.");
++      FIELD(proj, "投影 (proj)\n\n相机投影类型：perspective（透视）／orthographic（正交）／user（用户自定义，用 intrinsic 指定内参）。\n\n官方原文：camera projection type（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(resolution, "分辨率 (resolution)\n\n相机的分辨率（像素），格式 [宽 高]。渲染时其实不用这两个值（尺寸由渲染上下文决定），这里只是方便记录所需分辨率。任一值大于 1 时，打开相机可视化标志（mjVIS_CAMERA）会显示视锥。\n\n官方原文：Resolution of the camera in pixels [width height]. Note that these values are not used for rendering since those dimensions are determined by the size of the rendering context. Setting either value larger than 1 enables frustum visualization when the mjVIS_CAMERA visualization flag is active.");
++      FIELD(output, "输出 (output)\n\n该相机支持的输出图像类型（位标志）：rgb 彩色图、depth 深度图（到相机平面的距离）、distance 距离图（到相机原点的距离）、normal 法线图、segmentation 分割图。此属性不参与渲染，只是记录相机支持的输出类型。\n\n官方原文：Types of output images supported by the camera: rgb, depth (distance from camera plane), distance (distance from camera origin), normal, segmentation. This attribute is not used for rendering, but serves as a convenient location to save the output types supported.");
++      FIELD(fovy, "垂直视场角 (fovy)\n\n相机的垂直视场角。透视投影时单位是度（不受全局 angle 设置影响）；正交投影时单位是长度 —— 此时默认值 45 对多数场景偏大，通常要调小。\n\n官方原文：Vertical field-of-view of the camera. If the camera uses a perspective projection, the field-of-view is expressed in degrees, regardless of the global compiler/angle setting. If the camera uses an orthographic projection, the field-of-view is expressed in units of length; note that in this case the default of 45 is too large for most scenes and should likely be reduced.");
++      FIELD(ipd, "瞳距 (ipd)\n\n瞳距。只在立体渲染时起作用：左右两个视点各自沿相机系 X 轴偏移 ±一半。\n\n官方原文：Inter-pupilary distance. This attribute only has an effect during stereoscopic rendering. It specifies the distance between the left and right viewpoints. Each viewpoint is shifted by +/- half of the distance specified here, along the X axis of the camera frame.");
++      FIELD(intrinsic, "内参 (intrinsic)\n\n相机内参，以长度单位给出（焦距、主点、传感器尺寸等）。\n\n官方原文：camera intrinsics (length)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(sensor_size, "传感器尺寸 (sensor_size)\n\n相机内参之一，以长度单位给出。\n\n官方原文：sensor size (length)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(focal_length, "焦距 (focal_length)\n\n焦距，以长度单位给出（相机内参之一）。\n\n官方原文：focal length (length)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(focal_pixel, "像素焦距 (focal_pixel)\n\n焦距，以像素为单位给出（相机内参之一）。\n\n官方原文：focal length (pixel)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(principal_length, "主点长度 (principal_length)\n\n主点位置，以长度单位给出（相机内参之一）。\n\n官方原文：principal point (length)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(principal_pixel, "主点像素 (principal_pixel)\n\n主点位置，以像素为单位给出（相机内参之一）。\n\n官方原文：principal point (pixel)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_MESH: {
+       mjsMesh* elem = mjs_asMesh(element);
+       mjsMesh* ref = mjs_asMesh(ref_element);
+-      FIELD(content_type, "content type of file");
+-      FIELD(file, "mesh file");
+-      FIELD(refpos, "reference position");
+-      FIELD(refquat, "reference orientation");
+-      FIELD(scale, "rescale mesh");
+-      FIELD(inertia, "inertia type (convex, legacy, exact, shell)");
+-      FIELD(smoothnormal, "do not exclude large-angle faces from normals");
+-      FIELD(needsdf, "compute sdf from mesh");
+-      FIELD(maxhullvert, "maximum vertex count for the convex hull");
+-      FIELD(material, "name of material");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(content_type, "内容类型 (content_type)\n\n文件内容类型（用于判断怎么解析这个资源文件）。\n\n官方原文：content type of file（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(file, "文件 (file)\n\n网格文件路径（由 compiler 的 meshdir 决定基准目录）。扩展名必须是 stl / msh / obj（不区分大小写）。若省略文件名，就必须改用 vertex 属性直接给顶点。\n\n官方原文：The file from which the mesh will be loaded. The path is determined as described in the meshdir attribute of compiler. The file extension must be \"stl\", \"msh\", or \"obj\" (not case sensitive) specifying the file type. If the file name is omitted, the vertex attribute becomes required.");
++      FIELD(refpos, "参考位置 (refpos)\n\n参考位置 —— 网格顶点坐标是相对它给出的，编译时会把它从顶点坐标里减掉。\n\n官方原文：Reference position relative to which the 3D vertex coordinates are defined. This vector is subtracted from the positions.");
++      FIELD(refquat, "参考姿态 (refquat)\n\n参考姿态 —— 网格顶点坐标和法线都是相对它给出的。实际会用这个四元数的共轭去旋转位置和法线。编译器会自动归一化。\n\n官方原文：Reference orientation relative to which the 3D vertex coordinates and normals are defined. The conjugate of this quaternion is used to rotate the positions and normals. The model compiler normalizes the quaternion automatically.");
++      FIELD(scale, "缩放 (scale)\n\n对顶点数据沿各坐标轴的缩放。允许负值 —— 会把网格沿对应轴翻转。\n\n官方原文：This attribute specifies the scaling that will be applied to the vertex data along each coordinate axis. Negative values are allowed, resulting in flipping the mesh along the corresponding axis.");
++      FIELD(inertia, "惯量 (inertia)\n\n当质量与惯量由几何体推断时，决定怎么用这个网格算。convex（推荐）：用凸包按均匀密度算体积和惯量；legacy：默认值，为向后兼容保留；exact：对非凸网格也精确计算；shell：按薄壳处理。\n\n官方原文：This attribute controls how the mesh is used when mass and inertia are inferred from geometry. The default value is legacy for backward compatibility, but convex is recommended. convex: Use the mesh's convex hull to compute volume and inertia, assuming uniform density. exact: Compute volume and inertia exactly, even for non-convex meshes.");
++      FIELD(smoothnormal, "平滑法线 (smoothnormal)\n\n控制自动生成顶点法线的方式。true = 各顶点取相邻面法线的面积加权平均（完全平滑）；false = 与平均法线夹角过大的面不参与平均，从而保住立方体棱角这类硬边。\n\n官方原文：Controls the automatic generation of vertex normals when normals are not given explicitly. If true, smooth normals are generated by averaging the face normals at each vertex, with weight proportional to the face area. If false, faces at large angles relative to the average normal are excluded from the average. In this way, sharp edges (as in cube edges) are not smoothed.");
++      FIELD(needsdf, "需要 SDF (needsdf)\n\n是否从该网格计算有符号距离场（SDF），供 SDF 碰撞插件使用。\n\n官方原文：compute sdf from mesh（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(maxhullvert, "凸包最大顶点数 (maxhullvert)\n\n网格凸包的顶点数上限。当前实现是让 qhull 算到 maxhullvert 个顶点就停。默认 -1 = 不限；正值必须大于 3。\n\n官方原文：Maximum number of vertices in a mesh's convex hull. Currently this is implemented by asking qhull to terminate after maxhullvert vertices. The default value of -1 means \"unlimited\". Positive values must be larger than 3.");
++      FIELD(material, "材质 (material)\n\n该元素使用的材质（决定外观）。\n\n官方原文：Material used to specify the visual properties of the site.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_HFIELD: {
+       mjsHField* elem = mjs_asHField(element);
+       mjsHField* ref = mjs_asHField(ref_element);
+-      FIELD(content_type, "content type of file");
+-      FIELD(file, "file: (nrow, ncol, [elevation data])");
+-      FIELD(size, "hfield size (ignore referencing geom size)");
+-      FIELD(nrow, "number of rows");
+-      FIELD(ncol, "number of columns");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(content_type, "内容类型 (content_type)\n\n文件内容类型（用于判断怎么解析这个资源文件）。\n\n官方原文：content type of file（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(file, "文件 (file)\n\n高度场文件。以 .png 结尾（不区分大小写）按 PNG 解析；否则按自定义二进制格式：先是行数、列数，再是高程数据。行列数由文件内容决定。\n\n官方原文：If this attribute is specified, the elevation data is loaded from the given file. If the file extension is \".png\", not case-sensitive, the file is treated as a PNG file. Otherwise it is treated as a binary file in the above custom format. The number of rows and columns in the data are determined from the file contents.");
++      FIELD(size, "尺寸 (size)\n\n高度场的四个数：(radius_x, radius_y, elevation_z, base_z)。高度场以引用它的几何体局部坐标系为中心，高程沿 +Z。前两个数是矩形在 X/Y 方向的半宽。\n\n官方原文：The four numbers here are (radius_x, radius_y, elevation_z, base_z). The height field is centered at the referencing geom's local frame. Elevation is in the +Z direction. The first two numbers specify the X and Y extent (or \"radius\") of the rectangle over which the height field is defined.");
++      FIELD(nrow, "行数 (nrow)\n\n高程数据矩阵的行数。默认 0 表示从文件读入，由文件内容推断矩阵大小。\n\n官方原文：This attribute specifies the number of rows in the elevation data matrix. The default value of 0 means that the data will be loaded from a file, which will be used to infer the size of the matrix.");
++      FIELD(ncol, "列数 (ncol)\n\n高程数据矩阵的列数。\n\n官方原文：This attribute specifies the number of columns in the elevation data matrix.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_SKIN: {
+       mjsSkin* elem = mjs_asSkin(element);
+       mjsSkin* ref = mjs_asSkin(ref_element);
+-      FIELD(file, "skin file");
+-      FIELD(material, "name of material used for rendering");
+-      FIELD(rgba, "rgba when material is omitted");
+-      FIELD(inflate, "inflate in normal direction");
+-      FIELD(group, "group for visualization");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(file, "文件 (file)\n\n蒙皮文件路径。\n\n官方原文：skin file（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(material, "材质 (material)\n\n渲染该元素时使用的材质。\n\n官方原文：If specified, this attribute applies a material to the skin.");
++      FIELD(rgba, "颜色 (rgba)\n\n颜色与透明度。只要与内部默认值不同，就会覆盖对应材质里的同名属性。\n\n官方原文：Color and transparency. If this value is different from the internal default, it overrides the corresponding material properties.");
++      FIELD(inflate, "膨胀量 (inflate)\n\n非零时，蒙皮顶点沿自身法线外扩这么多距离。做柔性二维形状时特别有用。\n\n官方原文：If this number is not zero, the position of vertex during updating will be offset along the vertex normal, but the distance specified in this attribute. This is particularly useful for skins representing flexible 2D shapes.");
++      FIELD(group, "分组 (group)\n\n整数分组号，用于可视化时成组开关显示。\n\n官方原文：Integer group to which the skin belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of skins.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_FLEX: {
+       mjsFlex* elem = mjs_asFlex(element);
+       mjsFlex* ref = mjs_asFlex(ref_element);
+-      FIELD(contype, "contact type");
+-      FIELD(conaffinity, "contact affinity");
+-      FIELD(condim, "contact dimensionality");
+-      FIELD(priority, "contact priority");
+-      FIELD(friction, "one-sided friction coefficients: slide, roll, spin");
+-      FIELD(solmix, "solver mixing for contact pairs");
+-      FIELD(solref, "solver reference");
+-      FIELD(solimp, "solver impedance");
+-      FIELD(margin, "margin for contact detection");
+-      FIELD(gap, "additional contact detection buffer");
+-      FIELD(dim, "element dimensionality");
+-      FIELD(radius, "radius around primitive element");
+-      FIELD(size, "vertex bounding box half sizes in qpos0");
+-      FIELD(internal, "enable internal collisions");
+-      FIELD(flatskin, "render flex skin with flat shading");
+-      FIELD(selfcollide, "mode for flex self collision");
+-      FIELD(passive, "mode for passive collisions");
+-      FIELD(activelayers, "number of active element layers in 3D");
+-      FIELD(group, "group for visualization");
+-      FIELD(edgestiffness, "edge stiffness");
+-      FIELD(edgedamping, "edge damping");
+-      FIELD(rgba, "rgba when material is omitted");
+-      FIELD(material, "name of material used for rendering");
+-      FIELD(young, "Young's modulus");
+-      FIELD(poisson, "Poisson's ratio");
+-      FIELD(damping, "Rayleigh's damping");
+-      FIELD(thickness, "thickness (2D only)");
++      FIELD(contype, "接触类型 (contype)\n\n接触过滤用的 32 位掩码之一。两个几何体能否碰撞，取决于一方的 contype 与另一方的 conaffinity 是否有共同位同时为 1（反过来也一样）。\n\n官方原文：This attribute and the next specify 32-bit integer bitmasks used for contact filtering of dynamically generated contact pairs. Two geoms can collide if the contype of one geom is compatible with the conaffinity of the other geom or vice versa. Compatible means that the two bitmasks have a common bit set to 1.");
++      FIELD(conaffinity, "接触亲和力 (conaffinity)\n\n接触过滤用的 32 位掩码之一。两个几何体能否碰撞，取决于一方的 contype 与另一方的 conaffinity 是否有共同位同时为 1（反过来也一样）。\n\n官方原文：Bitmask for contact filtering; see contype above. Two geoms can collide if the contype of one geom is compatible with the conaffinity of the other geom or vice versa.");
++      FIELD(condim, "接触维度 (condim)\n\n接触空间的维度，取两个碰撞几何体中较大的那个 condim。\n\n官方原文：The dimensionality of the contact space for a dynamically generated contact pair is set to the maximum of the condim values of the two participating geoms. The allowed values and their meaning are: 1 = Frictionless contact. 3 = Regular frictional contact, opposing slip in the tangent plane. 4 = Frictional contact, opposing slip in the tangent plane and rotation around the contact normal.");
++      FIELD(priority, "优先级 (priority)\n\n接触优先级，决定两个几何体的属性如何合并成接触的属性。与「求解器混合 (solmix)」配合使用。\n\n官方原文：The geom priority determines how the properties of two colliding geoms are combined to form the properties of the contact. This interacts with the solmix attribute.");
++      FIELD(friction, "摩擦系数 (friction)\n\n接触摩擦系数，依次是滑动摩擦、滚动摩擦、自旋（扭转）摩擦。\n\n官方原文：Contact friction parameters for dynamically generated contact pairs. The first number is the sliding friction, acting along both axes of the tangent plane. The second number is the torsional friction, acting around the contact normal. The third number is the rolling friction, acting around both axes of the tangent plane.");
++      FIELD(solmix, "求解器混合 (solmix)\n\n接触参数的加权平均权重，与 priority 属性配合决定两个几何体的参数怎么合并。\n\n官方原文：This attribute specifies the weight used for averaging of contact parameters, and interacts with the priority attribute.");
++      FIELD(solref, "求解器参考 (solref)\n\n求解器参考参数（决定约束的刚度与阻尼）。含义与几何体的同名属性一致。\n\n官方原文：Same meaning as regular geom attributes.");
++      FIELD(solimp, "求解器阻抗 (solimp)\n\n接触仿真的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for contact simulation.");
++      FIELD(margin, "检测边距 (margin)\n\n把几何体表面「膨胀」多少来提前产生接触力。两个表面距离小于 margin 就算激活、开始出力。求解器阻抗可以是距离的函数，作用于「两几何体距离减去 margin」。\n\n官方原文：Geometric inflation of the geom surface for the purpose of contact force generation. When the distance between two geom surfaces is below margin, the contact is considered active and contact forces are generated. The constraint impedance can be a function of distance.");
++      FIELD(gap, "间隙 (gap)\n\n在 margin 之外再多探一段的缓冲距离。为正时：距离 margin+gap 就开始检测，但只有到了 margin 才真正产生力。夹在两者之间的接触以「非激活接触」形式记录在 mjData.contact 里（efc_address = -1），可供自定义计算使用。\n\n官方原文：Additional contact detection buffer beyond margin. When this value is positive, contacts are detected at distance margin + gap but forces are only generated at distance margin.");
++      FIELD(dim, "维度 (dim)\n\n柔性体的维度。1 = 一维（元素是胶囊），2 = 二维（元素是带半径的三角形），3 = 三维（元素是带可选半径的四面体）。\n\n官方原文：Dimensionality of the flex. Allowed values are 1, 2 and 3. In 1D the elements are capsules, in 2D the elements are triangles with radius, in 3D the elements are tetrahedra with (optional) radius.");
++      FIELD(radius, "半径 (radius)\n\n柔性体所有元素的半径。三维下可以为零，一维和二维必须为正。半径同时影响碰撞检测和渲染；一维/二维靠它才有体积。\n\n官方原文：Radius of all flex elements. It can be zero in 3D, but must be positive in 1D and 2D. The radius affects both collision detection and rendering. In 1D and 2D it is needed to make the elements volumetric.");
++      FIELD(size, "尺寸 (size)\n\n在参考构型 qpos0 下，柔性体顶点包围盒的半宽（三个方向）。\n\n官方原文：vertex bounding box half sizes in qpos0（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(internal, "内部 (internal)\n\n是否启用柔性体内部碰撞检测（防止自穿透和单元翻转）。共顶点的单元之间不会碰撞，否则会永久接触。\n\n官方原文：Enables or disables internal collisions which prevent flex self-penetration and element inversion. Note that flex elements that have shared vertices cannot collide (or else there will be permanent contacts).");
++      FIELD(flatskin, "扁平蒙皮 (flatskin)\n\n以 flexskin 方式渲染的二/三维柔性体用平滑着色还是平面着色。默认的平滑着色适合大多数情况；如果物体本身有明显棱角（比如立方体），平面着色更自然。\n\n官方原文：This attribute determines whether 2D and 3D flexes that are rendered in flexskin mode will use smooth or flat shading. The default smooth shading is suitable in most cases, however if the object is intended to have visible sharp edges (such as a cube) then flat shading is more natural.");
++      FIELD(selfcollide, "自碰撞 (selfcollide)\n\n同一柔性体内部元素之间怎么筛掉不可能碰撞的对：none = 完全不互相碰撞；narrow = 只做精确检测（所有对都查，仅供诊断，实用中不可取）；bvh / sap = 先用包围体层次或扫描-剪枝做粗筛。\n\n官方原文：This determines the strategy for midphase collision pruning of element pairs belonging to the same flex. none means flex elements cannot collide with each other. narrow means narrow phase only (i.e. all pairs are checked). This is a diagnostic tool and is never a good idea in practice. bvh and sap refer to bounding volume hierarchies and sweep-and-prune.");
++      FIELD(passive, "被动 (passive)\n\n开启后，接触不进接触求解器，而是改用被动（弹簧-阻尼）接触力计算。此时无论 condim 设为多少，接触都是无摩擦的（condim 1）。这是实验性功能。\n\n官方原文：When enabled, the contact is not added to the contact solver but it is instead used to compute passive (spring-damper) contact forces. All contacts, regardless of the specified condim, are frictionless (condim 1). This is an experimental feature.");
++      FIELD(activelayers, "激活层 (activelayers)\n\n只对三维柔性体有效。编译器会给每个四面体标一个整数 = 它到柔性体外表面的图距离：贴表面的在第 0 层，邻居第 1 层，依此类推。这个值决定允许参与碰撞的层数，默认 1 表示只有最外层参与。\n\n官方原文：This only has an effect for 3D flexes. Each tetrahedron is labeled by the model compiler with an integer corresponding to (graph) distance to the outside surface of the flex. Thus outside-facing elements are in layer 0, their neighbors are in layer 1, etc. This attribute specifies how many layers will be allowed to participate in collisions.");
++      FIELD(group, "分组 (group)\n\n整数分组号，用于可视化时成组开关显示。\n\n官方原文：Integer group to which the skin belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of skins.");
++      FIELD(edgestiffness, "边刚度 (edgestiffness)\n\n柔性体各条边的刚度系数（与「边阻尼」配对，共同决定边弹簧-阻尼器的行为）。\n\n官方原文：edge stiffness（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(edgedamping, "边阻尼 (edgedamping)\n\n柔性体各条边的阻尼系数（与「边刚度」配对，共同决定边弹簧-阻尼器的行为）。\n\n官方原文：edge damping（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(rgba, "颜色 (rgba)\n\n颜色与透明度。只要与内部默认值不同，就会覆盖对应材质里的同名属性。\n\n官方原文：Color and transparency. If this value is different from the internal default, it overrides the corresponding material properties.");
++      FIELD(material, "材质 (material)\n\n渲染该元素时使用的材质。\n\n官方原文：If specified, this attribute applies a material to the skin.");
++      FIELD(young, "杨氏模量 (young)\n\n杨氏模量，衡量材料抗拉伸／抗压缩的刚度。单位是压强（力/面积）。\n\n官方原文：Young's elastic modulus, a measure of tensile and compressive stiffness for continuum elastic materials. Units of pressure = force/area.");
++      FIELD(poisson, "泊松比 (poisson)\n\n泊松比 —— 横向形变与纵向应变之比，无量纲，取值范围 [0, 0.5)。值小偏可压缩，值大偏不可压缩。\n\n官方原文：Poisson's ratio, the ratio of transverse deformation to applied longitudinal strain. This unitless quantity is in the range [0, 0.5).");
++      FIELD(damping, "阻尼 (damping)\n\n瑞利阻尼，作用于柔性体的所有边。\n\n官方原文：Damping of all edges.");
++      FIELD(thickness, "厚度 (thickness)\n\n壳厚度（长度单位），只对二维柔性体有效，用来缩放拉伸刚度。可以设成半径的两倍以贴合几何形状，但单独暴露出来是因为半径可能受碰撞检测的限制。\n\n官方原文：Shell thickness, units of length; only for used 2D flexes. Used to scale the stretching stiffness. This thickness can be set equal to 2 times the radius in order to match the geometry, but is exposed separately since the radius might be constrained by considerations related to collision detection.");
+       FIELD(elastic2d,
+-            "2D passive forces; 0: none, 1: bending, 2: stretching, 3: both");
+-      FIELD(info, "message appended to compiler errors");
++            "2D 弹性 (elastic2d)\n\n二维柔性体（flex）的被动弹力来源。0=无，1=仅弯曲，2=仅拉伸，3=两者都有。\n\n官方原文：Elastic contribution to passive forces of 2D flexes. \"none\": none, \"bend\": bending only, \"stretch\": stretching only, \"both\": bending and stretching.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_TENDON: {
+       mjsTendon* elem = mjs_asTendon(element);
+       mjsTendon* ref = mjs_asTendon(ref_element);
+-      FIELD(stiffness, "stiffness coefficient");
+-      FIELD(springlength, "spring resting length; {-1, -1}: use qpos_spring");
+-      FIELD(damping, "damping coefficient");
+-      FIELD(frictionloss, "friction loss");
+-      FIELD(solref_friction, "solver reference: tendon friction");
+-      FIELD(solimp_friction, "solver impedance: tendon friction");
+-      FIELD(armature, "inertia associated with tendon velocity");
+-      FIELD(limited, "does tendon have limits (mjtLimited)");
+-      FIELD(actfrclimited, "does tendon have actuator force limits");
+-      FIELD(range, "length limits");
+-      FIELD(actfrcrange, "actuator force limits");
+-      FIELD(margin, "margin value for tendon limit detection");
+-      FIELD(solref_limit, "solver reference: tendon limits");
+-      FIELD(solimp_limit, "solver impedance: tendon limits");
+-      FIELD(material, "name of material for rendering");
+-      FIELD(width, "width for rendering");
+-      FIELD(rgba, "rgba when material is omitted");
+-      FIELD(group, "group");
+-      FIELD(info, "message appended to errors");
++      FIELD(stiffness, "刚度 (stiffness)\n\n关节刚度系数 a, b, c。a 为正时产生标准线性回复弹簧力 f = -a·x（x 是相对 springref 平衡位置的位移）。若给了第二、三个分量，则是非线性多项式弹簧力 f(x) = -(a x + b x² + c x³)。\n\n官方原文：Joint stiffness coefficients a, b, c. A positive a produces the standard restorative linear spring force f = -a x, where x is the joint displacement from equilibrium given by springref. If the optional second and third components are set, they define a nonlinear polynomial spring force f(x) = -(a x + b x^2 + c x^3).");
++      FIELD(springlength, "弹簧原长 (springlength)\n\n肌腱弹簧的静止长度。给 {-1, -1} 表示改用 qpos_spring 推算。\n\n官方原文：spring resting length; {-1, -1}: use qpos_spring（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(damping, "阻尼 (damping)\n\n阻尼系数。正值 a 产生线性耗散力 f(v) = -a·v（v 是关节速度）。阻尼过大会让积分器不稳定 —— MuJoCo 的 Euler 积分器对阻尼做了隐式处理来缓解。\n\n官方原文：Damping coefficients a, b, c. A positive a produces the standard dissipative linear damping force f(v) = -a v, where v is the joint velocity. Despite its simplicity, larger damping values can make numerical integrators unstable.");
++      FIELD(frictionloss, "摩擦损耗 (frictionloss)\n\n干摩擦造成的损耗。该关节产生的每个自由度都适用同一个值。自由关节在语义上不该有摩擦损耗（但编译器不拦）。设为正值才生效。\n\n官方原文：Friction loss due to dry friction. This value is the same for all degrees of freedom created by this joint. Semantically friction loss does not make sense for free joints, but the compiler allows it. To enable friction loss, set this attribute to a positive value.");
++      FIELD(solref_friction, "摩擦求解器参考 (solref_friction)\n\n模拟肌腱摩擦的求解器参考参数。\n\n官方原文：solver reference: tendon friction（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solimp_friction, "摩擦求解器阻抗 (solimp_friction)\n\n模拟肌腱摩擦的约束求解器参数（阻抗部分）。\n\n官方原文：solver impedance: tendon friction（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(armature, "电枢惯量 (armature)\n\n与肌腱速度关联的附加惯量。\n\n官方原文：inertia associated with tendon velocity（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(limited, "启用限幅 (limited)\n\n该肌腱是否启用长度限位。\n\n官方原文：does tendon have limits (mjtLimited)（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(actfrclimited, "驱动力限幅 (actfrclimited)\n\n该肌腱是否对执行器力设限（配合「驱动力范围」使用）。\n\n官方原文：does tendon have actuator force limits（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(range, "范围 (range)\n\n肌腱的长度限位。\n\n官方原文：length limits（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(actfrcrange, "驱动力范围 (actfrcrange)\n\n该关节上执行器力的上下限（配合「驱动器力限幅」使用）。\n\n官方原文：actuator force limits（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(margin, "检测边距 (margin)\n\n肌腱限位在距离多远时就进入激活状态。\n\n官方原文：margin value for tendon limit detection（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solref_limit, "限位求解器参考 (solref_limit)\n\n模拟肌腱限位的求解器参考参数。\n\n官方原文：solver reference: tendon limits（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solimp_limit, "限位求解器阻抗 (solimp_limit)\n\n模拟肌腱限位的约束求解器参数（阻抗部分）。\n\n官方原文：solver impedance: tendon limits（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(material, "材质 (material)\n\n渲染该元素时使用的材质。\n\n官方原文：name of material for rendering（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(width, "宽度 (width)\n\n渲染肌腱时的线条宽度。\n\n官方原文：width for rendering（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(rgba, "颜色 (rgba)\n\n颜色与透明度。只要与内部默认值不同，就会覆盖对应材质里的同名属性。\n\n官方原文：Color and transparency. If this value is different from the internal default, it overrides the corresponding material properties.");
++      FIELD(group, "分组 (group)\n\n整数分组号，可当自定义标签用。可视化里也用它成组地开关显示。\n\n官方原文：Integer group to which the joint belongs. This attribute can be used for custom tags. It is also used by the visualizer to enable and disable the rendering of entire groups of joints.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_TEXTURE: {
+       mjsTexture* elem = mjs_asTexture(element);
+       mjsTexture* ref = mjs_asTexture(ref_element);
+-      FIELD(type, "texture type");
+-      FIELD(colorspace, "colorspace");
+-      FIELD(builtin, "builtin type (mjtBuiltin)");
+-      FIELD(mark, "mark type (mjtMark)");
+-      FIELD(rgb1, "first color for builtin");
+-      FIELD(rgb2, "second color for builtin");
+-      FIELD(markrgb, "mark color");
+-      FIELD(random, "probability of random dots");
+-      FIELD(height, "height in pixels (square for cube and skybox)");
+-      FIELD(width, "width in pixels");
+-      FIELD(nchannel, "number of channels");
+-      FIELD(content_type, "content type of file");
+-      FIELD(file, "png file to load; use for all sides of cube");
+-      FIELD(gridsize, "size of grid for composite file; (1,1)-repeat");
+-      FIELD(gridlayout, "row-major: L,R,F,B,U,D for faces; . for unused");
+-      FIELD(cubefiles, "different file for each side of the cube");
+-      FIELD(hflip, "horizontal flip");
+-      FIELD(vflip, "vertical flip");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(type, "类型 (type)\n\n纹理的表示方式与映射方式，也决定后面哪些属性有意义。cube 会把纹理立方体「热缩」包到物体上（除 material 的 texuniform 可微调外，过程全自动）；2d 是平面贴图；skybox 用作背景。\n\n官方原文：This attribute determines how the texture is represented and mapped to objects. It also determines which of the remaining attributes are relevant. The cube type has the effect of shrink-wrapping a texture cube over an object. Apart from the adjustment provided by the texuniform attribute of material, the process is automatic.");
++      FIELD(colorspace, "色彩空间 (colorspace)\n\n纹理的色彩空间。auto（默认）表示从图片文件自身读取；文件里没写就按 linear 处理。\n\n官方原文：This attribute determines the color space of the texture. The default value auto means that the color space will be determined from the image file itself. If no color space is defined in the file, then linear is assumed.");
++      FIELD(builtin, "内建类型 (builtin)\n\n程序化生成纹理的类型。只要不是 none，纹理就按程序生成，文件名的设置被忽略。如 gradient 从 rgb1 渐变到 rgb2，checker 棋盘格，flat 纯色。\n\n官方原文：If the value of this attribute is different from \"none\", the texture is treated as procedural and any file names are ignored.");
++      FIELD(mark, "标记 (mark)\n\n程序化纹理在 builtin 配色之上再加的标记：edge = 图像四周描边，cross = 正中画十字，random = 随机点亮像素。所有标记都是一个像素宽，所以纹理越小标记越显眼、越糊。\n\n官方原文：Procedural textures can be marked with the markrgb color, on top of the colors determined by the builtin type. \"edge\" means that the edges of all texture images are marked. \"cross\" means that a cross is marked in the middle of each image. \"random\" means that randomly chosen pixels are marked. All markings are one-pixel wide.");
++      FIELD(rgb1, "颜色 1 (rgb1)\n\n程序化纹理用的第一个颜色。加载立方体/天空盒贴图时，缺失的面也用这个颜色填充。各分量取值范围 [0, 1]。\n\n官方原文：The first color used for procedural texture generation. This color is also used to fill missing sides of cube and skybox textures loaded from files. The components of this and all other RGB(A) vectors should be in the range [0 1].");
++      FIELD(rgb2, "颜色 2 (rgb2)\n\n程序化纹理用的第二个颜色。\n\n官方原文：The second color used for procedural texture generation.");
++      FIELD(markrgb, "标记颜色 (markrgb)\n\n程序化纹理上标记点使用的颜色。\n\n官方原文：The color used for procedural texture markings.");
++      FIELD(random, "随机种子 (random)\n\n当 mark 设为 random 时，每个像素被点亮的概率。纹理越大像素越多，而这个概率是逐像素独立作用的 —— 所以纹理尺寸和概率要一起调。配上渐变天空盒可以做出星空效果。\n\n官方原文：When the mark attribute is set to \"random\", this attribute determines the probability of turning on each pixel. Note that larger textures have more pixels, and the probability here is applied independently to each pixel -- thus the texture size and probability need to be adjusted jointly.");
++      FIELD(height, "高度 (height)\n\n程序化纹理的高度（像素）。立方体贴图和天空盒忽略此值 —— 它们的高度固定为宽度的 6 倍。从文件加载的纹理也忽略此值。\n\n官方原文：The height of the procedural texture, i.e., the number of rows in the image. For cube and skybox textures, this attribute is ignored and the height is set to 6 times the width. For textures loaded from files, this attribute is ignored.");
++      FIELD(width, "宽度 (width)\n\n程序化纹理的宽度（像素）。值越大通常画质越好，但某些图案（如棋盘格）用小值就够了。从文件加载的纹理忽略此值。\n\n官方原文：The width of a procedural texture, i.e., the number of columns in the image. Larger values usually result in higher quality images, although in some cases (e.g. checker patterns) small values are sufficient. For textures loaded from files, this attribute is ignored.");
++      FIELD(nchannel, "通道数 (nchannel)\n\n纹理图片文件的通道数。用于加载 4 通道（RGBA）或单通道纹理（例如基于物理渲染用的粗糙度、金属度贴图）。\n\n官方原文：The number of channels in the texture image file. This allows loading 4-channel textures (RGBA) or single-channel textures (e.g., for Physics-Based Rendering properties such as roughness or metallic).");
++      FIELD(content_type, "内容类型 (content_type)\n\n文件内容类型（用于判断怎么解析这个资源文件）。\n\n官方原文：content type of file（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(file, "文件 (file)\n\n从单个文件加载纹理（builtin 必须为 none）。文件路径见 compiler 的 texturedir 属性。\n\n官方原文：If this attribute is specified, and the builtin attribute below is set to \"none\", the texture data is loaded from a single file. See the texturedir attribute of compiler regarding the file path.");
++      FIELD(gridsize, "网格尺寸 (gridsize)\n\n立方体/天空盒贴图来自单个文件时，与 gridlayout 一起规定怎么从这张图切出六个面。默认「1 1」表示六个面都用同一张图；否则把图当成网格来切。\n\n官方原文：When a cube or skybox texture is loaded from a single file, this attribute and the next specify how the six square sides of the texture cube are obtained from the single image. The default setting \"1 1\" means that the same image is repeated on all sides of the cube. Otherwise the image is interpreted as a grid from which the six sides are extracted.");
++      FIELD(gridlayout, "网格排布 (gridlayout)\n\n当立方体/天空盒贴图来自单个文件、且 gridsize 不是 1 1 时，这个属性规定每个格子对应立方体的哪一面。\n\n官方原文：When a cube or skybox texture is loaded from a single file, and the grid size is different from \"1 1\", this attribute specifies which grid cells are used and which side of the cube they correspond to.");
++      FIELD(cubefiles, "立方体贴图文件 (cubefiles)\n\n立方体贴图每个面各用一个文件（共 6 个）。\n\n官方原文：different file for each side of the cube（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(hflip, "水平翻转 (hflip)\n\n为真时，从文件加载的图片左右翻转。不影响程序化纹理。\n\n官方原文：If true, images loaded from file are flipped in the horizontal direction. Does not affect procedural textures.");
++      FIELD(vflip, "垂直翻转 (vflip)\n\n为真时，从文件加载的图片上下翻转。不影响程序化纹理。\n\n官方原文：If true, images loaded from file are flipped in the vertical direction. Does not affect procedural textures.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_MATERIAL: {
+       mjsMaterial* elem = mjs_asMaterial(element);
+       mjsMaterial* ref = mjs_asMaterial(ref_element);
+-      FIELD(textures, "names of textures (empty: none)");
+-      FIELD(texuniform, "make texture cube uniform");
+-      FIELD(texrepeat, "texture repetition for 2D mapping");
+-      FIELD(emission, "emission");
+-      FIELD(specular, "specular");
+-      FIELD(shininess, "shininess");
+-      FIELD(reflectance, "reflectance");
+-      FIELD(metallic, "metallic");
+-      FIELD(roughness, "roughness");
+-      FIELD(rgba, "rgba");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(textures, "纹理集 (textures)\n\n材质用到的纹理名列表。留空表示不用任何纹理。\n\n官方原文：names of textures (empty: none)（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(texuniform, "纹理均匀 (texuniform)\n\n立方体贴图的映射方式。false（默认）= 按物体实际尺寸直接做立方体贴图；true = 先映射到单位物体再缩放，纹理看起来更均匀。\n\n官方原文：For cube textures, this attribute controls how cube mapping is applied. The default value \"false\" means apply cube mapping directly, using the actual size of the object. The value \"true\" maps the texture to a unit object before scaling it to its actual size.");
++      FIELD(texrepeat, "纹理重复 (texrepeat)\n\n只对类型为 2d 的纹理有效：贴图重复多少次。以物体尺寸还是空间单位为基准，由下一个属性（texuniform）决定。\n\n官方原文：This attribute applies to textures of type \"2d\". It specifies how many times the texture image is repeated, relative to either the object size or the spatial unit, as determined by the next attribute.");
++      FIELD(emission, "自发光 (emission)\n\n自发光强度。OpenGL 的 emission 是 RGBA，但这里只给一个标量：RGB 分量 = 材质颜色 × 该值，alpha 固定为 1。\n\n官方原文：Emission in OpenGL has the RGBA format, however we only provide a scalar setting. The RGB components of the OpenGL emission vector are the RGB components of the material color multiplied by the value specified here. The alpha component is 1.");
++      FIELD(specular, "镜面反射 (specular)\n\n镜面反射。OpenGL 的 specularity 是 RGBA，这里只给一个标量：RGB 三个分量都等于该值，alpha 固定为 1。取值范围 [0, 1]。\n\n官方原文：Specularity in OpenGL has the RGBA format, however we only provide a scalar setting. The RGB components of the OpenGL specularity vector are all equal to the value specified here. The alpha component is 1. This value should be in the range [0 1].");
++      FIELD(shininess, "光泽度 (shininess)\n\n光泽度。OpenGL 的 shininess 取值 0~128，这里给的数会乘以 128 再传给 OpenGL，所以取值范围是 [0, 1]。值越大高光越集中（总面积变小但更醒目）。\n\n官方原文：Shininess in OpenGL is a number between 0 and 128. The value given here is multiplied by 128 before passing it to OpenGL, so it should be in the range [0 1]. Larger values correspond to tighter specular highlight.");
++      FIELD(reflectance, "反射率 (reflectance)\n\n反射率，取值 [0, 1]。大于 0 且材质用在 plane 或 box 几何体上时，渲染器会模拟反射；值越大反射越强。box 只有朝局部 +Z 的那一面会反射。\n\n官方原文：This attribute should be in the range [0 1]. If the value is greater than 0, and the material is applied to a plane or a box geom, the renderer will simulate reflectance. The larger the value, the stronger the reflectance. For boxes, only the face in the direction of the local +Z axis is reflective.");
++      FIELD(metallic, "金属度 (metallic)\n\n金属度系数，作用于整个材质。MuJoCo 自带渲染器不使用它；用基于物理的渲染器时才有意义 —— 此时它与 metallic 贴图的采样值相乘，得到最终金属度。\n\n官方原文：This attribute corresponds to uniform metallicity coefficient applied to the entire material. This attribute has no effect in MuJoCo's native renderer, but it can be useful when rendering scenes with a physically-based renderer.");
++      FIELD(roughness, "粗糙度 (roughness)\n\n粗糙度系数，作用于整个材质。MuJoCo 自带渲染器不使用它；用基于物理的渲染器时才有意义 —— 此时它与 roughness 贴图的采样值相乘得到最终粗糙度。\n\n官方原文：This attribute corresponds to uniform roughness coefficient applied to the entire material. This attribute has no effect in MuJoCo's native renderer, but it can be useful when rendering scenes with a physically-based renderer. In this case, if a non-negative value is specified, this roughness value should be multiplied by the roughness texture sampled value to obtain the final roughness of the material.");
++      FIELD(rgba, "颜色 (rgba)\n\n材质的颜色与透明度，各分量取值 [0, 1]。注意：贴图颜色（若指定了）会与这里的颜色逐分量相乘 —— 所以默认值「1 1 1 1」相当于不改动贴图。当材质被应用到自带局部 rgba 的元素上时，以局部定义为准。\n\n官方原文：Color and transparency of the material. All components should be in the range [0 1]. Note that the texture color (if assigned) and the color specified here are multiplied component-wise. Thus the default value of \"1 1 1 1\" has the effect of leaving the texture unchanged. When the material is applied to a model element which defines its own local rgba attribute, the local definition has precedence.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_PAIR: {
+       mjsPair* elem = mjs_asPair(element);
+       mjsPair* ref = mjs_asPair(ref_element);
+-      FIELD(geomname1, "name of geom 1");
+-      FIELD(geomname2, "name of geom 2");
+-      FIELD(condim, "contact dimensionality");
+-      FIELD(solref, "solver reference, normal direction");
+-      FIELD(solreffriction, "solver reference, frictional directions");
+-      FIELD(solimp, "solver impedance");
+-      FIELD(margin, "margin for contact detection");
+-      FIELD(gap, "additional contact detection buffer");
+-      FIELD(friction, "full contact friction");
+-      FIELD(info, "message appended to errors");
++      FIELD(geomname1, "几何体 1 名称 (geomname1)\n\n该几何体对里第一个几何体的名字。求解器算出的接触力向量（存在 mjData.efc_force）按约定从第一个指向第二个。作用到系统上的力当然是一对反作用力，所以顺序不影响物理结果。\n\n官方原文：The name of the first geom in the pair. The contact force vector computed by the solver and stored in mjData.efc_force points from the first towards the second geom by convention. The forces applied to the system are of course equal and opposite, so the order of geoms does not affect the physics.");
++      FIELD(geomname2, "几何体 2 名称 (geomname2)\n\n该几何体对里第二个几何体的名字。求解器算出的接触力向量按约定从第一个指向第二个；作用到系统上的力是一对反作用力，所以顺序不影响物理结果。\n\n官方原文：The name of the second geom in the pair. The contact force vector computed by the solver and stored in mjData.efc_force points from the first towards the second geom by convention. The forces applied to the system are of course equal and opposite, so the order of geoms does not affect the physics.");
++      FIELD(condim, "接触维度 (condim)\n\n接触空间的维度，取两个碰撞几何体中较大的那个 condim。\n\n官方原文：The dimensionality of the contact space for a dynamically generated contact pair is set to the maximum of the condim values of the two participating geoms. The allowed values and their meaning are: 1 = Frictionless contact. 3 = Regular frictional contact, opposing slip in the tangent plane. 4 = Frictional contact, opposing slip in the tangent plane and rotation around the contact normal.");
++      FIELD(solref, "求解器参考 (solref)\n\n法线方向上的接触参考加速度。\n\n官方原文：solver reference, normal direction（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solreffriction, "摩擦求解器参考 (solreffriction)\n\n摩擦方向上的接触参考加速度。默认「0 0」表示「沿用 solref 的值」。只在椭圆摩擦锥下生效 —— 锥形摩擦锥会把法向和摩擦方向混合处理。\n\n官方原文：Contact reference acceleration, in the friction dimensions. The default \"0 0\" means \"use the same values as solref\". This attribute only takes effect for elliptic friction cones, since pyramidal cones mix normal and frictional dimensions.");
++      FIELD(solimp, "求解器阻抗 (solimp)\n\n接触仿真的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for contact simulation.");
++      FIELD(margin, "检测边距 (margin)\n\n把几何体表面「膨胀」多少来提前产生接触力。两个表面距离小于 margin 就算激活、开始出力。求解器阻抗可以是距离的函数，作用于「两几何体距离减去 margin」。\n\n官方原文：Geometric inflation of the geom surface for the purpose of contact force generation. When the distance between two geom surfaces is below margin, the contact is considered active and contact forces are generated. The constraint impedance can be a function of distance.");
++      FIELD(gap, "间隙 (gap)\n\n在 margin 之外再多探一段的缓冲距离。为正时：距离 margin+gap 就开始检测，但只有到了 margin 才真正产生力。夹在两者之间的接触以「非激活接触」形式记录在 mjData.contact 里（efc_address = -1），可供自定义计算使用。\n\n官方原文：Additional contact detection buffer beyond margin. When this value is positive, contacts are detected at distance margin + gap but forces are only generated at distance margin.");
++      FIELD(friction, "摩擦系数 (friction)\n\n该几何体对生成的接触所用的摩擦系数（最多 5 个）。前两个不同 → 切向摩擦各向异性；后两个不同 → 滚动摩擦各向异性。数组长度不强制，按需给。\n\n官方原文：The friction coefficients of the contacts generated by this geom pair. Making the first two coefficients different results in anisotropic tangential friction. Making the last two coefficients different results in anisotropic rolling friction.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_EQUALITY: {
+       mjsEquality* elem = mjs_asEquality(element);
+       mjsEquality* ref = mjs_asEquality(ref_element);
+-      FIELD(type, "constraint type");
+-      FIELD(data, "type-dependent data");
+-      FIELD(active, "is equality initially active");
+-      FIELD(name1, "name of object 1");
+-      FIELD(name2, "name of object 2");
+-      FIELD(objtype, "type of both objects");
+-      FIELD(solref, "solver reference");
+-      FIELD(solimp, "solver impedance");
+-      FIELD(info, "message appended to errors");
++      FIELD(type, "类型 (type)\n\n等式约束的类型：connect（点对点连接）、weld（焊接）、joint（关节耦合）、tendon（肌腱耦合）、distance（距离保持）。\n\n官方原文：constraint type（Studio 自带 tooltip；官方文档此处无可摘录原句）");
++      FIELD(data, "数据 (data)\n\n等式约束的数据，含义随约束类型而定（例如 connect 是锚点、joint 是多项式系数）。\n\n官方原文：type-dependent data（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(active, "启用 (active)\n\n该等式约束初始是否生效。编译时写进 mjModel.eq_active0，用来初始化运行时可改的 mjData.eq_active。\n\n官方原文：If this attribute is set to \"true\", the constraint is active and the constraint solver will try to enforce it. The field mjModel.eq_active0 corresponds to this value, and is used to initialize mjData.eq_active, which is user-settable at runtime.");
++      FIELD(name1, "名称 1 (name1)\n\n等式约束里第一个被约束对象的名字。\n\n官方原文：name of object 1（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(name2, "名称 2 (name2)\n\n等式约束里第二个被约束对象的名字。\n\n官方原文：name of object 2（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(objtype, "对象类型 (objtype)\n\n等式约束里两个对象共用的类型。\n\n官方原文：type of both objects（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(solref, "求解器参考 (solref)\n\n求解器参考参数（决定约束的刚度与阻尼）。含义与几何体的同名属性一致。\n\n官方原文：Same meaning as regular geom attributes.");
++      FIELD(solimp, "求解器阻抗 (solimp)\n\n接触仿真的约束求解器参数（阻抗部分）。\n\n官方原文：Constraint solver parameters for contact simulation.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_EXCLUDE: {
+       mjsExclude* elem = mjs_asExclude(element);
+       mjsExclude* ref = mjs_asExclude(ref_element);
+-      FIELD(bodyname1, "name of geom 1");
+-      FIELD(bodyname2, "name of geom 2");
+-      FIELD(info, "message appended to errors");
++      FIELD(bodyname1, "刚体 1 名称 (bodyname1)\n\n该几何体对里第一个几何体的名字。求解器算出的接触力向量（存在 mjData.efc_force）按约定从第一个指向第二个。作用到系统上的力当然是一对反作用力，所以顺序不影响物理结果。\n\n官方原文：The name of the first geom in the pair. The contact force vector computed by the solver and stored in mjData.efc_force points from the first towards the second geom by convention. The forces applied to the system are of course equal and opposite, so the order of geoms does not affect the physics.");
++      FIELD(bodyname2, "刚体 2 名称 (bodyname2)\n\n该几何体对里第二个几何体的名字。求解器算出的接触力向量按约定从第一个指向第二个；作用到系统上的力是一对反作用力，所以顺序不影响物理结果。\n\n官方原文：The name of the second geom in the pair. The contact force vector computed by the solver and stored in mjData.efc_force points from the first towards the second geom by convention. The forces applied to the system are of course equal and opposite, so the order of geoms does not affect the physics.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_NUMERIC: {
+       mjsNumeric* elem = mjs_asNumeric(element);
+       mjsNumeric* ref = mjs_asNumeric(ref_element);
+-      FIELD(data, "initialization data");
+-      FIELD(size, "array size, can be bigger than data size");
+-      FIELD(info, "message appended to errors");
++      FIELD(data, "数据 (data)\n\n编译时复制进 mjModel 的数值。若指定了 size，这里给的长度不能超过它（短了缺的部分补 0）。自定义数组也可以只用来运行时存东西 —— 所以初始化是可选的，只有省略 size 时才必须给数据。\n\n官方原文：Numeric data to be copied into mjModel. If size is specified, the length of the array given here cannot exceed the specified size. If the length of the array is smaller, the missing components are set to 0.");
++      FIELD(size, "尺寸 (size)\n\n数组长度（以 double 计）。不填则由下面实际给出的数据长度推断。\n\n官方原文：If specified this attribute sets the size of the data array, in doubles. If this attribute is not specified, the size will be inferred from the actual data array below.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_TEXT: {
+       mjsText* elem = mjs_asText(element);
+       mjsText* ref = mjs_asText(ref_element);
+-      FIELD(data, "text string");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(data, "数据 (data)\n\n自定义文本，编译时复制进 mjModel。\n\n官方原文：Custom text to be copied into mjModel.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_TUPLE: {
+       mjsTuple* elem = mjs_asTuple(element);
+       mjsTuple* ref = mjs_asTuple(ref_element);
+-      FIELD(objtype, "object types");
+-      FIELD(objname, "object names");
+-      FIELD(objprm, "object parameters");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(objtype, "对象类型 (objtype)\n\n被添加对象的类型。\n\n官方原文：Type of the object being added.");
++      FIELD(objname, "对象名称 (objname)\n\n被添加对象的名字。类型和名字必须指向模型里已定义的具名元素。元组之间也可以互相引用（包括自引用）。\n\n官方原文：Name of the object being added. The type and name must reference a named MuJoCo element defined somewhere in the model. Tuples can also be referenced (including self-references).");
++      FIELD(objprm, "对象参数 (objprm)\n\n传给被添加对象的参数。\n\n官方原文：object parameters（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_KEY: {
+       mjsKey* elem = mjs_asKey(element);
+       mjsKey* ref = mjs_asKey(ref_element);
+-      FIELD(time, "time");
+-      FIELD(qpos, "qpos");
+-      FIELD(qvel, "qvel");
+-      FIELD(act, "act");
+-      FIELD(mpos, "mocap pos");
+-      FIELD(mquat, "mocap quat");
+-      FIELD(ctrl, "ctrl");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(time, "时间 (time)\n\n仿真时间。把仿真状态设到这个关键帧时，会被复制进 mjData.time。\n\n官方原文：Simulation time, copied into mjData.time when the simulation state is set to this keyframe.");
++      FIELD(qpos, "位置 (qpos)\n\n该关键帧对应的关节位置。把仿真状态设到这个关键帧时，会被复制进 mjData.qpos。\n\n官方原文：Vector of joint positions, copied into mjData.qpos when the simulation state is set to this keyframe.");
++      FIELD(qvel, "速度 (qvel)\n\n该关键帧对应的关节速度。把仿真状态设到这个关键帧时，会被复制进 mjData.qvel。\n\n官方原文：Vector of joint velocities, copied into mjData.qvel when the simulation state is set to this keyframe.");
++      FIELD(act, "驱动状态 (act)\n\n该关键帧对应的驱动器激活状态。把仿真状态设到这个关键帧时，会被复制进 mjData.act。\n\n官方原文：Vector of actuator activations, copied into mjData.act when the simulation state is set to this keyframe.");
++      FIELD(mpos, "动捕位置 (mpos)\n\n该关键帧对应的动捕刚体位置。把仿真状态设到这个关键帧时，会被复制进 mjData.mocap_pos。\n\n官方原文：Vector of mocap body positions, copied into mjData.mocap_pos when the simulation state is set to this keyframe.");
++      FIELD(mquat, "动捕姿态 (mquat)\n\n该关键帧对应的动捕刚体姿态。把仿真状态设到这个关键帧时，会被复制进 mjData.mocap_quat。\n\n官方原文：Vector of mocap body quaternions, copied into mjData.mocap_quat when the simulation state is set to this keyframe.");
++      FIELD(ctrl, "控制量 (ctrl)\n\n该关键帧对应的控制量。把仿真状态设到这个关键帧时，会被复制进 mjData.ctrl。\n\n官方原文：Vector of controls, copied into mjData.ctrl when the simulation state is set to this keyframe.");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     case mjOBJ_PLUGIN: {
+       mjsPlugin* elem = mjs_asPlugin(element);
+       mjsPlugin* ref = mjs_asPlugin(ref_element);
+-      FIELD(name, "instance name");
+-      FIELD(plugin_name, "plugin name");
+-      FIELD(active, "is the plugin active");
+-      FIELD(info, "message appended to compiler errors");
++      FIELD(name, "名称 (name)\n\n该插件实例的名字，供其它地方引用。\n\n官方原文：instance name（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(plugin_name, "插件名称 (plugin_name)\n\n所用插件的名字。\n\n官方原文：plugin name（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(active, "启用 (active)\n\n该插件实例是否启用。\n\n官方原文：is the plugin active（Studio 自带 tooltip，官方文档无独立说明）");
++      FIELD(info, "备注 (info)\n\n编译报错时附在该元素错误信息后面的提示文字，方便在复杂模型里定位问题。\n\n官方原文：message appended to compiler errors（Studio 自带 tooltip，官方文档无独立说明）");
+       break;
+     }
+     default:
+--- a/src/experimental/platform/ux/imgui_widgets.cc
++++ b/src/experimental/platform/ux/imgui_widgets.cc
+@@ -223,12 +223,14 @@
+                                         const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, bool& val,
+                                         const bool& ref, const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, mjtSize& val,
+@@ -236,18 +238,21 @@
+                                         const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, int& val,
+                                         const int& ref, const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, float& val,
+                                         const float& ref, const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, double& val,
+@@ -255,6 +260,7 @@
+                                         const char* tooltip) {
+   Label(label, tooltip);
+   Input(val, ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label, std::string* ptr,
+@@ -262,6 +268,7 @@
+                                         const char* tooltip) {
+   Label(label, tooltip);
+   Input(*ptr, *ref);
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label,
+@@ -274,6 +281,7 @@
+   } else {
+     ImGui::Text("[%zu values]", ptr->size());
+   }
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label,
+@@ -286,6 +294,7 @@
+   } else {
+     ImGui::Text("[%zu values]", ptr->size());
+   }
++  ImGui::SetItemTooltip("%s", tooltip);
+ }
+ 
+ void ImGui_SpecElementTable::operator()(const char* label,
+@@ -295,6 +304,7 @@
+   for (int i = 0; i < ptr->size(); ++i) {
+     Label(label, tooltip, i, ptr->size());
+     Input(ptr->at(i));
++    ImGui::SetItemTooltip("%s", tooltip);
+   }
+ }
+ 
+--- a/src/experimental/platform/ux/imgui_widgets.h
++++ b/src/experimental/platform/ux/imgui_widgets.h
+@@ -285,6 +285,7 @@
+     for (int i = 0; i < N; ++i) {
+       Label(label, tooltip, i, N);
+       Input(val[i], ref[i]);
++      ImGui::SetItemTooltip("%s", tooltip);
+     }
+   }
+   template <std::size_t N>
+@@ -293,6 +294,7 @@
+     for (int i = 0; i < N; ++i) {
+       Label(label, tooltip, i, N);
+       Input(val[i], ref[i]);
++      ImGui::SetItemTooltip("%s", tooltip);
+     }
+   }
+   template <std::size_t N>
+@@ -301,6 +303,7 @@
+     for (int i = 0; i < N; ++i) {
+       Label(label, tooltip, i, N);
+       Input(val[i], ref[i]);
++      ImGui::SetItemTooltip("%s", tooltip);
+     }
+   }
+ 
+@@ -323,6 +326,7 @@
+       }
+       ImGui::PopID();
+     }
++    ImGui::SetItemTooltip("%s", tooltip);
+   }
+ 
+   // Special handling for treating enum values as integers.
+@@ -331,6 +335,7 @@
+                   const char* tooltip) {
+     Label(label, tooltip);
+     Input(val, ref);
++    ImGui::SetItemTooltip("%s", tooltip);
+   }
+ 
+   // Special handling for quaternion/orientation pairs.
+@@ -494,7 +499,8 @@
+ 
+ template <typename T>
+ bool ImGui_SwitchToggle(const char* label, T* boolean,
+-                        const ImVec2& size = ImVec2(0, 0)) {
++                        const ImVec2& size = ImVec2(0, 0),
++                        const char* tooltip = nullptr) {
+   static_assert(std::is_integral_v<T>, "Toggle only supports integral types.");
+ 
+   int i = static_cast<int>(*boolean);
+@@ -503,6 +509,7 @@
+     ImGui::SetNextItemWidth(size.x);
+   }
+   const bool changed = ImGui::SliderInt(label, &i, 0, 1, label, flags);
++    if (tooltip) ImGui::SetItemTooltip("%s", tooltip);
+   *boolean = (i != 0);
+   return changed;
+ }
+@@ -533,7 +540,8 @@
+ //
+ // Options can be used to specify step sizes, clamp ranges, and formatting.
+ template <typename T>
+-bool ImGui_InputN(const char* name, T* value, int num, ImGuiOpts<T> opts = {}) {
++bool ImGui_InputN(const char* name, T* value, int num, ImGuiOpts<T> opts = {},
++                  const char* tooltip = nullptr) {
+   bool res = false;
+   if (opts.width) {
+     ImGui::SetNextItemWidth(opts.width.value());
+@@ -566,6 +574,7 @@
+   } else {
+     static_assert(dependent_false<T>::value, "Unsupported type");
+   }
++      if (tooltip) ImGui::SetItemTooltip("%s", tooltip);
+ 
+   if (opts.min.has_value()) {
+     if (*value < *opts.min) *value = *opts.min;
+@@ -577,8 +586,9 @@
+ }
+ 
+ template <typename T>
+-bool ImGui_Input(const char* name, T* value, ImGuiOpts<T> opts = {}) {
+-  return ImGui_InputN(name, value, 1, opts);
++bool ImGui_Input(const char* name, T* value, ImGuiOpts<T> opts = {},
++                 const char* tooltip = nullptr) {
++  return ImGui_InputN(name, value, 1, opts, tooltip);
+ }
+ 
+ // Returns true if the given chord is has _just_ been pressed in this frame.
 --- a/src/experimental/platform/sim/sim_profiler.cc
 +++ b/src/experimental/platform/sim/sim_profiler.cc
 @@ -153,7 +153,7 @@

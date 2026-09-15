@@ -1,0 +1,762 @@
+{
+ "schema": 1,
+ "mujoco_version": "3.11.0",
+ "_doc": [
+  "Studio 里「非 Elements 面板」的控件悬停说明。",
+  "覆盖三类：",
+  "  helper — ImGui_Input / ImGui_InputN / ImGui_Slider /",
+  "           ImGui_SwitchToggle / ImGui_Checkbox（本身没有 tooltip 形参，要加尾随参数）",
+  "  direct — ImGui::ColorEdit3/4 / SliderInt / SliderFloat / Checkbox / InputInt",
+  "           （在调用点之后插一行 SetItemTooltip）",
+  "  loop   — Act Group %d / GroupGui 的 %s %d（68 条开关那批没覆盖到）",
+  "",
+  "⚠️ key 是 (label_en, panel) —— 同一英文标签在不同面板含义不同",
+  "   （Constraint 在 Mapping 是缩放系数、在 Colors 是颜色）。",
+  "",
+  "⚠️ zh 里禁用 `##`（会被 ImGui 当 ID 吃掉）与 `**`（ImGui 按纯文本渲染，会画出星号）。",
+  "",
+  "字段：",
+  "  label_en   控件英文标签（= gui.cc 里的字面量），也是 tooltip 首行的英文部分",
+  "  panel      所属面板函数名，用于消歧",
+  "  zh         译文。留空 = 还没写，生成器会报错",
+  "  provenance 出处，必填"
+ ],
+ "entries": [
+  {
+   "label_en": "Index",
+   "panel": "WatchGui",
+   "fn": "ImGui::InputInt",
+   "kind": "direct",
+   "zh": "序号 (Index)\n\n要监视的状态量在列表里的下标。改它切换「看第几个」。\n\n官方原文：（Studio 自带标签，官方文档无独立说明）",
+   "provenance": ""
+  },
+  {
+   "label_en": "Gravity",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "重力 (Gravity)\n\n重力加速度向量，单位 m/s²。默认 0 0 -9.81（Z 轴朝上）。\n机器人仿真一般不动它；想让模型「变轻」应该调质量或加重力补偿，而不是改这里。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「gravitational acceleration」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Wind",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "风 (Wind)\n\n风速向量。影响三件事：升力、阻力、以及介质粘度对物体的作用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「wind (for lift, drag and viscosity)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Magnetic",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "磁场 (Magnetic)\n\n全局磁通量向量。给磁力相关的传感器/执行器用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「global magnetic flux」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Density",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "介质密度 (Density)\n\n周围介质的密度（默认 0 = 真空）。配合下面的粘度，能让几何体在「水里」受浮力和阻力。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「density of medium」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Viscosity",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "介质粘度 (Viscosity)\n\n周围介质的粘度（默认 0）。与密度一起决定流体的粘滞阻力。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「viscosity of medium」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Imp Ratio",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "阻抗比 (Imp Ratio)\n\n约束求解器里，摩擦方向与法线方向的约束阻抗之比。默认 1（两者相等）。调大 = 摩擦相对更难滑。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「ratio of friction-to-normal contact impedance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Margin",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "接触边距 (Margin)\n\n全局默认的接触检测边距：两个几何体表面距离小于它就开始产生接触力。可以理解成把表面「膨胀」了一圈。单个几何体可以用自己的 margin 覆盖这个默认值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「margin」；说明见 doc/computation.rst 的 Constraint solver 一节",
+   "provenance": ""
+  },
+  {
+   "label_en": "Sol Imp",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "求解器阻抗 (Sol Imp)\n\n约束求解器的阻抗参数（5 个数）。它同时描述约束有多「软」、以及软硬程度随约束力/距离怎么变化 —— 决定了接触和限位的手感。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「solimp」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Sol Ref",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "求解器参考 (Sol Ref)\n\n约束求解器的参考参数（2 个数）：第一个是时间常数（约束多快被满足），第二个是阻尼比（1 = 临界阻尼，不振荡）。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「solref」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Friction",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "摩擦系数 (Friction)\n\n全局默认的接触摩擦系数（5 个数），依次是：滑动摩擦（两个切向）、扭转摩擦、滚动摩擦（两个切向）。单个几何体可以用自己的 friction 覆盖。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「friction」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Act Group %d",
+   "panel": "PhysicsGui",
+   "fn": "(loop)",
+   "kind": "loop",
+   "zh": "执行器分组 (Act Group N)\n\n取消勾选 = 关掉第 N 组执行器。模型里每个执行器都归属某个组（group 字段），这里按组批量禁用。\n\n官方原文：include/mujoco/mjmodel.h: mjOption「disableactuator — bit flags for disabling actuators by group id」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Tree depth",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::SliderInt",
+   "kind": "direct",
+   "zh": "树深度 (Tree depth)\n\n可视化 BVH（包围体层次）时往下画几层。只影响显示，不影响碰撞检测精度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「depth of the bounding volume hierarchy to be visualized」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Flex layer",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::SliderInt",
+   "kind": "direct",
+   "zh": "柔性体图层 (Flex layer)\n\n三维柔性体显示到第几层元素。编译器把每个四面体按「到表面的图距离」分层：贴表面的第 0 层，邻居第 1 层，依此类推。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「element layer to be visualized for 3D flex」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Active",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_SwitchToggle",
+   "kind": "helper",
+   "zh": "显示 (Active)\n\n是否开启头灯。头灯是从相机方向打过来的一盏灯，保证转视角时场景始终看得见。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「is headlight active」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Ambient",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit3",
+   "kind": "direct",
+   "zh": "环境光 (Ambient)\n\n头灯的环境光颜色。环境光是「无方向的基础亮度」，最暗处也能看到的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「ambient rgb (alpha=1)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Diffuse",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit3",
+   "kind": "direct",
+   "zh": "漫反射 (Diffuse)\n\n头灯的漫反射颜色，也就是物体的主色调来源。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「diffuse rgb (alpha=1)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Specular",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit3",
+   "kind": "direct",
+   "zh": "高光 (Specular)\n\n头灯的高光颜色，决定物体表面反光点的亮度和颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「specular rgb (alpha=1)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Orthographic",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_SwitchToggle",
+   "kind": "helper",
+   "zh": "正交投影 (Orthographic)\n\n自由相机是否用正交投影。关掉 = 透视投影（近大远小，符合直觉）；打开 = 正交投影（平行线不收敛，适合看尺寸对比）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「is the free camera orthographic (0: no, 1: yes)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "FOV",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "垂直视场角 (FOV)\n\n相机的垂直视野角度。注意：正交投影时这个值不是角度而是长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「y field-of-view of free camera (orthographic ? length : degree)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Center",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_InputN",
+   "kind": "helper",
+   "zh": "中心 (Center)\n\n相机围绕旋转的中心点（世界坐标）。改它就等于把视角「看向」别处。\n\n官方原文：include/mujoco/mjmodel.h 的 mjStatistic「center」—— 自由相机绕它旋转（doc/computation.rst 的 Free camera 小节）",
+   "provenance": ""
+  },
+  {
+   "label_en": "Azimuth",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "方位角 (Azimuth)\n\n相机绕中心点的水平旋转角，单位度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「initial azimuth of free camera (degrees)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Elevation",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "仰角 (Elevation)\n\n相机绕中心点的俯仰角，单位度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「initial elevation of free camera (degrees)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Extent",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "范围 (Extent)\n\n场景的参考尺寸（米）。它是个「尺度基准」：很多其他参数是相对它算的 —— 比如雾的起止、近远裁剪面、阴影范围都要乘它。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 ——  的 mjStatistic「extent」；mjModel.stat.extent 是场景的参考尺度，fogstart/fogend/znear/zfar/shadowclip 都相对它定义",
+   "provenance": ""
+  },
+  {
+   "label_en": "Inertia",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::SliderInt",
+   "kind": "direct",
+   "zh": "惯量 (Inertia)\n\n惯量显示成盒体还是椭球。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「geom for inertia visualization (0: box, 1: ellipsoid)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Stiffness",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "刚度 (Stiffness)\n\n用鼠标拖拽扰动模型时，弹簧的线性刚度（位移 → 力）。调大 = 更硬、拖不动。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「mouse perturbation stiffness (space->force)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Rot stiffness",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "旋转刚度 (Rot stiffness)\n\n用鼠标拖拽扰动模型时，弹簧的旋转刚度（转角 → 力矩）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「mouse perturbation stiffness (space->torque)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Force",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "力 (Force)\n\n把「力」的单位换算成视口里显示单位的比例。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「from force units to space units」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Torque",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "力矩 (Torque)\n\n把「力矩」的单位换算成视口里显示单位的比例。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「from torque units to space units」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Alpha",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "透明度 (Alpha)\n\n开启透明显示时，几何体透明度的缩放系数。调小 = 更透明。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「scale geom alphas when transparency is enabled」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Fog start",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "雾起点 (Fog start)\n\n雾从多远开始。这个值要乘以「范围 (Extent)」才是实际距离。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「OpenGL fog starts at fogstart * mjModel.stat.extent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Fog end",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "雾终点 (Fog end)\n\n雾到多远达到最浓。这个值要乘以「范围 (Extent)」才是实际距离。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「OpenGL fog ends at fogend * mjModel.stat.extent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Z near",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "近裁剪面 (Z near)\n\n比这个距离更近的东西不渲染。要乘以「范围 (Extent)」。 调太小会浪费深度精度、出现 z-fighting（面片闪烁）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「near clipping plane = znear * mjModel.stat.extent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Z far",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "远裁剪面 (Z far)\n\n比这个距离更远的东西不渲染。要乘以「范围 (Extent)」。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「far clipping plane = zfar * mjModel.stat.extent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Haze",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "霾 (Haze)\n\n霾的浓度比例。让远处的物体染上一层灰，增强距离感。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「haze ratio」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Shadow clip",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "阴影裁剪 (Shadow clip)\n\n平行光阴影贴图覆盖的范围。要乘以「范围 (Extent)」。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「directional light: shadowclip * mjModel.stat.extent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Shadow scale",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "阴影缩放 (Shadow scale)\n\n聚光灯阴影贴图的覆盖范围。要乘以光源的截止角 (cutoff)。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「spot light: shadowscale * light.cutoff」",
+   "provenance": ""
+  },
+  {
+   "label_en": "All (meansize)",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "全部（按尺寸） (All (meansize))\n\n「平均刚体尺寸」，用来自动定出下面这些可视化元素该多大。改它会按比例缩放所有还没单独设过的尺寸。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 ——  的 mjStatistic「mean body size」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Force width",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "力矢量宽度 (Force width)\n\n画外力/接触力箭头时的线条宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「width of force arrow」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact width",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "接触宽度 (Contact width)\n\n画接触点时那段的宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact height",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "接触高度 (Contact height)\n\n画接触点时那段的高度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact height」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Connect",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "连接 (Connect)\n\n「自动连接 (Auto Connect)」画出来的骨架线有多粗。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「autoconnect capsule width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Com",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "质心 (Com)\n\n质心标记的半径。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「com radius」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Camera",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "相机 (Camera)\n\n相机图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「camera object」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Light",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "光源 (Light)\n\n光源图标的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「light object」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Select point",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "选点 (Select point)\n\n鼠标选点标记的显示大小。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「selection point」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Joint length",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "关节长度 (Joint length)\n\n关节坐标轴的长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint length」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Joint width",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "关节宽度 (Joint width)\n\n关节坐标轴的粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Actuator length",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "执行器长度 (Actuator length)\n\n执行器图标的长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator length」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Actuator width",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "执行器宽度 (Actuator width)\n\n执行器图标的宽度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Frame length",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "坐标系长度 (Frame length)\n\n刚体坐标系三轴的箭头长度。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bodyframe axis length」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Frame width",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "坐标系宽度 (Frame width)\n\n刚体坐标系三轴的箭头粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bodyframe axis width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Constraint",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "约束 (Constraint)\n\n约束力的显示粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「constraint width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Slider-crank",
+   "panel": "VisualizationGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "曲柄滑块 (Slider-crank)\n\n曲柄滑块传动机构的显示粗细。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「slidercrank width」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Fog",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "雾 (Fog)\n\n雾的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「fog」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Joint",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "关节 (Joint)\n\n关节坐标轴的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「joint」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Actuator",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "执行器 (Actuator)\n\n执行器图标的颜色（中性状态）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, neutral」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Act. Negative",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "负向激励 (Act. Negative)\n\n执行器处于负向饱和时显示的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, negative limit」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Act. Positive",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "正向激励 (Act. Positive)\n\n执行器处于正向饱和时显示的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「actuator, positive limit」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Center of Mass",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "质心 (Center of Mass)\n\n质心标记的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「center of mass」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Select Point",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "选点 (Select Point)\n\n鼠标选点标记的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「selection point」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Auto Connect",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "自动连接 (Auto Connect)\n\n自动生成的骨架线的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「auto connect」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact Point",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "接触点 (Contact Point)\n\n接触点的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact point」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact Force",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "接触力 (Contact Force)\n\n接触力的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact force」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact Friction",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "接触摩擦 (Contact Friction)\n\n接触摩擦力矢量的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact friction force」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact Torque",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "接触力矩 (Contact Torque)\n\n接触力矩的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact torque」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Contact Gap",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "接触间隙 (Contact Gap)\n\n处于「检测到但还没产生力」这段间隙里的接触点颜色（对应 gap 参数的区间）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「contact point in gap」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Range Finder",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "测距仪 (Range Finder)\n\n测距仪射线的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「rangefinder ray」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Slider Crank",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "曲柄滑块 (Slider Crank)\n\n曲柄滑块的显示颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「slidercrank」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Crank Broken",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "曲柄断裂 (Crank Broken)\n\n曲柄被拉伸到超过极限而「断裂」时用的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「used when crank must be stretched/broken」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Frustum",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "视锥体 (Frustum)\n\n相机视锥体（能看到的空间范围）的颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「camera frustum」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Bounding Vol.",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "包围体 (Bounding Vol.)\n\n包围体的颜色（加速碰撞检测用的层次包围盒）。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「bounding volume」",
+   "provenance": ""
+  },
+  {
+   "label_en": "BV Active",
+   "panel": "VisualizationGui",
+   "fn": "ImGui::ColorEdit4",
+   "kind": "direct",
+   "zh": "包围体显示 (BV Active)\n\n当前活跃包围体的高亮颜色。\n\n官方原文：include/mujoco/mjmodel.h: mjVisual_ 字段注释 —— 「active bounding volume」",
+   "provenance": ""
+  },
+  {
+   "label_en": "%s %d",
+   "panel": "GroupsGui",
+   "fn": "(loop)",
+   "kind": "loop",
+   "zh": "几何体分组 (Geom Group N)\n\n取消勾选 = 隐藏第 N 组几何体。模型里每个几何体都归属某个组（geom group 字段），这里按组批量控制显示。\n\n官方原文：include/mujoco/mjvisualize.h: mjvOption「geomgroup[mjNGROUP] — geom visualization by group」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Noise scale",
+   "panel": "NoiseGui",
+   "fn": "ImGui::SliderFloat",
+   "kind": "direct",
+   "zh": "噪声强度 (Noise scale)\n\n给控制信号叠加噪声的标准差。0 = 不加噪声。\n用途：测试控制器在真实传感器/执行器噪声下的鲁棒性。\n\n官方原文：src/experimental/platform/sim/step_control.cc: InjectNoise() —— ctrl_noise_std_ 即本值；scale = ctrl_noise_std_ * sqrt(1 - rate*rate)",
+   "provenance": ""
+  },
+  {
+   "label_en": "Noise rate",
+   "panel": "NoiseGui",
+   "fn": "ImGui::SliderFloat",
+   "kind": "direct",
+   "zh": "噪声相关时间 (Noise rate)\n\n噪声的时间相关尺度（秒）。实现是 Ornstein–Uhlenbeck 过程：rate = exp(-timestep / ctrl_noise_rate_)。值越大噪声变化越慢（越「黏」），越小越接近逐帧独立的白噪声。\n\n官方原文：src/experimental/platform/sim/step_control.cc: InjectNoise() —— 「convert rate and scale to discrete time (Ornstein–Uhlenbeck)」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Timestep",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "仿真步长 (Timestep)\n\n物理计算每次往前推进多少秒。这是最要紧的一个参数：\n调小 → 更准更稳，但一步算得慢；调大 → 快，但可能穿透、抖动、甚至「爆炸」。\n机器人仿真常用 0.001~0.005 秒。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「timestep」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Iterations",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "主求解器迭代次数 (Iterations)\n\n主求解器最多迭代多少轮。调大 → 约束满足得更准（接触更实、不易穿透），但更慢。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of main solver iterations」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Tolerance",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "主求解器容差 (Tolerance)\n\n主求解器提前收敛的阈值：迭代改善量小于它就停。调大 → 更快停、但结果粗。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「main solver tolerance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "LS Iter",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "线搜索迭代次数 (LS Iter)\n\nCG / Newton 求解器里「线搜索」的最大迭代次数。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of CG/Newton linesearch iterations」",
+   "provenance": ""
+  },
+  {
+   "label_en": "LS Tol",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "线搜索容差 (LS Tol)\n\nCG / Newton 求解器线搜索的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「CG/Newton linesearch tolerance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Noslip Iter",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "无滑移迭代次数 (Noslip Iter)\n\n无滑移（noslip）求解器的最大迭代次数。它专门修掉接触点上残余的切向滑移。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of noslip solver iterations」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Noslip Tol",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "无滑移容差 (Noslip Tol)\n\n无滑移求解器的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「noslip solver tolerance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "CCD Iter",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "CCD 迭代次数 (CCD Iter)\n\n凸碰撞检测（CCD）求解器的最大迭代次数。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「maximum number of convex collision solver iterations」",
+   "provenance": ""
+  },
+  {
+   "label_en": "CCD Tol",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "CCD 容差 (CCD Tol)\n\n凸碰撞检测求解器的收敛阈值。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「convex collision solver tolerance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Sleep Tol",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "休眠容差 (Sleep Tol)\n\n速度低于这个阈值就允许刚体「休眠」（停算，省 CPU）。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「sleep velocity tolerance」",
+   "provenance": ""
+  },
+  {
+   "label_en": "SDF Iter",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "SDF 迭代次数 (SDF Iter)\n\nSDF 碰撞检测做梯度下降时最多迭代多少轮。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「max number of iterations for gradient descent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "SDF Init",
+   "panel": "PhysicsGui",
+   "fn": "ImGui_Input",
+   "kind": "helper",
+   "zh": "SDF 起始点个数 (SDF Init)\n\nSDF 梯度下降从几个起始点开始找最近点。调大 → 更不容易陷在局部极小，但更慢。\n\n官方原文：include/mujoco/mjmodel.h: mjOption_ 字段注释 —— 「number of starting points for gradient descent」",
+   "provenance": ""
+  },
+  {
+   "label_en": "Integrator",
+   "panel": "PhysicsGui",
+   "fn": "ImGui::Combo",
+   "kind": "direct",
+   "zh": "积分器 (Integrator)\n\n物理引擎用什么方法把加速度积分成位置/速度。\nEuler：半隐式欧拉，最快，绝大多数场景够用（默认）。\nRK4：四阶龙格-库塔，更准但慢很多，适合对精度敏感的小场景。\nimplicit / implicitfast：对速度做隐式积分 —— 关节阻尼或弹簧很硬时更稳，但更慢；implicitfast 不做 rne 导数，比 implicit 快。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjINT_EULER — semi-implicit Euler / mjINT_RK4 — 4th-order Runge Kutta / mjINT_IMPLICIT — implicit in velocity / mjINT_IMPLICITFAST — implicit in velocity, no rne derivative」",
+   "provenance": "include/mujoco/mjtype.h 枚举注释 —— "
+  },
+  {
+   "label_en": "Cone",
+   "panel": "PhysicsGui",
+   "fn": "ImGui::Combo",
+   "kind": "direct",
+   "zh": "摩擦锥 (Cone)\n\n摩擦锥用哪种形状近似。\nPyramidal（金字塔形，默认）：把圆摩擦锥近似成四面体，求解快，但滑动方向会有细微的各向异性。\nElliptic（椭圆）：真正的圆摩擦锥，更物理正确，但更慢。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjCONE_PYRAMIDAL — pyramidal / mjCONE_ELLIPTIC — elliptic」",
+   "provenance": "include/mujoco/mjtype.h 枚举注释 —— "
+  },
+  {
+   "label_en": "Jacobian",
+   "panel": "PhysicsGui",
+   "fn": "ImGui::Combo",
+   "kind": "direct",
+   "zh": "约束雅可比 (Jacobian)\n\n约束雅可比矩阵用稠密还是稀疏存储。\nDense：稠密，小模型更快；Sparse：稀疏，大模型省内存也更快；\nAuto（默认）：自由度 nv < 60 时用稠密，否则用稀疏。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjJAC_DENSE — dense / mjJAC_SPARSE — sparse / mjJAC_AUTO — dense if nv<60, sparse otherwise」",
+   "provenance": "include/mujoco/mjtype.h 枚举注释 —— "
+  },
+  {
+   "label_en": "Solver",
+   "panel": "PhysicsGui",
+   "fn": "ImGui::Combo",
+   "kind": "direct",
+   "zh": "求解器 (Solver)\n\n约束求解用什么算法。\nPGS（默认）：投影高斯-赛德尔，逐约束迭代，快且稳，机器人仿真最常用。\nCG：共轭梯度，收敛更快但每步更贵。\nNewton：牛顿法，收敛最快但每步最贵，适合约束耦合强的场景。\n\n官方原文：include/mujoco/mjtype.h 枚举注释 —— 「mjSOL_PGS — PGS (dual) / mjSOL_CG — CG (primal) / mjSOL_NEWTON — Newton (primal)」",
+   "provenance": "include/mujoco/mjtype.h 枚举注释 —— "
+  }
+ ]
+}

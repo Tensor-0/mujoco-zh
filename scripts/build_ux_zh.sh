@@ -219,19 +219,24 @@ compile() { # ⚠️ 失败必须让父脚本知道 —— 子 shell 里的 exit
 }
 
 for f in gui gui_spec imgui_widgets interaction spec_editor plugin; do
-  ( compile "$SRC/experimental/platform/ux/$f.cc" "mj_$f.o" && echo "  ✅ ux/$f" \
-    || FAILED=1 ) &
+  ( compile "$SRC/experimental/platform/ux/$f.cc" "mj_$f.o" && echo "  ✅ ux/$f" ) &
 done
 for f in step_control sim_profiler model_holder sim_history; do
-  ( compile "$SRC/experimental/platform/sim/$f.cc" "mj_sim_$f.o" && echo "  ✅ sim/$f" \
-    || FAILED=1 ) &
+  ( compile "$SRC/experimental/platform/sim/$f.cc" "mj_sim_$f.o" && echo "  ✅ sim/$f" ) &
 done
-( compile "$SRC/experimental/platform/sys_utils.cc" mj_sys_utils.o && echo "  ✅ sys_utils" || FAILED=1 ) &
-( compile "$SRC/experimental/platform/helpers.cc"  mj_helpers.o   && echo "  ✅ helpers" || FAILED=1 ) &
-( compile "$REPO_SRC/python/mujoco/experimental/studio/ux.cc" mj_ux_pybind.o && echo "  ✅ ux.cc" || FAILED=1 ) &
-wait
+( compile "$SRC/experimental/platform/sys_utils.cc" mj_sys_utils.o && echo "  ✅ sys_utils" ) &
+( compile "$SRC/experimental/platform/helpers.cc"  mj_helpers.o   && echo "  ✅ helpers" ) &
+( compile "$REPO_SRC/python/mujoco/experimental/studio/ux.cc" mj_ux_pybind.o && echo "  ✅ ux.cc" ) &
+# ⚠️⚠️ `FAILED=1` **不能写在子 shell 里** —— 那只是子 shell 的变量，
+#    父脚本的 FAILED 永远是 0，于是「编译失败」会被当成成功一路装下去。
+#    （这个错误本文件 212 行的注释就警告过，但代码一直没落实；
+#      实测代价：gui.cc 编译失败，装了个缺一整个源文件的 .so，脚本还报 ✅）
+#    ⇒ 正确做法是用 **`wait` 的退出码**汇总。
+rc=0
+for pid in $(jobs -p); do wait "$pid" || rc=1; done
+FAILED=$rc
 # ⚠️ 必须在这里就检查 —— 否则编译失败会拿旧的 .o 凑出一个 .so，
-#    装上去看着「成功」实际是残缺的（踩过：一半源文件没编上还照样安装）
+#    装上去看着「成功」实际是残缺的（实测：gui.cc 报错但脚本报 ✅）
 (( FAILED == 0 )) || { echo "❌ MuJoCo 源文件编译失败，中止" >&2; exit 1; }
 
 for f in imgui imgui_draw imgui_tables imgui_widgets; do
