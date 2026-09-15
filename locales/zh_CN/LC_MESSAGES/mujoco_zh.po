@@ -111,3 +111,771 @@ msgstr "监视"
 
 msgid "Reset"
 msgstr "重置"
+
+#: Algorithmic Parameters
+msgid "Algorithmic Parameters"
+msgstr "算法参数"
+
+#: Physical Parameters
+msgid "Physical Parameters"
+msgstr "物理参数"
+
+#: Physics
+msgid "Physics"
+msgstr "物理"
+
+#: Integrator
+msgid "Integrator"
+msgstr "积分器"
+
+#: Integration
+msgid "Integration"
+msgstr "积分方式"
+
+#: Timestep
+msgid "Timestep"
+msgstr "时间步长"
+
+#: Gravity
+msgid "Gravity"
+msgstr "重力"
+
+#: Iterations
+msgid "Iterations"
+msgstr "迭代次数"
+
+#: Tolerance
+msgid "Tolerance"
+msgstr "容差"
+
+#: Convergence vs iter
+msgid "Convergence vs iter"
+msgstr "收敛性 vs 迭代"
+
+#: Implicit
+msgid "Implicit"
+msgstr "隐式"
+
+#: implicit
+msgid "implicit"
+msgstr "隐式"
+
+#: implicitfast
+msgid "implicitfast"
+msgstr "快速隐式"
+
+#: Cone
+msgid "Cone"
+msgstr "锥形"
+
+#: Elliptic
+msgid "Elliptic"
+msgstr "椭圆锥"
+
+#: Pyramidal
+msgid "Pyramidal"
+msgstr "金字塔"
+
+#: Friction
+msgid "Friction"
+msgstr "摩擦"
+
+#: Margin
+msgid "Margin"
+msgstr "余量"
+
+#: Sol Imp
+msgid "Sol Imp"
+msgstr "求解器阻抗"
+
+#: Sol Ref
+msgid "Sol Ref"
+msgstr "求解器参考"
+
+#: Noslip Iter
+msgid "Noslip Iter"
+msgstr "无滑移迭代"
+
+#: Noslip Tol
+msgid "Noslip Tol"
+msgstr "无滑移容差"
+
+#: CCD Iter
+msgid "CCD Iter"
+msgstr "CCD 迭代"
+
+#: CCD Tol
+msgid "CCD Tol"
+msgstr "CCD 容差"
+
+#: LS Iter
+msgid "LS Iter"
+msgstr "线搜索迭代"
+
+#: LS Tol
+msgid "LS Tol"
+msgstr "线搜索容差"
+
+#: SDF Init
+msgid "SDF Init"
+msgstr "SDF 初始"
+
+#: SDF Iter
+msgid "SDF Iter"
+msgstr "SDF 迭代"
+
+#: Sleep Tol
+msgid "Sleep Tol"
+msgstr "休眠容差"
+
+#: Full Physics
+msgid "Full Physics"
+msgstr "完整物理"
+
+#: Enable/disable constraints
+msgid "Enable/disable constraints"
+msgstr "启用/禁用约束"
+
+#: FwdInv
+msgid "FwdInv"
+msgstr "前向-逆向"
+
+#: Warmstart
+msgid "Warmstart"
+msgstr "热启动"
+
+#: Body
+msgid "Body"
+msgstr "刚体"
+
+#: Geom
+msgid "Geom"
+msgstr "几何体"
+
+#: Geoms
+msgid "Geoms"
+msgstr "几何体"
+
+#: Site
+msgid "Site"
+msgstr "站点"
+
+#: Sites
+msgid "Sites"
+msgstr "站点"
+
+#: Joint
+msgid "Joint"
+msgstr "关节"
+
+#: Tendon
+msgid "Tendon"
+msgstr "肌腱"
+
+#: Tendons
+msgid "Tendons"
+msgstr "肌腱"
+
+#: Actuator
+msgid "Actuator"
+msgstr "执行器"
+
+#: Actuators
+msgid "Actuators"
+msgstr "执行器"
+
+#: Flex
+msgid "Flex"
+msgstr "柔性体"
+
+#: Flexes
+msgid "Flexes"
+msgstr "柔性体"
+
+#: Skin
+msgid "Skin"
+msgstr "蒙皮"
+
+#: Skins
+msgid "Skins"
+msgstr "蒙皮"
+
+#: Light
+msgid "Light"
+msgstr "光源"
+
+#: Camera
+msgid "Camera"
+msgstr "相机"
+
+#: World
+msgid "World"
+msgstr "世界"
+
+#: Contact
+msgid "Contact"
+msgstr "接触"
+
+#: Constraint
+msgid "Constraint"
+msgstr "约束"
+
+#: Island
+msgid "Island"
+msgstr "孤岛"
+
+#: Islands
+msgid "Islands"
+msgstr "孤岛"
+
+#: Inertia
+msgid "Inertia"
+msgstr "惯量"
+
+#: Position
+msgid "Position"
+msgstr "位置"
+
+#: Velocity
+msgid "Velocity"
+msgstr "速度"
+
+#: Control
+msgid "Control"
+msgstr "控制"
+
+#: Value
+msgid "Value"
+msgstr "数值"
+
+#: Name
+msgid "Name"
+msgstr "名称"
+
+#: Index
+msgid "Index"
+msgstr "索引"
+
+#: Size
+msgid "Size"
+msgstr "尺寸"
+
+#: Scale
+msgid "Scale"
+msgstr "缩放"
+
+#: Frame
+msgid "Frame"
+msgstr "坐标系"
+
+#: Ellipsoid
+msgid "Ellipsoid"
+msgstr "椭球"
+
+#: Box
+msgid "Box"
+msgstr "盒体"
+
+#: Com
+msgid "Com"
+msgstr "质心"
+
+#: Center of Mass
+msgid "Center of Mass"
+msgstr "质心"
+
+#: Center
+msgid "Center"
+msgstr "中心"
+
+#: Active
+msgid "Active"
+msgstr "显示"
+
+#: Alpha
+msgid "Alpha"
+msgstr "透明度"
+
+#: Ambient
+msgid "Ambient"
+msgstr "环境光"
+
+#: Diffuse
+msgid "Diffuse"
+msgstr "漫反射"
+
+#: Specular
+msgid "Specular"
+msgstr "高光"
+
+#: Headlight
+msgid "Headlight"
+msgstr "头灯"
+
+#: Magnetic
+msgid "Magnetic"
+msgstr "磁力"
+
+#: Density
+msgid "Density"
+msgstr "密度"
+
+#: Viscosity
+msgid "Viscosity"
+msgstr "粘度"
+
+#: Wind
+msgid "Wind"
+msgstr "风"
+
+#: Force
+msgid "Force"
+msgstr "力"
+
+#: Torque
+msgid "Torque"
+msgstr "力矩"
+
+#: Energy
+msgid "Energy"
+msgstr "能量"
+
+#: Select Point
+msgid "Select Point"
+msgstr "选点"
+
+#: Selection
+msgid "Selection"
+msgstr "选择"
+
+#: Label
+msgid "Label"
+msgstr "标签"
+
+#: None
+msgid "None"
+msgstr "无"
+
+#: All (meansize)
+msgid "All (meansize)"
+msgstr "全部（按尺寸）"
+
+#: Auto
+msgid "Auto"
+msgstr "自动"
+
+#: Auto Connect
+msgid "Auto Connect"
+msgstr "自动连接"
+
+#: Connect
+msgid "Connect"
+msgstr "连接"
+
+#: Align
+msgid "Align"
+msgstr "对齐"
+
+#: Bounding Vol.
+msgid "Bounding Vol."
+msgstr "包围体"
+
+#: BV Active
+msgid "BV Active"
+msgstr "包围体显示"
+
+#: BVH active
+msgid "BVH active"
+msgstr "BVH 显示"
+
+#: Contact Point
+msgid "Contact Point"
+msgstr "接触点"
+
+#: Contact Force
+msgid "Contact Force"
+msgstr "接触力"
+
+#: Contact Torque
+msgid "Contact Torque"
+msgstr "接触力矩"
+
+#: Contact Friction
+msgid "Contact Friction"
+msgstr "接触摩擦"
+
+#: Contact Gap
+msgid "Contact Gap"
+msgstr "接触间隙"
+
+#: Contact Override
+msgid "Contact Override"
+msgstr "接触覆盖"
+
+#: Contact height
+msgid "Contact height"
+msgstr "接触高度"
+
+#: Contact width
+msgid "Contact width"
+msgstr "接触宽度"
+
+#: Force width
+msgid "Force width"
+msgstr "力矢量宽度"
+
+#: Frame length
+msgid "Frame length"
+msgstr "坐标系长度"
+
+#: Frame width
+msgid "Frame width"
+msgstr "坐标系宽度"
+
+#: Joint length
+msgid "Joint length"
+msgstr "关节长度"
+
+#: Joint width
+msgid "Joint width"
+msgstr "关节宽度"
+
+#: Actuator length
+msgid "Actuator length"
+msgstr "执行器长度"
+
+#: Actuator width
+msgid "Actuator width"
+msgstr "执行器宽度"
+
+#: Actuator activation
+msgid "Actuator activation"
+msgstr "执行器激励"
+
+#: Actuator Groups
+msgid "Actuator Groups"
+msgstr "执行器分组"
+
+#: Model Elements
+msgid "Model Elements"
+msgstr "模型元素"
+
+#: Render Flags
+msgid "Render Flags"
+msgstr "渲染开关"
+
+#: Flags
+msgid "Flags"
+msgstr "开关"
+
+#: Colors
+msgid "Colors"
+msgstr "颜色"
+
+#: Field
+msgid "Field"
+msgstr "场"
+
+#: Mapping
+msgid "Mapping"
+msgstr "映射"
+
+#: Shadow clip
+msgid "Shadow clip"
+msgstr "阴影裁剪"
+
+#: Shadow scale
+msgid "Shadow scale"
+msgstr "阴影缩放"
+
+#: Fog start
+msgid "Fog start"
+msgstr "雾起点"
+
+#: Fog end
+msgid "Fog end"
+msgstr "雾终点"
+
+#: Z near
+msgid "Z near"
+msgstr "近裁剪面"
+
+#: Z far
+msgid "Z far"
+msgstr "远裁剪面"
+
+#: Azimuth
+msgid "Azimuth"
+msgstr "方位角"
+
+#: Elevation
+msgid "Elevation"
+msgstr "仰角"
+
+#: Extent
+msgid "Extent"
+msgstr "范围"
+
+#: Orthographic
+msgid "Orthographic"
+msgstr "正交投影"
+
+#: Frustum
+msgid "Frustum"
+msgstr "视锥体"
+
+#: Free Camera
+msgid "Free Camera"
+msgstr "自由相机"
+
+#: Copy Camera
+msgid "Copy Camera"
+msgstr "复制相机"
+
+#: Slider Crank
+msgid "Slider Crank"
+msgstr "曲柄滑块"
+
+#: Slider-crank
+msgid "Slider-crank"
+msgstr "曲柄滑块"
+
+#: Crank Broken
+msgid "Crank Broken"
+msgstr "曲柄断裂"
+
+#: Range Finder
+msgid "Range Finder"
+msgstr "测距仪"
+
+#: Tree depth
+msgid "Tree depth"
+msgstr "树深度"
+
+#: Stiffness
+msgid "Stiffness"
+msgstr "刚度"
+
+#: Rot stiffness
+msgid "Rot stiffness"
+msgstr "旋转刚度"
+
+#: Orientations of mocap bodies
+msgid "Orientations of mocap bodies"
+msgstr "动捕刚体姿态"
+
+#: Positions of mocap bodies
+msgid "Positions of mocap bodies"
+msgstr "动捕刚体位置"
+
+#: Sensor 
+msgid "Sensor "
+msgstr "传感器 "
+
+#: Sensors
+msgid "Sensors"
+msgstr "传感器"
+
+#: sensor
+msgid "sensor"
+msgstr "传感器"
+
+#: Act Group %d
+msgid "Act Group %d"
+msgstr "执行器分组 %d"
+
+#: control %d
+msgid "control %d"
+msgstr "控制 %d"
+
+#: joint %d
+msgid "joint %d"
+msgstr "关节 %d"
+
+#: No state components are selected.
+msgid "No state components are selected."
+msgstr "未选择任何状态分量。"
+
+#: Plugin state
+msgid "Plugin state"
+msgstr "插件状态"
+
+#: User
+msgid "User"
+msgstr "用户"
+
+#: User data
+msgid "User data"
+msgstr "用户数据"
+
+#: Time
+msgid "Time"
+msgstr "时间"
+
+#: Reset to 0
+msgid "Reset to 0"
+msgstr "重置为 0"
+
+#: Reset to default
+msgid "Reset to default"
+msgstr "恢复默认"
+
+#: Clear All
+msgid "Clear All"
+msgstr "全部清除"
+
+#: Toggle theme
+msgid "Toggle theme"
+msgstr "切换主题"
+
+#: Pause
+msgid "Pause"
+msgstr "暂停"
+
+#: Desired Speed
+msgid "Desired Speed"
+msgstr "目标速度"
+
+#: Desired Speed (Measured Speed)
+msgid "Desired Speed (Measured Speed)"
+msgstr "目标速度（实测速度）"
+
+#: Counts vs iter
+msgid "Counts vs iter"
+msgstr "计数 vs 迭代"
+
+#: active
+msgid "active"
+msgstr "活动"
+
+#: changed
+msgid "changed"
+msgstr "已改变"
+
+#: evals
+msgid "evals"
+msgstr "求值次数"
+
+#: gradient
+msgid "gradient"
+msgstr "梯度"
+
+#: improvement
+msgid "improvement"
+msgstr "改进量"
+
+#: lineslope
+msgid "lineslope"
+msgstr "线斜率"
+
+#: total
+msgid "total"
+msgstr "总计"
+
+#: updates
+msgid "updates"
+msgstr "更新次数"
+
+#: value
+msgid "value"
+msgstr "数值"
+
+#: Viscous posing mode
+msgid "Viscous posing mode"
+msgstr "粘性摆姿模式"
+
+#: add viscosity for easier posing.
+msgid "add viscosity for easier posing."
+msgstr "增加粘度以便摆姿更轻松。"
+
+#: Acceleration used for warmstart
+msgid "Acceleration used for warmstart"
+msgstr "用于热启动的加速度"
+
+#: Applied Cartesian force/torque
+msgid "Applied Cartesian force/torque"
+msgstr "施加的笛卡尔力/力矩"
+
+#: Applied generalized force
+msgid "Applied generalized force"
+msgstr "施加的广义力"
+
+#: Modified
+msgid "Modified"
+msgstr "已修改"
+
+#: Selected
+msgid "Selected"
+msgstr "已选中"
+
+#: Free
+msgid "Free"
+msgstr "自由"
+
+#: Fixed
+msgid "Fixed"
+msgstr "固定"
+
+#: Sel Pnt
+msgid "Sel Pnt"
+msgstr "选中点"
+
+#: Total
+msgid "Total"
+msgstr "总计"
+
+#: Subtree
+msgid "Subtree"
+msgstr "子树"
+
+#: Act. Negative
+msgid "Act. Negative"
+msgstr "负向激励"
+
+#: Act. Positive
+msgid "Act. Positive"
+msgstr "正向激励"
+
+#: Flex layer
+msgid "Flex layer"
+msgstr "柔性体图层"
+
+#: Fog
+msgid "Fog"
+msgstr "雾"
+
+#: Global
+msgid "Global"
+msgstr "全局"
+
+#: Haze
+msgid "Haze"
+msgstr "霾"
+
+#: Imp Ratio
+msgid "Imp Ratio"
+msgstr "阻抗比"
+
+#: Jacobian
+msgid "Jacobian"
+msgstr "雅可比"
+
+#: Memory
+msgid "Memory"
+msgstr "内存"
+
+#: Noise rate
+msgid "Noise rate"
+msgstr "噪声速率"
+
+#: Noise scale
+msgid "Noise scale"
+msgstr "噪声强度"
+
+#: PLUGIN
+msgid "PLUGIN"
+msgstr "插件"
+
+#: Select point
+msgid "Select point"
+msgstr "选点"

@@ -110,7 +110,11 @@ done
 echo "编译器:   $CLANG"
 
 WORK="${WORKDIR:-/tmp/ux-zh-build}"
-SRC="$WORK/mujoco-src/src"
+# ⚠️ `tar --strip-components=1` 解压后，源码根是 <mujoco-src>/src/ 下面那一层，
+#    即 <mujoco-src>/src 才是「仓库根」，C++ 在 <仓库根>/src/experimental/...
+#    （踩过：这里写成 $WORK/mujoco-src/src 又拼 $SRC/src/... 会多一层 src）
+REPO_SRC="$WORK/mujoco-src/src"
+SRC="$REPO_SRC/src"
 mkdir -p "$WORK"
 
 # ── 拉依赖（幂等，已存在则跳过）─────────────────────────────
@@ -152,21 +156,36 @@ fetch https://github.com/epezent/implot.git \
 fetch https://github.com/abseil/abseil-cpp.git "" "$WORK/abseil" "20250127.0"
 
 # ── 打译文 patch ────────────────────────────────────────────
+# ⚠️ 用 `patch` 而不是 `git apply` ——
+#    源码是 tarball 解压的，**不是 git 仓库**，`git -C ... apply` 会直接
+#    报 "不是 git 仓库" 而失败。踩过：这个错误被 2>/dev/null 吞掉，脚本
+#    一路"成功"编出个**原文版**的 .so，看不出任何异常。
 PATCH_DIR="${PATCH_DIR:-$REPO/patches}"
 if [[ -d "$PATCH_DIR" ]] && compgen -G "$PATCH_DIR/*.patch" >/dev/null; then
   echo "应用译文 patch..."
+  n_ok=0
   for p in "$PATCH_DIR"/*.patch; do
-    if git -C "$SRC" apply --check "$p" 2>/dev/null; then
-      git -C "$SRC" apply "$p" && echo "  ✅ $(basename "$p")"
-    elif git -C "$SRC" apply --reverse --check "$p" 2>/dev/null; then
-      echo "  · $(basename "$p") 已应用"
+    if patch -d "$REPO_SRC" -p1 --dry-run --silent < "$p" 2>/dev/null; then
+      patch -d "$REPO_SRC" -p1 --silent < "$p"
+      echo "  ✅ $(basename "$p")"
+      n_ok=$((n_ok + 1))
+    elif patch -d "$REPO_SRC" -p1 -R --dry-run --silent < "$p" 2>/dev/null; then
+      echo "  · $(basename "$p") 已应用（跳过）"
+      n_ok=$((n_ok + 1))
     else
-      echo "  ⚠️ $(basename "$p") 打不上（源码已变？）" >&2
+      echo "❌ $(basename "$p") 打不上 —— 源码版本与 patch 不匹配" >&2
+      echo "   重新生成：python3 scripts/gen_cpp_patch.py" >&2
+      exit 1
     fi
   done
+  echo "  （已应用 $n_ok 个 patch）"
 else
-  echo "（无 patch，编译原始版本 —— 用于验证构建流程）"
+  echo "⚠️  没找到 patch（$PATCH_DIR/*.patch）—— 将编译**原文版**"
+  echo "    要出中文版请先跑：python3 scripts/gen_cpp_patch.py"
 fi
+
+# ⚠️ 从干净源码重打之前，先确认没有残留的上次 patch
+#    （patch 是可重入的：已应用的会被识别并跳过，但仍要防手工改脏）
 
 # ── 编译 ────────────────────────────────────────────────────
 BUILD="$WORK/build"
@@ -176,7 +195,7 @@ PBINC="$("$PY" -c 'import pybind11;print(pybind11.get_include())')"
 WEBP_INC=""
 [[ -f /home/zhan/anaconda3/include/webp/encode.h ]] && WEBP_INC="-I/home/zhan/anaconda3/include"
 
-INC="-I$SP/include -I$SRC -I$SRC/include -I$SRC/src -I$SRC/python/mujoco \
+INC="-I$SP/include -I$REPO_SRC -I$REPO_SRC/include -I$SRC -I$REPO_SRC/python/mujoco \
      -I$WORK/imgui -I$WORK/imgui/backends -I$WORK/imgui/misc/cpp -I$WORK/implot \
      -I$WORK/abseil $WEBP_INC -I$PYINC -I$PBINC"
 FLAGS="-std=c++20 -stdlib=libc++ -fPIC -O1 -w -fvisibility=hidden"
@@ -185,20 +204,31 @@ echo
 echo "编译（$(nproc) 核并行）..."
 # ⚠️ 对象文件名必须加前缀：MuJoCo 的 imgui_widgets.cc 与 imgui 库的
 #    imgui_widgets.cpp 会同名，后者覆盖前者 → 链接缺符号 ImGui_DataPtrTable::DataPtr
-compile() { local src="$1" out="$2"; $CLANG $FLAGS -c "$src" -o "$out" $INC; }
+FAILED=0
+compile() { # ⚠️ 失败必须让父脚本知道 —— 子 shell 里的 exit 只退出子 shell
+  local src="$1" out="$2"
+  if ! $CLANG $FLAGS -c "$src" -o "$out" $INC 2>"$out.err"; then
+    echo "  ❌ 编译失败: $src" >&2
+    head -5 "$out.err" >&2
+    return 1
+  fi
+}
 
 for f in gui gui_spec imgui_widgets interaction spec_editor plugin; do
-  ( compile "$SRC/src/experimental/platform/ux/$f.cc" "mj_$f.o" && echo "  ✅ ux/$f" \
-    || { echo "  ❌ ux/$f" >&2; exit 1; } ) &
+  ( compile "$SRC/experimental/platform/ux/$f.cc" "mj_$f.o" && echo "  ✅ ux/$f" \
+    || FAILED=1 ) &
 done
 for f in step_control sim_profiler model_holder sim_history; do
-  ( compile "$SRC/src/experimental/platform/sim/$f.cc" "mj_sim_$f.o" && echo "  ✅ sim/$f" \
-    || { echo "  ❌ sim/$f" >&2; exit 1; } ) &
+  ( compile "$SRC/experimental/platform/sim/$f.cc" "mj_sim_$f.o" && echo "  ✅ sim/$f" \
+    || FAILED=1 ) &
 done
-( compile "$SRC/src/experimental/platform/sys_utils.cc" mj_sys_utils.o && echo "  ✅ sys_utils" ) &
-( compile "$SRC/src/experimental/platform/helpers.cc"  mj_helpers.o   && echo "  ✅ helpers" ) &
-( compile "$SRC/python/mujoco/experimental/studio/ux.cc" mj_ux_pybind.o && echo "  ✅ ux.cc" ) &
+( compile "$SRC/experimental/platform/sys_utils.cc" mj_sys_utils.o && echo "  ✅ sys_utils" || FAILED=1 ) &
+( compile "$SRC/experimental/platform/helpers.cc"  mj_helpers.o   && echo "  ✅ helpers" || FAILED=1 ) &
+( compile "$REPO_SRC/python/mujoco/experimental/studio/ux.cc" mj_ux_pybind.o && echo "  ✅ ux.cc" || FAILED=1 ) &
 wait
+# ⚠️ 必须在这里就检查 —— 否则编译失败会拿旧的 .o 凑出一个 .so，
+#    装上去看着「成功」实际是残缺的（踩过：一半源文件没编上还照样安装）
+(( FAILED == 0 )) || { echo "❌ MuJoCo 源文件编译失败，中止" >&2; exit 1; }
 
 for f in imgui imgui_draw imgui_tables imgui_widgets; do
   ( compile "$WORK/imgui/$f.cpp" "imgui_$f.o" ) &
@@ -207,7 +237,11 @@ done
 ( compile "$WORK/implot/implot.cpp" implot_implot.o ) &
 ( compile "$WORK/implot/implot_items.cpp" implot_implot_items.o ) &
 wait
+(( FAILED == 0 )) || { echo "❌ 第三方库编译失败，中止" >&2; exit 1; }
 echo "  ✅ imgui / implot"
+
+# ⚠️ 链接前清掉上次的产物，避免旧 .o 混进来
+rm -f ux_zh.so
 
 # ── 链接 ────────────────────────────────────────────────────
 echo
