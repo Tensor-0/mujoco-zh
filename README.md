@@ -1,62 +1,43 @@
-# mujoco-zh —— MuJoCo 中文控制面板（带悬停教学）
+# mujoco-zh —— MuJoCo Studio 中文化
 
-> **给 MuJoCo Studio 加中文控制面板：所有控件中文，鼠标悬停弹出「这个选项是干什么的」。**
+> **让 MuJoCo Studio 说中文：官方界面原生中文化 + 鼠标悬停中文讲解每个选项。**
 
 ---
 
 ## 这是什么
 
-在官方 **MuJoCo Studio** 上挂一个纯 Python 面板：
+给官方 **MuJoCo Studio** 加两层中文能力：
 
-| 功能 | 说明 |
-|---|---|
-| **中文面板** | 控件标签全中文（中英对照）|
-| ⭐ **悬停教学** | 鼠标停在任意选项上 → 弹出「调大/调小会怎样」|
-| **零侵入** | 不改官方二进制、不重编译、不 fork |
+| 能力 | 做法 | 状态 |
+|---|---|---|
+| ① **官方 UI 原生中文** | 拦截 `imgui` 模块的调用，官方 UI 每一处文字自动翻译 | ✅ 已跑通 |
+| ② **悬停教学面板** | 追加一个中文面板，鼠标停在控件上 → 弹出「调大/调小会怎样」 | ✅ 已跑通 |
 
-**截图**：见 `assets/panel.png`
+**默认零侵入**：不改官方源码、不 fork、不重编译。装上字体 + 跑一个模块即可，随时可卸载还原。
+
+**截图**：见 `assets/panel.png`（面板）与 `assets/studio_cjk_verify.png`（官方 UI 中文化）
 
 ---
 
 ## 快速开始
 
 ```bash
+# 0. 找到「装了 mujoco 的那个 python」——这一步最容易踩坑
+#    如果 python3 -c "import mujoco" 报错，说明你默认的 python3 不是它
+MUJOCO_PY=/path/to/your/venv/bin/python3
+
 # 1. 装中文字体（必须，否则中文显示为方块）
 ./scripts/install_font.sh
 
-# 2. 跑起来（用装 mujoco 的那个 python）
-export PYTHONPATH=$PWD/src
-python3 -m mujoco_zh.panel_zh /path/to/your_model.xml
+# 2. 跑起来
+PYTHONPATH=$PWD/src $MUJOCO_PY -m mujoco_zh.panel_zh /path/to/your_model.xml
 ```
 
 **退出**：终端按 `Ctrl+C`（官方文档说明的方式）
 
-**前置**：`mujoco` 需 ≥ 3.11（Studio 从这版开始在 wheel 里）
+**前置**：`mujoco` ≥ 3.11（Studio 从这版开始进 wheel）
 
----
-
-## ⭐ 为什么不用官方老 viewer（`mujoco.viewer`）
-
-> **这一节是本次调研最重要的结论。三条路我们都实测验证过，全部堵死。**
-
-### 实测证据
-
-| 路线 | 结论 | 证据 |
-|---|---|---|
-| **老 viewer 加 tooltip** | ❌ **框架层不支持** | 它用的**不是 ImGui**，是自研 `mjUI`。`mjuiItem` 结构体**没有任何描述字段**，全仓只有 `int mousehelp`（按右键显示快捷键）|
-| **老 viewer 显示中文** | ❌ **字体只有 128 个 ASCII 字形** | 反汇编 `makeFont`：`movl $0x80, ...; glGenLists(128)`。渲染用 `glCallLists` **逐字节查表**，UTF-8 汉字节越界 → 画到相邻字体图集上，**画出乱码且不报错** |
-| **二进制 patch** | ❌ **双重死因** | ① 只能换字符串、**挂不了 tooltip 交互** ② 中文根本画不出来（同上）。长度反而不是问题（40 字节槽，中位余量 39 字节 ≈ 13 汉字）|
-
-### 而 Studio 三件套全有
-
-官方自己的对比表（`doc/skills/studio/SKILL.md`）：
-
-| | 老 `simulate` | **Studio** |
-|---|---|---|
-| GUI 框架 | 自制 `mjUI` | **Dear ImGui** |
-| 可扩展性 | **硬编码面板和快捷键** | **C++ 和 Python 双插件架构** |
-
-**⇒ 这就是选 Studio 的理由。**
+> ⚠️ **`install_font.sh` 会自动探测解释器**，但如果你机器上不止一个 mujoco，用 `PYTHON=<路径> ./scripts/install_font.sh` 显式指定。
 
 ---
 
@@ -71,14 +52,122 @@ python3 -m mujoco_zh.panel_zh /path/to/your_model.xml
 **⇒ 换掉字体文件就自动生效，不需要指定 glyph range、不需要改代码。**
 
 ```bash
-# 就是这一条
-cp /usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc \
-   "$(python3 -c 'from mujoco.experimental import studio as s; print(list(s.__path__)[0])')/assets/AtkinsonHyperlegibleNext[wght].ttf"
+./scripts/install_font.sh              # 自动备份 + 替换 + 校验
+PYTHON=<你的mujoco解释器> ./scripts/install_font.sh   # 显式指定解释器
 ```
 
-`scripts/install_font.sh` 会自动做这件事（含备份）。
+**还原**：
 
-> ⚠️ **`pip install --upgrade mujoco` 会覆盖字体** —— 升级后重跑脚本。
+```bash
+./scripts/restore_font.sh              # 从备份还原
+```
+
+> ⚠️ **备份的前提是备份时还是原版字体。** 脚本会先校验文件大小（原版 ~200 KB / CJK 字体 19 MB+），
+> **已经是 CJK 字体就不会拿它去覆盖备份** —— 否则会把 CJK 字体当成「原版」备份下来，
+> 之后「还原」等于什么都没做。
+>
+> ⚠️ **`pip install --upgrade mujoco` 会覆盖字体** —— 升级后重跑 `install_font.sh`。
+
+---
+
+## 中文化是怎么做到的
+
+官方 Studio 的界面文字全部通过 `imgui.Begin('Inspector')`、`imgui.Text('...')`
+这样的**调用**产生。所以**包住这一层就能翻译整个官方 UI，零源码改动**。
+
+```python
+from mujoco_zh import translate
+translate.install()      # 幂等；必须装在官方 UI 构建之前
+```
+
+翻译资产用 **GNU gettext**（`locales/zh_CN/LC_MESSAGES/mujoco_zh.po`）——
+白拿 Poedit / Weblate 的译者工作流，`.po` 的 diff 对 Git 也友好。
+
+界面样式是 **`中文 (English)`** 双语并列，方便你对照官方文档和英文教程。
+
+### ⭐ 三条实测教训（都踩过）
+
+**1. `wrapt` 在这里静默失效，只能手写 `setattr`**
+
+```python
+>>> wrapt.wrap_function_wrapper(ig, 'MenuItem', wrapper)
+>>> type(ig.MenuItem)     # 仍是 builtin_function_or_method —— 没包上！也不报错
+```
+
+原因：`imgui` 的属性是 pybind11 的 `builtin_function_or_method`，
+**不是普通 Python 函数**，wrapt 的包装机制对它们不生效。手写 `setattr` 可行。
+
+**2. 不能包「所有」方法 —— 会破坏 ImGui 的配对**
+
+第一版把所有方法都包了，ImGui 立刻报：
+
+```
+[imgui-error] Calling End() too many times!
+[imgui-error] Calling EndMenu() in wrong window!
+```
+
+`Begin*` / `TreeNode*` 严格要求 `if X(): ... EndX()` 配对，而
+`MenuItem` / `TreeNode` / `TreeNodeEx` / `BeginTabItem` 是**重载函数**。
+**⇒ 只包「纯文本、无返回值、非重载」的方法**（见 `translate.py` 的 `SAFE_METHODS`）。
+
+**3. 五条排除规则 —— 这是「不崩」的保障**
+
+非 `str` · 空串 · 含 `%`（格式串）· 含 `##`（ImGui ID 后缀）· 已含中文（幂等）
+—— 任一命中原样透传。另外 `TextUnformatted` 这类会被 ImGui 直接当格式串用的也不能包。
+
+> ⚠️ **代价**：默认**关闭**安装，必须显式 `translate.install()`；`uninstall()` 完整还原。
+> 这是吸取 **MusicBrainz Picard PR #2421** 的教训 —— 那个项目先 monkeypatch 了 gettext，
+> 后来**主动拆掉**（mypy 报错 / pylint 需额外配置 / 破坏下游）。
+
+---
+
+## 覆盖边界（实测，别期待超出这个范围）
+
+| 位置 | 例子 | 能翻吗 |
+|---|---|---|
+| `viewer_app.py` / `studio_app.py` 的 Python 字面量（~23 条）| `Options` `Inspector` `Physics Settings` `Watch` | ✅ |
+| 编译进 `ux.cpython-*.so` 的 C++ 字符串（**实测 210 条**）| `Algorithmic Parameters` `Timestep` `Viscosity` `Sol Imp` | ⚠️ 需重编译 |
+| `libmujoco.so` 导出的枚举名 | `Fog` `Haze` `Cull Face` `Id Color` | ❌ |
+
+**为什么 Python 层翻不了 `ux.so`** —— 这不是 bug，是**设计使然**。四条独立实测证据：
+
+| 证据 | 内容 |
+|---|---|
+| **GIL 被释放** | `ux.cc` 里 **18 个 `*_gui` 绑定全部** `py::gil_scoped_release no_gil;` —— 进 C++ 前先放掉 GIL |
+| **反汇编** | `lea -0x80f5f(%rip),%rdi # 1a4aa <Algorithmic Parameters>` —— 字符串地址直接进第一个参数寄存器，这是 C++ 调 `ImGui::Text()` 的产物；走 Python 必须先 `PyUnicode_FromString` |
+| **imgui.cpp 内部串** | `Missing EndTable()` / `Calling End() too many times!` 在 `ux.so` 里成片出现 —— 说明 imgui 实现被静态编进去了 |
+| **没有模块名** | `ux.so` 里搜不到 `dear_imgui`；要回调 Python 必须 import 它，模块名一定会在 |
+
+**⇒ `ux.so` 静态链接了自己的一份 C++ ImGui**（本机一共躺着**四份**独立 ImGui 拷贝：
+`ux` / `dear_imgui` / `native_viewer_cc` / `implot` 各一份，C 层零符号共享，
+唯一的桥是 `native_viewer.py` 把同一个 context 指针分别灌给每一份）。
+Python 层的 patch 永远看不到它发出的文字。
+
+**要翻这部分，走重编译** —— 已打通，一条命令：
+
+```bash
+./scripts/build_ux_zh.sh            # 编译 + 安装（含 ABI 自检）
+./scripts/build_ux_zh.sh --restore  # 还原官方
+```
+
+⚠️ **必须用 clang + libc++**（pybind11 的类型注册表按编译器 ABI 隔离，
+gcc 编出来会在运行时报 `incompatible function arguments`）。
+完整说明与 210 条清单见 → [`docs/重编译覆盖C++字符串.md`](docs/重编译覆盖C++字符串.md)
+
+---
+
+## ⭐ 为什么不用官方老 viewer（`mujoco.viewer`）
+
+| 路线 | 结论 | 一句话原因 |
+|---|---|---|
+| 老 viewer 加 tooltip | ❌ | 它用的不是 ImGui，是自研 `mjUI`；`mjuiItem` 结构体**没有描述字段** |
+| 老 viewer 显示中文 | ❌ | 字体只有 **128 个 ASCII 字形**；渲染**逐字节查表无掩码**，汉字节越界 → 画出错字且**静默不报错** |
+| 二进制 patch 老 viewer | ❌ | 双重死因：挂不了 tooltip 交互 + 中文根本画不出来 |
+
+**而 Studio 三件套全有**：Dear ImGui 1.92.6（声明式 UI）· 官方已在用 tooltip
+（`gui.cc` 里的 `SetItemTooltip`）· 运行时从磁盘加载 TTF（**字体可换**）。
+
+> **完整反汇编证据链**（含 `glGenLists(128)` 的实证）见 → [`docs/为什么用Studio.md`](docs/为什么用Studio.md)
 
 ---
 
@@ -89,15 +178,23 @@ mujoco-zh/
 ├── README.md                      本文
 ├── docs/
 │   ├── 为什么用Studio.md           三条路线的实测证据（含反汇编）
-│   └── tooltip文案规范.md          写解释文案的规则
+│   ├── tooltip文案规范.md          写解释文案的规则
+│   └── 重编译覆盖C++字符串.md      ux.so 那些翻不了的字符串怎么办
 ├── src/mujoco_zh/
 │   ├── __init__.py
-│   ├── tooltips.py                ⭐ 文案数据层（52 条，与 UI 框架解耦）
+│   ├── translate.py               ⭐ 官方 UI 中文化（monkeypatch 层）
+│   ├── tooltips.py                ⭐ 悬停文案数据层（52 条，与 UI 框架解耦）
 │   └── panel_zh.py                ⭐ 主程序
+├── locales/zh_CN/LC_MESSAGES/     gettext 译文（.po / .mo）
+├── data/
+│   └── ux_strings_audit.json      盘点：ux.so 里 210 条可翻字符串 + 面板归属
 ├── scripts/
-│   └── install_font.sh            字体替换（含备份）
-└── assets/
-    └── panel.png                  截图
+│   ├── install_font.sh            字体替换（含 SC face 抽取 + 校验 + 备份）
+│   ├── restore_font.sh            字体还原
+│   ├── extract_sc_font.py         从 TTC 抽简体中文 face（绕开 window.cc 不设 FontNo）
+│   ├── build_ux_zh.sh             ⭐ 重编译 ux.so（clang+libc++，含 ABI 自检 + 还原）
+│   └── compile_mo.sh              .po → .mo
+└── assets/                        截图
 ```
 
 ---
@@ -147,26 +244,31 @@ class Tip:
 |---|---|
 | **退出时 core dump** | `Engine::shutdown() called from the wrong thread!` —— Studio passive 模式 teardown 的已知竞态，**运行期无影响** |
 | `Xlib: NV-GLX missing` | 无害警告（软件渲染路径）|
+| 本机 GUI 要用 `DISPLAY=:1` | 不是 `:0`。设错了**静默失败**，容易被误判成「播放器/窗口打不开」 |
 | `dear_imgui` 是命名空间包 | 必须 `from mujoco.experimental.dear_imgui import dear_imgui`（多一层）|
-| 枚举是类属性 | 用 `imgui.Cond.FirstUseEver`，不是 `imgui.ImGuiCond_FirstUseEver` |
+| 枚举是类属性 | 用 `imgui.Cond.FirstUseEver`，**不是** `imgui.ImGuiCond_FirstUseEver` |
 | `SetNextWindowSize` 要 `Vec2` | `imgui.SetNextWindowSize(imgui.Vec2(380, 560), ...)` |
+| `launch_passive` 不接 model/data | 用 `handle.send_to_viewer(messages.ModelEvent(model=model))` |
+| `@messages.handler` 要类型标注 | `def on_build_gui(self, _: messages.BuildGuiEvent) -> None:` |
+| `studio.__file__` 是 `None` | 用 `list(studio.__path__)[0]` |
 
 ---
 
 ## 调研背景：这个方向是空白
 
-三个独立 agent 检索确认：
-
 | 检索词 | 结果 |
 |---|---|
 | `mujoco i18n` / `mujoco 汉化` / `mujoco viewer alternative` | **0 个项目** |
+| PyPI 全量穷举（24 个含 imgui 的包）| **零个 i18n 包** |
+| 三大包描述 grep（imgui-bundle / pyimgui / dearpygui）| 全 **NONE** |
 | Gazebo 全系 / PyBullet / Isaac Lab 的翻译文件 | **0 个** |
 
-> **⇒ 机器人仿真领域，三大家（Gazebo / Bullet / Isaac）都没做 i18n。**
-> **这个项目没有现成轮子可抄。**
+**ImGui 官方立场**（ocornut 原话）：
 
-**最接近的参考**：`LeonIdris/alien-chinese`（ImGui 模拟器的汉化版）——
-但它是**纯翻译**，没有悬停教学。**这正是本项目的差异化。**
+> *"it's not really something that dear imgui will do for you. It's really not in the DNA of dear imgui to go toward that direction."*
+
+**最接近的参考**：`LeonIdris/alien-chinese`（ImGui 模拟器汉化）——
+但它是**纯翻译，没有悬停教学**。**这正是本项目的差异化。**
 
 ---
 
@@ -175,7 +277,7 @@ class Tip:
 | 资源 | 链接 |
 |---|---|
 | MuJoCo 官方仓库 | https://github.com/google-deepmind/mujoco |
-| Studio 源码 | `src/experimental/studio/`（同仓库）|
+| Studio 源码 | 同仓库 `src/experimental/platform/` + `python/mujoco/experimental/studio/` |
 | ImGui | https://github.com/ocornut/imgui |
 | Noto Sans CJK | https://fonts.google.com/noto/specimen/Noto+Sans+SC |
 

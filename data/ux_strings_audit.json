@@ -1,0 +1,1470 @@
+{
+ "translatable": [
+  "ACT",
+  "Acceleration used for warmstart",
+  "Act Group %d",
+  "Act. Negative",
+  "Act. Positive",
+  "Active",
+  "Actuator",
+  "Actuator Groups",
+  "Actuator activation",
+  "Actuator length",
+  "Actuator width",
+  "Actuators",
+  "Algorithmic Parameters",
+  "Align",
+  "All (meansize)",
+  "Alpha",
+  "Ambient",
+  "Applied Cartesian force/torque",
+  "Applied generalized force",
+  "Auto",
+  "Auto Connect",
+  "Azimuth",
+  "BV Active",
+  "BVH active",
+  "Body",
+  "Bounding Vol.",
+  "Box",
+  "CCD Iter",
+  "CCD Tol",
+  "CG",
+  "CPU",
+  "CTRL",
+  "Camera",
+  "Center",
+  "Center of Mass",
+  "Clear All",
+  "Colors",
+  "Com",
+  "Cone",
+  "Connect",
+  "Constraint",
+  "Contact",
+  "Contact Force",
+  "Contact Friction",
+  "Contact Gap",
+  "Contact Override",
+  "Contact Point",
+  "Contact Torque",
+  "Contact height",
+  "Contact width",
+  "Control",
+  "Convergence vs iter",
+  "Copy Camera",
+  "Counts vs iter",
+  "Crank Broken",
+  "Dense",
+  "Density",
+  "Desired Speed",
+  "Desired Speed (Measured Speed)",
+  "Diffuse",
+  "EQ_ACTIVE",
+  "Elevation",
+  "Ellipsoid",
+  "Elliptic",
+  "Enable/disable constraints",
+  "Energy",
+  "Euler",
+  "Extent",
+  "FOV",
+  "FPS",
+  "Field",
+  "Flags",
+  "Flex",
+  "Flex layer",
+  "Flexes",
+  "Fog",
+  "Fog end",
+  "Fog start",
+  "Force",
+  "Force width",
+  "Frame",
+  "Frame length",
+  "Frame width",
+  "Free Camera",
+  "Friction",
+  "Frustum",
+  "Full Physics",
+  "FwdInv",
+  "Geom",
+  "Geoms",
+  "Global",
+  "Gravity",
+  "HISTORY",
+  "Haze",
+  "Headlight",
+  "Imp Ratio",
+  "Index",
+  "Inertia",
+  "Integration",
+  "Integrator",
+  "Island",
+  "Islands",
+  "Iterations",
+  "Jacobian",
+  "Joint",
+  "Joint length",
+  "Joint width",
+  "Joints",
+  "LS Iter",
+  "LS Tol",
+  "Label",
+  "Light",
+  "MOCAP_POS",
+  "MOCAP_QUAT",
+  "Magnetic",
+  "Mapping",
+  "Margin",
+  "Memory",
+  "Model Elements",
+  "Name",
+  "Newton",
+  "No state components are selected.",
+  "Noise rate",
+  "Noise scale",
+  "None",
+  "Noslip Iter",
+  "Noslip Tol",
+  "Orientations of mocap bodies",
+  "Orthographic",
+  "PGS",
+  "PLUGIN",
+  "Pause",
+  "Physical Parameters",
+  "Physics",
+  "Plugin state",
+  "Position",
+  "Positions of mocap bodies",
+  "Pyramidal",
+  "QFRC_APPLIED",
+  "QPOS",
+  "QVEL",
+  "RK4",
+  "Range Finder",
+  "Render Flags",
+  "Reset to 0",
+  "Reset to default",
+  "Rot stiffness",
+  "SDF Init",
+  "SDF Iter",
+  "Scale",
+  "Sel Pnt",
+  "Select Point",
+  "Select point",
+  "Selection",
+  "Sensor ",
+  "Sensors",
+  "Shadow clip",
+  "Shadow scale",
+  "Site",
+  "Sites",
+  "Size",
+  "Skin",
+  "Skins",
+  "Sleep Tol",
+  "Slider Crank",
+  "Slider-crank",
+  "Sol Imp",
+  "Sol Ref",
+  "Solver",
+  "Sparse",
+  "Specular",
+  "State",
+  "Stiffness",
+  "TIME",
+  "Tendon",
+  "Tendons",
+  "Time",
+  "Timestep",
+  "Toggle theme",
+  "Tolerance",
+  "Torque",
+  "Tree depth",
+  "USERDATA",
+  "User",
+  "User data",
+  "Value",
+  "Velocity",
+  "Viscosity",
+  "Viscous posing mode",
+  "WARMSTART",
+  "Wind",
+  "World",
+  "XFRC_APPLIED",
+  "Z far",
+  "Z near",
+  "active",
+  "add viscosity for easier posing.",
+  "changed",
+  "control %d",
+  "evals",
+  "gradient",
+  "implicit",
+  "implicitfast",
+  "improvement",
+  "joint %d",
+  "lineslope",
+  "sensor",
+  "total",
+  "updates",
+  "value"
+ ],
+ "skip": [],
+ "by_panel": {
+  "StepControlGui": {
+   "file": "gui.cc",
+   "line": 520,
+   "strings": [
+    {
+     "en": "Desired Speed",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Desired Speed (Measured Speed)",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Pause",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "ThemeSelectGui": {
+   "file": "gui.cc",
+   "line": 609,
+   "strings": [
+    {
+     "en": "Toggle theme",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "LabelSelectionGui": {
+   "file": "gui.cc",
+   "line": 626,
+   "strings": [
+    {
+     "en": "Actuator",
+     "in_ux": 1,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "Body",
+     "in_ux": 1,
+     "in_libmujoco": 22
+    },
+    {
+     "en": "Camera",
+     "in_ux": 9,
+     "in_libmujoco": 28
+    },
+    {
+     "en": "Constraint",
+     "in_ux": 1,
+     "in_libmujoco": 20
+    },
+    {
+     "en": "Contact",
+     "in_ux": 1,
+     "in_libmujoco": 10
+    },
+    {
+     "en": "Flex",
+     "in_ux": 2,
+     "in_libmujoco": 22
+    },
+    {
+     "en": "Force",
+     "in_ux": 2,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "Geom",
+     "in_ux": 1,
+     "in_libmujoco": 22
+    },
+    {
+     "en": "Island",
+     "in_ux": 1,
+     "in_libmujoco": 4
+    },
+    {
+     "en": "Joint",
+     "in_ux": 1,
+     "in_libmujoco": 15
+    },
+    {
+     "en": "Label",
+     "in_ux": 3,
+     "in_libmujoco": 9
+    },
+    {
+     "en": "Light",
+     "in_ux": 1,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "None",
+     "in_ux": 27,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Sel Pnt",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Selection",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Site",
+     "in_ux": 1,
+     "in_libmujoco": 17
+    },
+    {
+     "en": "Skin",
+     "in_ux": 2,
+     "in_libmujoco": 19
+    },
+    {
+     "en": "Tendon",
+     "in_ux": 1,
+     "in_libmujoco": 12
+    }
+   ]
+  },
+  "FrameSelectionGui": {
+   "file": "gui.cc",
+   "line": 653,
+   "strings": [
+    {
+     "en": "Body",
+     "in_ux": 1,
+     "in_libmujoco": 22
+    },
+    {
+     "en": "Camera",
+     "in_ux": 9,
+     "in_libmujoco": 28
+    },
+    {
+     "en": "Contact",
+     "in_ux": 1,
+     "in_libmujoco": 10
+    },
+    {
+     "en": "Frame",
+     "in_ux": 4,
+     "in_libmujoco": 26
+    },
+    {
+     "en": "Geom",
+     "in_ux": 1,
+     "in_libmujoco": 22
+    },
+    {
+     "en": "Light",
+     "in_ux": 1,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "None",
+     "in_ux": 27,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Site",
+     "in_ux": 1,
+     "in_libmujoco": 17
+    },
+    {
+     "en": "World",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    }
+   ]
+  },
+  "CameraSelectionGui": {
+   "file": "gui.cc",
+   "line": 697,
+   "strings": [
+    {
+     "en": "Camera",
+     "in_ux": 9,
+     "in_libmujoco": 28
+    },
+    {
+     "en": "Copy Camera",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "SensorGui": {
+   "file": "gui.cc",
+   "line": 752,
+   "strings": [
+    {
+     "en": "Sensor ",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sensors",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "sensor",
+     "in_ux": 1,
+     "in_libmujoco": 29
+    },
+    {
+     "en": "value",
+     "in_ux": 2,
+     "in_libmujoco": 3
+    }
+   ]
+  },
+  "StateGui": {
+   "file": "gui.cc",
+   "line": 817,
+   "strings": [
+    {
+     "en": "ACT",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Acceleration used for warmstart",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Actuator activation",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Applied Cartesian force/torque",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Applied generalized force",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "CTRL",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Control",
+     "in_ux": 1,
+     "in_libmujoco": 4
+    },
+    {
+     "en": "EQ_ACTIVE",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Enable/disable constraints",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Full Physics",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "HISTORY",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Index",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Integration",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "MOCAP_POS",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "MOCAP_QUAT",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Name",
+     "in_ux": 3,
+     "in_libmujoco": 12
+    },
+    {
+     "en": "No state components are selected.",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Orientations of mocap bodies",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "PLUGIN",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Physics",
+     "in_ux": 2,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Plugin state",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Position",
+     "in_ux": 2,
+     "in_libmujoco": 6
+    },
+    {
+     "en": "Positions of mocap bodies",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "QFRC_APPLIED",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "QPOS",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "QVEL",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "State",
+     "in_ux": 6,
+     "in_libmujoco": 27
+    },
+    {
+     "en": "TIME",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Time",
+     "in_ux": 3,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "USERDATA",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "User",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "User data",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Value",
+     "in_ux": 1,
+     "in_libmujoco": 6
+    },
+    {
+     "en": "Velocity",
+     "in_ux": 1,
+     "in_libmujoco": 12
+    },
+    {
+     "en": "WARMSTART",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "XFRC_APPLIED",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    }
+   ]
+  },
+  "WatchGui": {
+   "file": "gui.cc",
+   "line": 958,
+   "strings": [
+    {
+     "en": "Field",
+     "in_ux": 1,
+     "in_libmujoco": 13
+    },
+    {
+     "en": "Index",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Value",
+     "in_ux": 1,
+     "in_libmujoco": 6
+    }
+   ]
+  },
+  "PhysicsGui": {
+   "file": "gui.cc",
+   "line": 986,
+   "strings": [
+    {
+     "en": "Act Group %d",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Actuator Groups",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Algorithmic Parameters",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Auto",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "CCD Iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "CCD Tol",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "CG",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Cone",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Contact Override",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Dense",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Density",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Elliptic",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Euler",
+     "in_ux": 1,
+     "in_libmujoco": 3
+    },
+    {
+     "en": "Flags",
+     "in_ux": 4,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Friction",
+     "in_ux": 2,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Gravity",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Imp Ratio",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Integrator",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Iterations",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Jacobian",
+     "in_ux": 1,
+     "in_libmujoco": 3
+    },
+    {
+     "en": "LS Iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "LS Tol",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Magnetic",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Margin",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Newton",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Noslip Iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Noslip Tol",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "PGS",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Physical Parameters",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Pyramidal",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "RK4",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "SDF Init",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "SDF Iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sleep Tol",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sol Imp",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sol Ref",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Solver",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sparse",
+     "in_ux": 1,
+     "in_libmujoco": 51
+    },
+    {
+     "en": "Timestep",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Tolerance",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Viscosity",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Viscous posing mode",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Wind",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "add viscosity for easier posing.",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "implicit",
+     "in_ux": 1,
+     "in_libmujoco": 3
+    },
+    {
+     "en": "implicitfast",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    }
+   ]
+  },
+  "VisualizationGui": {
+   "file": "gui.cc",
+   "line": 1104,
+   "strings": [
+    {
+     "en": "Act. Negative",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Act. Positive",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Active",
+     "in_ux": 2,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Actuator",
+     "in_ux": 1,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "Actuator length",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Actuator width",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Align",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "All (meansize)",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Alpha",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Ambient",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Auto Connect",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Azimuth",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "BV Active",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "BVH active",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Bounding Vol.",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Box",
+     "in_ux": 1,
+     "in_libmujoco": 13
+    },
+    {
+     "en": "Camera",
+     "in_ux": 9,
+     "in_libmujoco": 28
+    },
+    {
+     "en": "Center",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Center of Mass",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Colors",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Com",
+     "in_ux": 1,
+     "in_libmujoco": 5
+    },
+    {
+     "en": "Connect",
+     "in_ux": 2,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Constraint",
+     "in_ux": 1,
+     "in_libmujoco": 20
+    },
+    {
+     "en": "Contact Force",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Contact Friction",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Contact Gap",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Contact Point",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Contact Torque",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Contact height",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Contact width",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Crank Broken",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Diffuse",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Elevation",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Ellipsoid",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Extent",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "FOV",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Flex layer",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Fog",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Fog end",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Fog start",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Force",
+     "in_ux": 2,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "Force width",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Frame length",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Frame width",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Free Camera",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Frustum",
+     "in_ux": 2,
+     "in_libmujoco": 5
+    },
+    {
+     "en": "Global",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Haze",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Headlight",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Inertia",
+     "in_ux": 1,
+     "in_libmujoco": 2
+    },
+    {
+     "en": "Joint",
+     "in_ux": 1,
+     "in_libmujoco": 15
+    },
+    {
+     "en": "Joint length",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Joint width",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Light",
+     "in_ux": 1,
+     "in_libmujoco": 11
+    },
+    {
+     "en": "Mapping",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Orthographic",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Range Finder",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Rot stiffness",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Scale",
+     "in_ux": 2,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Select Point",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "Select point",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Shadow clip",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Shadow scale",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Slider Crank",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Slider-crank",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Specular",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Stiffness",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Torque",
+     "in_ux": 2,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Tree depth",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Z far",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Z near",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "RenderingGui": {
+   "file": "gui.cc",
+   "line": 1212,
+   "strings": [
+    {
+     "en": "Model Elements",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Render Flags",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "GroupsGui": {
+   "file": "gui.cc",
+   "line": 1244,
+   "strings": [
+    {
+     "en": "Actuators",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Flexes",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Geoms",
+     "in_ux": 1,
+     "in_libmujoco": 4
+    },
+    {
+     "en": "Joints",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Sites",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Skins",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Tendons",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "NoiseGui": {
+   "file": "gui.cc",
+   "line": 1281,
+   "strings": [
+    {
+     "en": "Noise rate",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Noise scale",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "JointsGui": {
+   "file": "gui.cc",
+   "line": 1292,
+   "strings": [
+    {
+     "en": "Reset to default",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "joint %d",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "ControlsGui": {
+   "file": "gui.cc",
+   "line": 1341,
+   "strings": [
+    {
+     "en": "Clear All",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Reset to 0",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "control %d",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "ConvergenceGui": {
+   "file": "gui.cc",
+   "line": 1409,
+   "strings": [
+    {
+     "en": "Convergence vs iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "gradient",
+     "in_ux": 1,
+     "in_libmujoco": 6
+    },
+    {
+     "en": "improvement",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "lineslope",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "CountsGui": {
+   "file": "gui.cc",
+   "line": 1478,
+   "strings": [
+    {
+     "en": "Counts vs iter",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "active",
+     "in_ux": 2,
+     "in_libmujoco": 7
+    },
+    {
+     "en": "changed",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "evals",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "total",
+     "in_ux": 1,
+     "in_libmujoco": 3
+    },
+    {
+     "en": "updates",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "InfoGui": {
+   "file": "gui.cc",
+   "line": 1571,
+   "strings": [
+    {
+     "en": "CPU",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Energy",
+     "in_ux": 1,
+     "in_libmujoco": 1
+    },
+    {
+     "en": "FPS",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "FwdInv",
+     "in_ux": 1,
+     "in_libmujoco": 3
+    },
+    {
+     "en": "Islands",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Memory",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Size",
+     "in_ux": 10,
+     "in_libmujoco": 17
+    },
+    {
+     "en": "Solver",
+     "in_ux": 1,
+     "in_libmujoco": 0
+    },
+    {
+     "en": "Time",
+     "in_ux": 3,
+     "in_libmujoco": 0
+    }
+   ]
+  },
+  "ProfilerGui": {
+   "file": "gui.cc",
+   "line": 1639,
+   "strings": []
+  }
+ }
+}
