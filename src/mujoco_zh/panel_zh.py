@@ -52,7 +52,17 @@ from . import translate
 # 官方 viewer_app / studio_app 也是 `import ... as imgui`，
 # 它们拿到的是**同一个模块对象** —— 所以在模块属性上打补丁，它们立刻就生效。
 # 时机：只要在 launch_passive 之前即可。
-translate.install(imgui)
+#
+# `MUJOCO_ZH_NO_TRANSLATE=1` 时跳过安装 —— 供「原版 vs 汉化版」并排对比的
+# **对照组**使用。没有这个开关的话，即使该实例加载的是原版 ux.so，
+# Python 侧那 200+ 条仍会被汉化，看到的就成了「半汉化 vs 全汉化」而非原版。
+# 见 scripts/compare_ux.sh
+#
+# ⚠️ 保持模块级执行 —— 挪进 run() 会晚于官方 UI 构建的 import 时机。
+if not os.environ.get("MUJOCO_ZH_NO_TRANSLATE"):
+    translate.install(imgui)
+else:
+    print("ℹ️  MUJOCO_ZH_NO_TRANSLATE=1 —— 跳过 Python 侧翻译层（对比模式）")
 
 
 # ══════════════════════════════════════════════════════════
@@ -223,8 +233,10 @@ def run(model_path: str, width: int = 1400, height: int = 900) -> int:
     print()
     print("启动 Studio（关掉请在终端按 Ctrl+C）...")
 
+    # 标题可用环境变量覆盖 —— 「原版 vs 汉化版」并排对比时，两个窗口
+    # 默认同名，任务栏里分不清哪个是哪个（见 scripts/compare_ux.sh）
     config = viewer_protocol.ViewerConfig(
-        title="MuJoCo 中文面板",
+        title=os.environ.get("MUJOCO_ZH_TITLE", "MuJoCo 中文面板"),
         width=width, height=height,
         gfx="",
         viewer_mode=viewer_protocol.ViewerMode.NATIVE,
@@ -255,7 +267,11 @@ def main(argv: list[str] | None = None) -> int:
     if not argv or argv[0] in ("-h", "--help"):
         print(__doc__)
         return 0 if argv else 1
-    return run(argv[0])
+    # 窗口尺寸：⚠️ 传进去的是**逻辑点**，实际像素要乘 DPI 缩放（本机 1.13x），
+    # 所以设 1100 得到的窗口约 1243 px 宽。见 scripts/compare_ux.sh
+    return run(argv[0],
+               width=int(os.environ.get("MUJOCO_ZH_WIDTH", 1400)),
+               height=int(os.environ.get("MUJOCO_ZH_HEIGHT", 900)))
 
 
 if __name__ == "__main__":

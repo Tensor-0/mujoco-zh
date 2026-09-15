@@ -1,6 +1,6 @@
 # 覆盖 ux.so 里的 C++ 字符串
 
-> `ux.cpython-*.so` 里有 **210 条**界面文字，Python 层的 monkeypatch 够不着。
+> `ux.cpython-*.so` 里有 **234 条**界面文字，Python 层的 monkeypatch 够不着。
 > 本文说明**为什么够不着**、**怎么翻**，以及**哪些翻不了**。
 
 ---
@@ -161,22 +161,53 @@ clang++-15 -shared -stdlib=libc++ -nodefaultlibs -o ux_zh.so *.o \
 
 ## 三、覆盖边界
 
-`data/ux_strings_audit.json` —— **210 条可翻**，分布在 19 个面板：
+`data/ux_strings_audit.json` 里有**两套口径，别混**：
+
+- **`translatable`** —— 平铺字符串清单，**234 条可翻**（211 条已翻 ＋ 23 条刻意保留），跨 3 个源文件
+- **`by_panel`** —— 按面板的分布，**只覆盖 `gui.cc`**，共 228 条候选（下面这张表）
+
+按文件看实际翻了什么（`patches/ux-zh.patch`）：
+
+| 源文件 | 不同字符串 | 替换处 |
+|---|---|---|
+| `ux/gui.cc` | 187 | 212 |
+| `ux/gui_spec.cc` | 27 | 27 |
+| `sim/sim_profiler.cc` | 12 | 12 |
+| **去重合计** | **211** | **251** |
+
+> ⚠️ **187 是 `gui.cc` 单文件的条数，不是总数。**（这个数曾在 README 里被当成总数用，已修正。）
+> 251 处 ≠ 211 条，是因为有 15 条字符串在多个文件里各出现一次。
+
+**按面板的分布**（`by_panel`，**仅 `gui.cc`**，18 个面板 / 228 条候选）：
 
 | 面板 | 条数 | 默认可见 |
 |---|---|---|
 | `visualization_gui` | 71 | 需展开 Visualization |
 | `physics_gui` | 46 | 需展开 Physics Settings |
-| `state_gui` | 38 | 需展开 State |
-| `label_selection_gui` | 19 | ✅ 常驻 |
-| `frame_selection_gui` | 10 | ✅ 常驻 |
+| `state_gui` | 36 | 需展开 State |
+| `label_selection_gui` | 18 | ✅ 常驻 |
+| `frame_selection_gui` | 9 | ✅ 常驻 |
 | `info_gui` | 9 | 需展开 Info |
-| `groups_gui` / `counts_gui` | 7 / 6 | 需展开 |
-| `sensor_gui` / `convergence_gui` / `watch_gui` | 各 4 | 需展开 |
+| `groups_gui` | 7 | 需展开 |
+| `counts_gui` | 6 | 需展开 |
+| `sensor_gui` | 4 | 需展开 |
+| `convergence_gui` | 4 | 需展开 |
+| `controls_gui` | 3 | 需展开 |
 | `step_control_gui` | 3 | ✅ 常驻（底部控制条）|
-| `controls_gui` / `joints_gui` | 3 / 2 | 需展开 |
-| `camera_selection_gui` / `rendering_gui` / `noise_gui` | 各 2 | ✅ 常驻 |
+| `watch_gui` | 3 | 需展开 |
+| `camera_selection_gui` | 2 | ✅ 常驻 |
+| `joints_gui` | 2 | 需展开 |
+| `noise_gui` | 2 | ✅ 常驻 |
+| `rendering_gui` | 2 | ✅ 常驻 |
 | `theme_select_gui` | 1 | ✅ 常驻 |
+
+> ⚠️ **这张表只覆盖 `gui.cc`，加起来是 228 不是 234。** `gui_spec.cc`（Elements 面板）
+> 与 `sim_profiler.cc`（Profiler 面板）的文字**不在 `by_panel` 里** ——
+> 那份扫描是**早期只扫 `*_gui` 函数体**时做的，Profiler 的 12 条在
+> 图例辅助函数里、没有 `*_gui` 函数体，所以 `by_panel["ProfilerGui"]` 是空的
+> （**但它确实已经翻了**）。
+>
+> **核对总数请用 `translatable`，不要用这张表。**
 
 ### ❌ 真正翻不了的
 

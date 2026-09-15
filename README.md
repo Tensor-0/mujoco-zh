@@ -17,8 +17,8 @@
 
 | | 覆盖范围 | 代价 |
 |---|---|---|
-| **基础**（装字体 + 跑模块）| Python 侧 ~23 条 | 零侵入，随时卸载 |
-| **完整**（再重编译 `ux.so`）| 再加 C++ 侧 187 条 | 需 clang + libc++，可一键还原 |
+| **基础**（装字体 + 跑模块）| Python 侧 23 条 | 零侵入，随时卸载 |
+| **完整**（再重编译 `ux.so`）| 再加 C++ 侧 211 条 | 需 clang + libc++，可一键还原 |
 
 > 基础用法**不改官方任何文件**（除了字体，可还原）。
 > 完整用法会替换 `ux.so`，但原版已自动备份，`build_ux_zh.sh --restore` 一键还原。
@@ -41,7 +41,7 @@ MUJOCO_PY=/path/to/your/venv/bin/python3
 PYTHONPATH=$PWD/src $MUJOCO_PY -m mujoco_zh.panel_zh /path/to/your_model.xml
 ```
 
-以上是**基础用法**（Python 侧 ~23 条 + 面板）。要连 `ux.so` 里那 187 条
+以上是**基础用法**（Python 侧 23 条 + 面板）。要连 `ux.so` 里那 211 条
 C++ 字面量一起翻，再加两步：
 
 ```bash
@@ -58,6 +58,48 @@ python3 scripts/gen_cpp_patch.py
 **前置**：`mujoco` ≥ 3.11（Studio 从这版开始进 wheel）
 
 > ⚠️ **`install_font.sh` 会自动探测解释器**，但如果你机器上不止一个 mujoco，用 `PYTHON=<路径> ./scripts/install_font.sh` 显式指定。
+
+---
+
+## 对比验证：原版 vs 汉化版并排看
+
+想直观确认汉化效果（或截图做前后对照），一条命令拉起**两个窗口**：
+
+```bash
+./scripts/compare_ux.sh /path/to/your_model.xml
+
+# 例
+./scripts/compare_ux.sh ~/UniLab/src/unilab/assets/robots/dm10/dm10.xml
+```
+
+左边选**① 原版 MuJoCo Studio**，右边选**② 汉化版 MuJoCo Studio**（窗口标题可分辨）。
+
+### 为什么要两个进程
+
+C++ 侧那 200 多条汉化靠**替换 `ux.so` 这一个文件**实现，而 venv 里同一时刻只能装一个版本。
+所以脚本造了个 **1.7MB 的影子包**（默认 `/tmp/mujoco-orig`）——整棵包树全是指向真实包的
+symlink，**只有 `ux.so` 是实体**（官方备份的拷贝），靠 `PYTHONPATH` 排在 `site-packages`
+前面命中它。两个 Studio 进程各加载各的 `.so`，互不干扰。
+
+脚本开跑前会先把**两个实例实际加载的 `.so` 的 md5** 打出来，一眼能核对该不一致。
+
+### ⚠️ 三个必须知道的点
+
+1. **原版实例会设 `MUJOCO_ZH_NO_TRANSLATE=1`。** 不设的话，Python 侧那 200 多条仍会被汉化，
+   你看到的就成了「**半汉化 vs 全汉化**」而不是「原版 vs 汉化版」。
+2. **两边共用同一套 CJK 字体**（影子包的 `assets` 是 symlink，这是**有意设计**）——
+   否则原版实例里的中文全是豆腐块，反而看不出差异。**别把它当 bug「修」掉。**
+3. **窗口位置不可控**（Studio 硬编码 `SDL_WINDOWPOS_UNDEFINED`），要用
+   `Super + ←` / `Super + →` 手动摆成左右半屏。
+
+### 其他实测结论（省得重踩）
+
+| | |
+|---|---|
+| **出图慢** | 要 **30~60 秒**；头 50 秒窗口列表里看不到它是正常的，不是启动失败 |
+| **不需要隔离 HOME** | Studio 是 `io.IniFilename = nullptr`，**根本不读也不写 `imgui.ini`** |
+| **退出必崩** | `Engine::shutdown() called from the wrong thread!` —— **官方 `.so` 也一样**，是 Studio 已知问题，不是汉化引入的 |
+| **截图尺寸** | 本机 GUI 是 `DISPLAY=:1`、屏幕 **2560x1440**。写反成 `1440x2560` 时 ffmpeg 会报错**但仍写出坏图**，静默坑 |
 
 ---
 
@@ -94,7 +136,7 @@ PYTHON=<你的mujoco解释器> ./scripts/install_font.sh   # 显式指定解释�
 
 分**两条路径**，取决于文字在哪：
 
-### ① Python 侧（~23 条）—— monkeypatch
+### ① Python 侧（23 条）—— monkeypatch
 
 官方 Studio 的界面文字全部通过 `imgui.Begin('Inspector')`、`imgui.Text('...')`
 这样的**调用**产生。所以**包住这一层就能翻译整个官方 UI，零源码改动**。
@@ -104,7 +146,7 @@ from mujoco_zh import translate
 translate.install()      # 幂等；必须装在官方 UI 构建之前
 ```
 
-### ② C++ 侧（187 条）—— 重编译
+### ② C++ 侧（211 条）—— 重编译
 
 `ux.so` 里那部分文字 Python 层够不着（原因见下节「覆盖边界」），
 只能改了源码重编。**一条命令**：
@@ -174,8 +216,8 @@ C++ 侧实际写进字面量的是 `中文 (English)##English` ——
 
 | 位置 | 条数 | 状态 |
 |---|---|---|
-| `viewer_app.py` / `studio_app.py` 的 Python 字面量 | ~23 | ✅ monkeypatch 自动翻 |
-| `ux.cpython-*.so` 的 C++ 字面量 | **187 / 210** | ✅ 已重编译覆盖 |
+| `viewer_app.py` / `studio_app.py` 的 Python 字面量 | 23 | ✅ monkeypatch 自动翻 |
+| `ux.cpython-*.so` 的 C++ 字面量 | **211 / 234** | ✅ 已重编译覆盖 |
 | `libmujoco.so` 导出的枚举名（`Fog` `Haze` `Cull Face` `Id Color`…）| — | ❌ 够不着 |
 | 状态字段标识符（`QPOS` `QVEL` `CTRL` `PGS` `Newton`…）| 23 | ⛔ **刻意不翻** |
 
@@ -210,7 +252,7 @@ Python 层的 patch 永远看不到它发出的文字。
 
 ⚠️ **必须用 clang + libc++**（pybind11 的类型注册表按编译器 ABI 隔离，
 gcc 编出来会在运行时报 `incompatible function arguments`）。
-完整说明与 210 条清单见 → [`docs/重编译覆盖C++字符串.md`](docs/重编译覆盖C++字符串.md)
+完整说明与 234 条清单见 → [`docs/重编译覆盖C++字符串.md`](docs/重编译覆盖C++字符串.md)
 
 ---
 
@@ -245,7 +287,7 @@ mujoco-zh/
 │   └── panel_zh.py                ⭐ 主程序
 ├── locales/zh_CN/LC_MESSAGES/     gettext 译文（.po / .mo）
 ├── data/
-│   └── ux_strings_audit.json      盘点：ux.so 里 210 条可翻字符串 + 面板归属
+│   └── ux_strings_audit.json      盘点：ux.so 里 234 条可翻字符串 + 面板归属
 ├── patches/
 │   └── ux-zh.patch                译文 patch（由 gen_cpp_patch.py 从 .po 生成）
 ├── scripts/
@@ -254,6 +296,7 @@ mujoco-zh/
 │   ├── extract_sc_font.py         从 TTC 抽简体中文 face（绕开 window.cc 不设 FontNo）
 │   ├── gen_cpp_patch.py           ⭐ .po → C++ 译文 patch
 │   ├── build_ux_zh.sh             ⭐ 重编译 ux.so（clang+libc++，含 ABI 自检 + 还原）
+│   ├── compare_ux.sh              ⭐ 原版 vs 汉化版并排对比（影子包 + 双进程）
 │   └── compile_mo.sh              .po → .mo
 └── assets/                        截图
 ```
