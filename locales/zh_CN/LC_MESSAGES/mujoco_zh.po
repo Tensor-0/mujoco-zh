@@ -879,3 +879,100 @@ msgstr "插件"
 #: Select point
 msgid "Select point"
 msgstr "选点"
+
+#: CPU microseconds (avg) vs frame
+msgid "CPU microseconds (avg) vs frame"
+msgstr "CPU 微秒（均值）vs 帧"
+
+#: prepare
+msgid "prepare"
+msgstr "预处理"
+
+#: solve
+msgid "solve"
+msgstr "求解"
+
+#: collision
+msgid "collision"
+msgstr "碰撞"
+
+#: other
+msgid "other"
+msgstr "其它"
+
+#: nnz
+msgid "nnz"
+msgstr "非零元"
+
+#: constraint
+msgid "constraint"
+msgstr "约束"
+
+#: dof
+msgid "dof"
+msgstr "自由度"
+
+#: contact
+msgid "contact"
+msgstr "接触"
+
+#: body
+msgid "body"
+msgstr "刚体"
+
+#: iteration
+msgid "iteration"
+msgstr "迭代"
+
+#: Elements
+msgid "Elements"
+msgstr "元素"
+
+#: Default
+msgid "Default"
+msgstr "默认"
+
+#: Equality
+msgid "Equality"
+msgstr "等式"
+
+#: Exclude
+msgid "Exclude"
+msgstr "排除"
+
+#: Height Fields
+msgid "Height Fields"
+msgstr "高度场"
+
+#: Key
+msgid "Key"
+msgstr "关键帧"
+
+#: Materials
+msgid "Materials"
+msgstr "材质"
+
+#: Meshes
+msgid "Meshes"
+msgstr "网格"
+
+#: Numeric
+msgid "Numeric"
+msgstr "数值"
+
+#: Pair
+msgid "Pair"
+msgstr "配对"
+
+#: Text
+msgid "Text"
+msgstr "文本"
+
+#: Textures
+msgid "Textures"
+msgstr "纹理"
+
+#: Tuple
+msgid "Tuple"
+msgstr "元组"
+

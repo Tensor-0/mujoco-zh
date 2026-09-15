@@ -739,3 +739,152 @@
    }
  
    ImGui::NextColumn();
+--- a/src/experimental/platform/ux/gui_spec.cc
++++ b/src/experimental/platform/ux/gui_spec.cc
+@@ -102,12 +102,12 @@
+           *selected_element = editor.AddBodyElement(body, type);
+         }
+       };
+-      option("Camera", mjOBJ_CAMERA);
+-      option("Frame", mjOBJ_FRAME);
+-      option("Geom", mjOBJ_GEOM);
+-      option("Joint", mjOBJ_JOINT);
+-      option("Light", mjOBJ_LIGHT);
+-      option("Site", mjOBJ_SITE);
++      option("相机 (Camera)##Camera", mjOBJ_CAMERA);
++      option("坐标系 (Frame)##Frame", mjOBJ_FRAME);
++      option("几何体 (Geom)##Geom", mjOBJ_GEOM);
++      option("关节 (Joint)##Joint", mjOBJ_JOINT);
++      option("光源 (Light)##Light", mjOBJ_LIGHT);
++      option("站点 (Site)##Site", mjOBJ_SITE);
+       ImGui::EndPopup();
+     }
+ 
+@@ -205,9 +205,9 @@
+     }
+ 
+     BodyChildrenGui("Frames", mjOBJ_FRAME, element, body, editor);
+-    BodyChildrenGui("Sites", mjOBJ_SITE, element, body, editor);
+-    BodyChildrenGui("Joints", mjOBJ_JOINT, element, body, editor);
+-    BodyChildrenGui("Geoms", mjOBJ_GEOM, element, body, editor);
++    BodyChildrenGui("站点 (Sites)##Sites", mjOBJ_SITE, element, body, editor);
++    BodyChildrenGui("关节 (Joints)##Joints", mjOBJ_JOINT, element, body, editor);
++    BodyChildrenGui("几何体 (Geoms)##Geoms", mjOBJ_GEOM, element, body, editor);
+     BodyChildrenGui("Lights", mjOBJ_LIGHT, element, body, editor);
+     BodyChildrenGui("Cameras", mjOBJ_CAMERA, element, body, editor);
+     ImGui::TreePop();
+@@ -242,29 +242,29 @@
+   ImGui::PushID("$spec$");
+ 
+   // Non-tree elements.
+-  if (SectionHeader("Elements", flags, 0.65f)) {
+-    list("Actuators", mjOBJ_ACTUATOR);
+-    list("Sensors", mjOBJ_SENSOR);
+-    list("Flexes", mjOBJ_FLEX);
+-    list("Tendons", mjOBJ_TENDON);
+-    list("Pair", mjOBJ_PAIR);
+-    list("Exclude", mjOBJ_EXCLUDE);
+-    list("Equality", mjOBJ_EQUALITY);
+-    list("Numeric", mjOBJ_NUMERIC);
+-    list("Text", mjOBJ_TEXT);
+-    list("Tuple", mjOBJ_TUPLE);
+-    list("Key", mjOBJ_KEY);
+-    list("Default", mjOBJ_DEFAULT);
++  if (SectionHeader("元素 (Elements)##Elements", flags, 0.65f)) {
++    list("执行器 (Actuators)##Actuators", mjOBJ_ACTUATOR);
++    list("传感器 (Sensors)##Sensors", mjOBJ_SENSOR);
++    list("柔性体 (Flexes)##Flexes", mjOBJ_FLEX);
++    list("肌腱 (Tendons)##Tendons", mjOBJ_TENDON);
++    list("配对 (Pair)##Pair", mjOBJ_PAIR);
++    list("排除 (Exclude)##Exclude", mjOBJ_EXCLUDE);
++    list("等式 (Equality)##Equality", mjOBJ_EQUALITY);
++    list("数值 (Numeric)##Numeric", mjOBJ_NUMERIC);
++    list("文本 (Text)##Text", mjOBJ_TEXT);
++    list("元组 (Tuple)##Tuple", mjOBJ_TUPLE);
++    list("关键帧 (Key)##Key", mjOBJ_KEY);
++    list("默认 (Default)##Default", mjOBJ_DEFAULT);
+     ImGui::TreePop();
+   }
+ 
+   // Assets.
+   if (SectionHeader("Assets", flags, 0.65f)) {
+-    list("Meshes", mjOBJ_MESH);
+-    list("Height Fields", mjOBJ_HFIELD);
+-    list("Skins", mjOBJ_SKIN);
+-    list("Textures", mjOBJ_TEXTURE);
+-    list("Materials", mjOBJ_MATERIAL);
++    list("网格 (Meshes)##Meshes", mjOBJ_MESH);
++    list("高度场 (Height Fields)##Height Fields", mjOBJ_HFIELD);
++    list("蒙皮 (Skins)##Skins", mjOBJ_SKIN);
++    list("纹理 (Textures)##Textures", mjOBJ_TEXTURE);
++    list("材质 (Materials)##Materials", mjOBJ_MATERIAL);
+     ImGui::TreePop();
+   }
+ 
+--- a/src/experimental/platform/sim/sim_profiler.cc
++++ b/src/experimental/platform/sim/sim_profiler.cc
+@@ -153,7 +153,7 @@
+ 
+   ImPlotFlags flags =
+       ImPlot_SetupPlotFlags(plot_size) | ImPlotFlags_NoMouseText;
+-  if (ImPlot::BeginPlot("CPU microseconds (avg) vs frame", plot_size, flags)) {
++  if (ImPlot::BeginPlot("CPU 微秒（均值）vs 帧 (CPU microseconds (avg) vs frame)##CPU microseconds (avg) vs frame", plot_size, flags)) {
+     ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
+     ImPlot_SetupTimeAxis(plot_size, "");
+     ImPlot_SetupValueAxis(plot_size, "", "%.0f");
+@@ -168,19 +168,19 @@
+     ImPlot::SetupLegend(ImPlotLocation_NorthEast);
+     ImPlot::SetupFinish();
+ 
+-    ImPlot::PlotLine(GetLegendLabel("total", cpu_total_).c_str(),
++    ImPlot::PlotLine(GetLegendLabel("总计 (total)##total", cpu_total_).c_str(),
+                      cpu_total_.data(), cpu_total_.size(), 1,
+                      -(int)cpu_total_.size());
+-    ImPlot::PlotLine(GetLegendLabel("prepare", cpu_prepare_).c_str(),
++    ImPlot::PlotLine(GetLegendLabel("预处理 (prepare)##prepare", cpu_prepare_).c_str(),
+                      cpu_prepare_.data(), cpu_prepare_.size(), 1,
+                      -(int)cpu_prepare_.size());
+-    ImPlot::PlotLine(GetLegendLabel("solve", cpu_solve_).c_str(),
++    ImPlot::PlotLine(GetLegendLabel("求解 (solve)##solve", cpu_solve_).c_str(),
+                      cpu_solve_.data(), cpu_solve_.size(), 1,
+                      -(int)cpu_solve_.size());
+-    ImPlot::PlotLine(GetLegendLabel("collision", cpu_collision_).c_str(),
++    ImPlot::PlotLine(GetLegendLabel("碰撞 (collision)##collision", cpu_collision_).c_str(),
+                      cpu_collision_.data(), cpu_collision_.size(), 1,
+                      -(int)cpu_collision_.size());
+-    ImPlot::PlotLine(GetLegendLabel("other", cpu_other_).c_str(),
++    ImPlot::PlotLine(GetLegendLabel("其它 (other)##other", cpu_other_).c_str(),
+                      cpu_other_.data(), cpu_other_.size(), 1,
+                      -(int)cpu_other_.size());
+     ImPlot::PopStyleVar();
+@@ -226,24 +226,24 @@
+     };
+ 
+     GetterData nnz_data{&dim_nnz_, count};
+-    ImPlot::PlotLineG(GetDimensionLabel("nnz", dim_nnz_.back()).c_str(),
++    ImPlot::PlotLineG(GetDimensionLabel("非零元 (nnz)##nnz", dim_nnz_.back()).c_str(),
+                       getter, &nnz_data, count);
+     GetterData constraint_data{&dim_constraint_, count};
+     ImPlot::PlotLineG(
+-        GetDimensionLabel("constraint", dim_constraint_.back()).c_str(),
++        GetDimensionLabel("约束 (constraint)##constraint", dim_constraint_.back()).c_str(),
+         getter, &constraint_data, count);
+     GetterData dof_data{&dim_dof_, count};
+-    ImPlot::PlotLineG(GetDimensionLabel("dof", dim_dof_.back()).c_str(),
++    ImPlot::PlotLineG(GetDimensionLabel("自由度 (dof)##dof", dim_dof_.back()).c_str(),
+                       getter, &dof_data, count);
+     GetterData contact_data{&dim_contact_, count};
+-    ImPlot::PlotLineG(GetDimensionLabel("contact", dim_contact_.back()).c_str(),
++    ImPlot::PlotLineG(GetDimensionLabel("接触 (contact)##contact", dim_contact_.back()).c_str(),
+                       getter, &contact_data, count);
+     GetterData body_data{&dim_body_, count};
+-    ImPlot::PlotLineG(GetDimensionLabel("body", dim_body_.back()).c_str(),
++    ImPlot::PlotLineG(GetDimensionLabel("刚体 (body)##body", dim_body_.back()).c_str(),
+                       getter, &body_data, count);
+     GetterData iteration_data{&dim_iteration_, count};
+     ImPlot::PlotLineG(
+-        GetDimensionLabel("iteration", dim_iteration_.back()).c_str(),
++        GetDimensionLabel("迭代 (iteration)##iteration", dim_iteration_.back()).c_str(),
+         getter, &iteration_data, count);
+     ImPlot::PopStyleVar();
+     ImPlot::EndPlot();
