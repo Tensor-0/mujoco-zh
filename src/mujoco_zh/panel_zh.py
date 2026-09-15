@@ -46,6 +46,13 @@ from mujoco.experimental.studio import viewer_protocol
 from mujoco.experimental.dear_imgui import dear_imgui as imgui
 
 from . import tooltips as T
+from . import translate
+
+# ⚠️ **必须在官方 UI 构建之前安装**。
+# 官方 viewer_app / studio_app 也是 `import ... as imgui`，
+# 它们拿到的是**同一个模块对象** —— 所以在模块属性上打补丁，它们立刻就生效。
+# 时机：只要在 launch_passive 之前即可。
+translate.install(imgui)
 
 
 # ══════════════════════════════════════════════════════════
@@ -199,8 +206,9 @@ def check_font() -> bool:
 # 主程序
 # ══════════════════════════════════════════════════════════
 
-def run(model_path: str, width: int = 1100, height: int = 700) -> int:
+def run(model_path: str, width: int = 1400, height: int = 900) -> int:
     import mujoco
+    from mujoco.experimental.studio import viewer_app
 
     print(f"加载模型: {model_path}")
     model = mujoco.MjModel.from_xml_path(model_path)
@@ -208,6 +216,10 @@ def run(model_path: str, width: int = 1100, height: int = 700) -> int:
     print(f"  {model.nbody} 刚体 · {model.njnt} 关节 · {model.nu} 执行器")
 
     check_font()
+    print()
+    st = translate.stats()
+    print(f"✅ 翻译层已装：{st['translations']} 条译文（来源 {st['source']}）"
+          f" / 包装了 {st['wrapped']} 个 imgui 方法")
     print()
     print("启动 Studio（关掉请在终端按 Ctrl+C）...")
 
@@ -218,10 +230,16 @@ def run(model_path: str, width: int = 1100, height: int = 700) -> int:
         viewer_mode=viewer_protocol.ViewerMode.NATIVE,
     )
 
+    # ⚠️ 关键：必须同时挂官方 ViewerApp，否则菜单栏 / Inspector /
+    #    Physics / State 面板全都不加载，只剩一个光秃秃的渲染窗口。
     with launch_passive.launch_passive(
-        config, viewer_handlers=[ChinesePanel()]
+        config,
+        viewer_handlers=[
+            viewer_app.ViewerApp(),   # ← 官方完整 UI（菜单栏、各面板）
+            ChinesePanel(),           # ← 我们的中文面板（追加）
+        ],
     ) as handle:
-        handle.send_to_viewer(messages.ModelEvent(model=model))
+        handle.send_to_viewer(messages.ModelEvent(model=model, path=model_path))
         step_control = studio_sim.StepControl()
         try:
             while handle.is_running():
