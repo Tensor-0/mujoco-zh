@@ -312,6 +312,7 @@ class Tip:
 | `launch_passive` 不接 model/data | 用 `handle.send_to_viewer(messages.ModelEvent(model=model))` |
 | `@messages.handler` 要类型标注 | `def on_build_gui(self, _: messages.BuildGuiEvent) -> None:` |
 | `studio.__file__` 是 `None` | 用 `list(studio.__path__)[0]` |
+| 重编的 `ux.so` 比官方大 | 官方是 `-O2` + `--gc-sections` + strip 过的（1.4 MB），我们是 `-O1` 未 strip（5.4 MB）。功能等价，只是体积大 |
 
 ---
 

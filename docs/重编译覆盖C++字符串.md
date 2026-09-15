@@ -103,6 +103,32 @@ readelf -d ux.cpython-*.so | grep NEEDED
 
 依赖：`sudo apt-get install -y clang-15 libc++-15-dev libc++abi-15-dev`
 
+### libc++ 必须**静态**链接
+
+官方 `.so` 的 `NEEDED` 里没有 `libc++`/`libc++abi`/`libunwind`，
+且未定义 C++ 符号为 0 ⇒ 它把 libc++ 静态链进去了。
+动态链的后果是**产物不可移植**：拷到没装 libc++ 的机器上直接跑不起来。
+
+⚠️ **直接加 `-Wl,-Bstatic -lc++` 无效** —— clang 驱动会在命令末尾
+把 `-lc++` 重新以动态方式加回来。正确做法是 `-nodefaultlibs` 掐掉默认库列表，
+再显式列出静态库和底层 libc：
+
+```bash
+clang++-15 -shared -stdlib=libc++ -nodefaultlibs -o ux_zh.so *.o \
+  "$SP/libmujoco.so.$VER" "$WEBP_LIB" \
+  -Wl,--start-group \
+    /usr/lib/llvm-15/lib/libc++.a \
+    /usr/lib/llvm-15/lib/libc++abi.a \
+    /usr/lib/llvm-15/lib/libunwind.a \
+  -Wl,--end-group \
+  -lgcc_s -lgcc -lc -Wl,-rpath,'$ORIGIN' -Wl,-z,now -Wl,-z,relro
+```
+
+脚本里有自检：若产物仍 `NEEDED` 里带 `libc++`/`libunwind` 会直接报错退出。
+
+> 体积差异正常：官方 1.4 MB（`-O2` + `--gc-sections` + strip），
+> 我们 5.4 MB（`-O1` 未 strip）。功能等价。
+
 ### 最小构建：13 个 .cc，完全绕开 filament
 
 | 来源 | 文件 |

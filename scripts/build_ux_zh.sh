@@ -257,11 +257,43 @@ done
 [[ -n "$WEBP_LIB" ]] || { echo "❌ 找不到 libwebp（helpers.cc 需要）" >&2
   echo "   sudo apt-get install -y libwebp-dev" >&2; exit 1; }
 
-$CLANG -shared -stdlib=libc++ -o ux_zh.so *.o \
+# ⚠️ libc++ 必须**静态**链接，与官方一致
+#
+#   官方 .so 的 NEEDED 里没有 libc++/libc++abi/libunwind，
+#   而它内部有 libcxxabi 的源码路径串、且未定义 C++ 符号为 0
+#   ⇒ libc++ 与 libc++abi 都被静态链进去了。
+#
+#   动态链的后果：编出来的 .so 依赖 libc++.so.1 / libc++abi.so.1 /
+#   libunwind.so.1，**拷到没装 libc++ 的机器上直接跑不起来**。
+#
+#   直接加 `-Wl,-Bstatic -lc++` 是**无效的** —— clang 驱动会在命令末尾
+#   把 -lc++ 重新以动态方式加回来。正确做法是 `-nodefaultlibs`
+#   掐掉默认库列表，再显式把静态库和底层 libc 全部列上。
+LIBCXX_DIR="/usr/lib/llvm-15/lib"
+for d in /usr/lib/llvm-15/lib /usr/lib/llvm-14/lib /usr/lib/llvm-16/lib; do
+  [[ -f "$d/libc++.a" ]] && { LIBCXX_DIR="$d"; break; }
+done
+[[ -f "$LIBCXX_DIR/libc++.a" ]] || {
+  echo "❌ 找不到 libc++.a（静态链接需要）:$LIBCXX_DIR" >&2
+  echo "   sudo apt-get install -y libc++-15-dev libc++abi-15-dev" >&2; exit 1; }
+
+$CLANG -shared -stdlib=libc++ -nodefaultlibs -o ux_zh.so *.o \
   "$SP/libmujoco.so.$MUJOCO_VER" "$WEBP_LIB" \
+  -Wl,--start-group \
+    "$LIBCXX_DIR/libc++.a" "$LIBCXX_DIR/libc++abi.a" "$LIBCXX_DIR/libunwind.a" \
+  -Wl,--end-group \
+  -lgcc_s -lgcc -lc \
   -Wl,-rpath,'$ORIGIN' -Wl,-z,now -Wl,-z,relro 2>&1 | head -20
 [[ -f ux_zh.so ]] || { echo "❌ 链接失败" >&2; exit 1; }
 echo "  ✅ ux_zh.so ($(stat -c%s ux_zh.so | awk '{printf "%.1f MB", $1/1e6}'))"
+
+# 确认 libc++ 确实静态链进去了（否则产物不可移植）
+if readelf -d ux_zh.so | grep -qE "libc\+\+|libunwind"; then
+  echo "❌ 仍动态依赖 libc++/libunwind —— 产物无法拷到其它机器" >&2
+  readelf -d ux_zh.so | grep NEEDED | sed 's/^/     /' >&2
+  exit 1
+fi
+echo "  ✅ libc++ 已静态链接（无 libc++/libunwind 运行时依赖）"
 
 # ── 自检：ABI key 必须与官方一致 ────────────────────────────
 echo
