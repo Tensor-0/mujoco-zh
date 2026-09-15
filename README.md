@@ -1,17 +1,18 @@
 # mujoco-zh —— MuJoCo Studio 中文化
 
-> **让 MuJoCo Studio 说中文：官方界面原生中文化 + 鼠标悬停中文讲解每个选项。**
+> **让 MuJoCo Studio 说中文：官方界面原生中文化（234 条界面文字）。**
 
 ---
 
 ## 这是什么
 
-给官方 **MuJoCo Studio** 加两层中文能力：
+让官方 **MuJoCo Studio** 的界面**原生显示中文** —— 不是旁边挂个面板，是
+菜单栏、Inspector、各设置面板里的文字**本身**变成中文，形如 `中文 (English)`。
 
-| 能力 | 做法 | 状态 |
+| 层 | 做法 | 条数 |
 |---|---|---|
-| ① **官方 UI 原生中文** | 拦截 `imgui` 调用（Python 侧）+ 重编译 `ux.so`（C++ 侧）| ✅ 已跑通 |
-| ② **悬停教学面板** | 追加一个中文面板，鼠标停在控件上 → 弹出「调大/调小会怎样」 | ✅ 已跑通 |
+| **Python 侧** | 拦截 `imgui` 模块调用（monkeypatch，零源码改动）| 23 |
+| **C++ 侧** | 改 `ux.so` 源码字面量后**重编译** | 211 |
 
 **两级用法，按需要选**：
 
@@ -23,7 +24,8 @@
 > 基础用法**不改官方任何文件**（除了字体，可还原）。
 > 完整用法会替换 `ux.so`，但原版已自动备份，`build_ux_zh.sh --restore` 一键还原。
 
-**截图**：见 `assets/panel.png`（面板）与 `assets/studio_cjk_verify.png`（官方 UI 中文化）
+**截图**：见 `assets/panel.png` 与 `assets/studio_cjk_verify.png`。
+想**并排看原版 vs 汉化版**：`./scripts/compare_ux.sh <model.xml>`（见下）。
 
 ---
 
@@ -288,7 +290,7 @@ mujoco-zh/
 ├── src/mujoco_zh/
 │   ├── __init__.py
 │   ├── translate.py               ⭐ 官方 UI 中文化（monkeypatch 层）
-│   ├── tooltips.py                ⭐ 悬停文案数据层（52 条，与 UI 框架解耦）
+│   ├── tooltips.py                悬停文案数据层（52 条，**当前未接入 UI**）
 │   └── panel_zh.py                ⭐ 主程序
 ├── locales/zh_CN/LC_MESSAGES/     gettext 译文（.po / .mo）
 ├── data/
@@ -308,7 +310,10 @@ mujoco-zh/
 
 ---
 
-## ⭐ 核心设计：文案与前端解耦
+## 📦 预留资产：`tooltips.py`（悬停教学文案，**当前 UI 未接入**）
+
+> ⚠️ **这一层现在不影响运行** —— 主程序只做中文化，不再挂任何附加面板。
+> 文件保留是因为文案本身有复用价值，将来想接悬停教学可以直接用。
 
 `tooltips.py` 是**纯数据**，换任何前端（ImGui / PyQt / Web）都能复用：
 
@@ -343,7 +348,7 @@ class Tip:
 💡 ⭐ 看到关节抽搐、物体穿透时，先调小它试试。
 ```
 
-**当前覆盖 52 条**：可视化开关 15 · 渲染 8 · 物理参数 12 · 仿真控制 4 · 分组 6 · 相机 7
+**当前攒了 52 条**：可视化开关 15 · 渲染 8 · 物理参数 12 · 仿真控制 4 · 分组 6 · 相机 7
 
 ---
 
@@ -378,7 +383,8 @@ class Tip:
 > *"it's not really something that dear imgui will do for you. It's really not in the DNA of dear imgui to go toward that direction."*
 
 **最接近的参考**：`LeonIdris/alien-chinese`（ImGui 模拟器汉化）——
-但它是**纯翻译，没有悬停教学**。**这正是本项目的差异化。**
+同样是纯翻译路线。本项目额外做了**重编译 `.so` 覆盖 C++ 字面量**
+（那一半 Python 层够不着）与**双语 `中文 (English)` 对照显示**。
 
 ---
 

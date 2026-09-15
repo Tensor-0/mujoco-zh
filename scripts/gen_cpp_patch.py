@@ -121,6 +121,71 @@ def c_escape(s: str) -> str:
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
 
+#: ⚠️⚠️ **哪些串不能加 `##`**——必须按「这个串最终被谁消费」判断。
+#:
+#: `##` 在 ImGui 里的语义是「从这里开始是 ID，不显示」。它**只在
+#: ImGui 直接把 label 当 ID 用时才成立**。一旦这个串被 `snprintf`/
+#: 字符串拼接当**数据**用，或整串被当成**显示文本**，`##` 就会把
+#: 后面的内容全部吃掉。
+#:
+#: 实测踩过的三类（2026-09-15，用户截图对比发现"汉化版缺了数字信息"）：
+#:
+#:   A. **会被拼接/格式化**  `snprintf("%s %d", name, i)`
+#:      ⇒ 拼出 `几何体 (Geoms)##Geoms 0`，ImGui 从 `##` 起当 ID
+#:      ⇒ 屏幕上只剩 `几何体 (Geoms)`，**编号 0~5 全丢**
+#:      （`GroupGui` 一个 lambda 就吃掉 7 组 × 6 = 42 个编号）
+#:
+#:   B. **整串当显示文本**  `SetItemTooltip("%s", "...")`
+#:      ⇒ `##` 后全不显示 ⇒ **译文被截掉一半**（`目标速度 (Desired Speed)` 全没）
+#:
+#:   C. **本就有 `###` 分隔**  `"%-9s (%4.0f)###%s"`
+#:      ⇒ 我们**多加**一个 `##` 反而破坏原有分隔
+#:
+#: ✅ **可以加**的位置：`ImGui::Begin` / `TreeNodeEx` / `Button` / `Text` 等
+#:    直接把 label 传给 ImGui 的调用，以及 `SectionHeader`（内部用
+#:    `window->GetID(label)`，本就吃 `##`）。
+#:
+#: 判别方法：**看这个字面量出现的那一行**。出现在 `snprintf`/`sprintf`/
+#: `std::to_string` 拼接/`SetItemTooltip` 附近 ⇒ 不加 `##`；
+#: 直接是 `ImGui::Xxx("...")` 的第一个参数 ⇒ 加。
+#:
+#: ⚠️ **但有一种「行内看不出问题」的陷阱**：字面量被当成**参数**传进一个
+#: 「内部会拼接它」的辅助函数。此时该行长得完全正常
+#: （`GroupGui("Geoms", ...)`），危险发生在**函数体内**。
+#: 这类只能靠**知道函数名**来判 —— 见 `CONCAT_HELPERS`。
+NOWRAP_GUARDS: tuple[str, ...] = (
+    "snprintf", "sprintf", "to_string", "SetItemTooltip", "###",
+)
+
+#: ⚠️ 这些辅助函数**内部会拼接/格式化它的参数**，所以调用点传进去的
+#: 字面量**不能带 `##`**（带了会被函数体拼进数据、再被 ImGui 当 ID 吃掉）。
+#:
+#:   `GroupGui(name, group)` —— 内部
+#:       `snprintf(label, "%s %d", name, i)`  ⇒ 拼出 `几何体 (Geoms)##Geoms 0`
+#:       ⇒ **每个分组的 0~5 编号全丢**（7 组 × 6 = 42 个）
+#:
+#: 新增此类函数时**必须**加进来，否则症状是「编号/后缀凭空消失」。
+CONCAT_HELPERS: tuple[str, ...] = (
+    "GroupGui",
+)
+
+#: 一行里出现这些 ⇒ 该行上的字面量**不能**加 `##`
+IDX_RE = re.compile(r"%[-#0-9.]*[dsfegx]")
+
+
+def _needs_no_wrap(line: str) -> bool:
+    """这一行上的字符串字面量能不能安全地加 `##` 后缀？
+
+    两类危险：
+      ① 本行内就在拼接/格式化/当显示文本（`NOWRAP_GUARDS`）
+      ② 本行把字面量传给了「内部会拼接它」的辅助函数（`CONCAT_HELPERS`）
+         —— 这一行本身看着无害，危险在被调函数体内
+    """
+    if any(g in line for g in NOWRAP_GUARDS):
+        return True
+    return any(re.search(rf'\b{h}\s*\(', line) for h in CONCAT_HELPERS)
+
+
 def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]:
     """在源码副本上做替换，返回 (unified diff, 统计)。
 
@@ -133,6 +198,7 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
     diffs: list[str] = []
     applied, skipped, missing = [], [], []
     touched_files: list[str] = []
+    nowrapped: list[tuple[str, str, str]] = []   # 未加 ## 的，供报告
 
     for rel in TARGET_FILES:
         target = src_dir / rel
@@ -142,6 +208,7 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
                 f"   （先跑 scripts/build_ux_zh.sh 拉源码，或用 --src 指定）")
 
         original = target.read_text(encoding="utf-8")
+        lines = original.splitlines(keepends=True)
         text = original
 
         for en in todo:
@@ -160,17 +227,34 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
 
             # ⚠️ 只替换**完整字面量** `"<en>"`，绝不碰前缀/子串
             #    （否则 "Body" 会误伤 "Body " 之类的其它串）
-            #
-            # 写作 `中文 (English)##English`：`##` 后是 ImGui 的 ID 部分，
-            # 保持英文原串 ⇒ widget ID 恒定，界面文字变了但状态（展开、
-            # docking 布局）不受影响。详见 docs/重编译覆盖C++字符串.md
             needle = f'"{c_escape(en)}"'
-            replacement = f'"{c_escape(zh)} ({c_escape(en)})##{c_escape(en)}"'
-            n = text.count(needle)
-            if n == 0:
+            if needle not in text:
                 continue
-            text = text.replace(needle, replacement)
-            applied.append((en, zh, rel, n))
+
+            # ⚠️⚠️ 逐行判断该不该加 `##`（见 NOWRAP_GUARDS 的长注释）
+            #
+            #    `中文 (English)##English` 里的 `##` 保持 widget ID 稳定，
+            #    但**只在 ImGui 直接消费 label 时成立**。被拼进数据或整串
+            #    当显示文本时，`##` 会把后面的内容吃掉。
+            plain = f'"{c_escape(zh)} ({c_escape(en)})"'
+            wrapped = f'{plain[:-1]}##{c_escape(en)}"'
+
+            out_lines, hits = [], 0
+            for ln in lines:
+                if needle in ln:
+                    hits += ln.count(needle)
+                    if _needs_no_wrap(ln):
+                        out_lines.append(ln.replace(needle, plain))
+                        nowrapped.append((en, zh, rel))
+                    else:
+                        out_lines.append(ln.replace(needle, wrapped))
+                else:
+                    out_lines.append(ln)
+            if not hits:
+                continue
+            lines = out_lines
+            text = "".join(out_lines)
+            applied.append((en, zh, rel, hits))
 
         # 汇总是按「条目」算的，某条可能已在别的文件里替换过
         if text != original:
@@ -187,11 +271,15 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
 
     if not diffs:
         # 区分「译文表有问题」和「源码已经是译文状态」—— 后者是正常情况
-        already = sum(1 for rel in TARGET_FILES
-                      for en, zh in translations.items()
-                      if en in audit["translatable"]
-                      and f'"{c_escape(zh)} ({c_escape(en)})##' in
-                          (src_dir / rel).read_text(encoding="utf-8"))
+        # ⚠️ 不能只找带 ## 的 —— 有些串现在**故意不加** ##（被拼接/当显示文本）
+        already = 0
+        for rel in TARGET_FILES:
+            body = (src_dir / rel).read_text(encoding="utf-8")
+            for en, zh in translations.items():
+                if en not in audit["translatable"]:
+                    continue
+                if f'"{c_escape(zh)} ({c_escape(en)})' in body:
+                    already += 1
         if already:
             raise SystemExit(
                 f"⚠️ 源码已处于译文状态（检测到 {already} 处已翻译），无需重复生成。\n"
@@ -212,6 +300,7 @@ def build_patch(translations: dict[str, str], src_dir: Path) -> tuple[str, dict]
     return "".join(diffs), {
         "applied": applied, "skipped": skipped, "missing": missing,
         "by_file": by_file, "files": touched_files,
+        "nowrapped": nowrapped,
     }
 
 
@@ -239,6 +328,16 @@ def main() -> int:
         print(f"    {n:>4}  {rel}")
     print(f"跳过（窗口名/ID/标识符）: {len(st['skipped'])} 条")
     print(f"缺译文:                   {len(st['missing'])} 条")
+
+    # ⚠️ 不加 ## 的那批要显式报告 —— 它们是**故意**的，不是漏了
+    nw = st.get("nowrapped", [])
+    if nw:
+        print(f"\n⚠️ 以下 {len(nw)} 处**故意不加 `##`**（会被拼接/当显示文本，"
+              f"加了会吃掉后面的内容）：")
+        for en, zh, rel in nw:
+            print(f"    [{rel.split('/')[-1]}] {en}")
+        print("    ⇒ 这些位置译文形如 `中文 (English)`，无 ID 后缀，"
+              "属**预期行为**，别当 bug 修。")
 
     if args.list_missing and st["missing"]:
         print("\n═══ 还缺译文的 ═══")
