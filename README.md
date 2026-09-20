@@ -59,7 +59,78 @@ python3 scripts/gen_cpp_patch.py
 
 **前置**：`mujoco` ≥ 3.11（Studio 从这版开始进 wheel）
 
-> ⚠️ **`install_font.sh` 会自动探测解释器**，但如果你机器上不止一个 mujoco，用 `PYTHON=<路径> ./scripts/install_font.sh` 显式指定。
+---
+
+### ⚠️ 第 3 步之前：编译 `ux.so` 的 5 个坑（2026-09-20 实测）
+
+这几个都会**静默失败、或报错指向错误的地方**，逐一说明。
+（脚本里对应位置都已修，这里记录**为什么**，免得下个人又去踩。）
+
+#### ① pybind11 必须用 **3.0.x**（ABI v11）
+
+官方 `ux.so` 的类型注册表 key 是：
+
+```
+__pybind11_internals_v11_system_libcpp_abi1__
+```
+
+而 `PYBIND11_INTERNALS_VERSION` 这个数**随 pybind11 版本跳变**，装错会编出 key 不一致的
+`.so`，运行时才报 `incompatible function arguments`：
+
+| pybind11 | INTERNALS_VERSION | 编出来的 key |
+|---|---|---|
+| 3.1.0（最新） | 12 | `v12_...` ❌ |
+| 2.13.6 | 5 | `v5_clang_libcpp_cxxabi1002` ❌（连编译器段都变了） |
+| **3.0.x** | **11** | `v11_system_libcpp_abi1` ✅ |
+
+```bash
+uv pip install 'pybind11==3.0.2'    # 或任意 3.0.x
+```
+
+脚本现在会**在编译前**读头文件里的版本号预检，不符直接报错并告诉你装哪个版本
+——不用等几分钟编完才发现。
+
+#### ② 第三方依赖走 `git clone`，没代理会失败
+
+本机只有 HTTP 代理（7897）时：
+
+```bash
+export http_proxy=http://127.0.0.1:7897
+export https_proxy=http://127.0.0.1:7897
+export ALL_PROXY=          # ⚠️ 必须清空
+```
+
+`ALL_PROXY` 那行是必须的：本机默认是 `ALL_PROXY=socks://127.0.0.1:7897`，
+而 **curl 不认 `socks://` 这个 scheme**，会直接报
+`Unknown scheme for proxy URL` 而失败。
+
+（不要用 `git config --global http.proxy` —— 那会影响其它仓库的 push。）
+
+#### ③ 源码包必须走 **codeload 直链**，且要校验完整性
+
+`github.com/<org>/<repo>/archive/refs/tags/<tag>.tar.gz` 会 **302 到 codeload**，
+经代理时这条重定向路径容易断流。同一台机器实测：
+
+```
+github.com/...   → 卡在 8.8 MB / 10.3 MB（三次都断）
+codeload 直链    → 10 秒下完 71 MB
+```
+
+```bash
+# 直链（脚本已内置）
+https://codeload.github.com/google-deepmind/mujoco/tar.gz/refs/tags/3.11.0
+```
+
+⚠️ **断掉的包开头仍是合法 gzip 头 `0x1f8b`** —— `file` 命令看不出来。
+而**只判断「文件存在」就会拿坏包继续跑**，报错是 `tar: 归档文件中异常的 EOF`，
+指向 tar 而不是下载，极难诊断。
+
+⇒ 脚本现在的判据是「文件存在 **且** `tar tzf` 能读通」，不通过就删掉重下。
+手工排查时：
+
+```bash
+tar tzf "$WORK/mujoco-$VER.tar.gz" >/dev/null 2>&1 || echo "❌ 包损坏，删除重下"
+```
 
 ---
 
@@ -402,3 +473,30 @@ class Tip:
 ## 许可
 
 本仓库代码 MIT。引用的字体（Noto Sans CJK）为 SIL OFL。
+```bash
+tar tzf "$WORK/mujoco-$VER.tar.gz" >/dev/null 2>&1 || echo "❌ 包损坏，删除重下"
+```
+
+#### ④ `patch` 会交互提问，脚本里要加 `--batch`
+
+`patch` 检测到「已应用过」时会问：
+
+```
+Reversed (or previously applied) patch detected!  Assume -R? [n]
+```
+
+`--silent` 管不住它，`2>/dev/null` 只吞显示、**吞不掉「它在读 stdin」**。
+而脚本里 stdin 被 `< "$p"` 重定向成 patch 文件 ⇒ patch 会把 patch 文本当答案读，
+行为不确定 + 往终端喷乱码提示。
+
+⇒ 加 `--batch`（永不提问，自动走 `-R` 跳过）。脚本已改。
+
+#### ⑤ 依赖目录「存在 ≠ 版本正确」
+
+`fetch()` 原先只判断 `-d "$dir/.git"` 就跳过，导致手动 clone 来的**默认分支最新版**
+被当成合格。实测代价：imgui 拿成 `420f179`（而非 pin 的 `913a3c605`），
+编译时报 `ImGuiCol_DockingPreview` / `GetWindowDpiScale` **不存在** ——
+**报错指向源码，根因却在依赖版本**。
+
+⇒ 现在会 `rev-parse HEAD` 比对，不符就重拉；checkout 后还二次校验。
+

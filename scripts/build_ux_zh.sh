@@ -121,18 +121,43 @@ REPO_SRC="$WORK/mujoco-src"
 SRC="$REPO_SRC/src"
 mkdir -p "$WORK"
 
-# ── 拉依赖（幂等，已存在则跳过）─────────────────────────────
-fetch() { # url sha dir
+# ── 拉依赖（幂等，但**目录存在 ≠ 版本正确**）──────────────────
+# ⚠️ 2026-09-20 修：旧版只判断 `-d "$dir/.git"` 就 return，导致
+#    「目录在、但 commit 不是 pin 的那个」这种状态被静默当成合格。
+#    实测代价：手动 clone 拿到默认分支最新版（imgui 420f179 而非
+#    913a3c605）⇒ 编译时报 `ImGuiCol_DockingPreview` / `GetWindowDpiScale`
+#    不存在，而脚本直到编译阶段才发现，报错指向源码而不是依赖版本。
+fetch() { # url sha dir [tag]
   local url="$1" sha="$2" dir="$3" tag="${4:-}"
-  if [[ -d "$dir/.git" ]]; then echo "  · $dir 已存在"; return 0; fi
+  local want="${sha:-$tag}"
+
+  if [[ -d "$dir/.git" ]]; then
+    local have; have="$(git -C "$dir" rev-parse HEAD 2>/dev/null || echo '')"
+    if [[ -z "$want" ]]; then
+      echo "  · $dir 已存在（未 pin 版本，按原样使用）"; return 0
+    fi
+    # tag 可能是轻量 tag，比 sha 前缀；两边都试
+    if [[ "$have" == "$want"* ]] || git -C "$dir" describe --tags --exact-match 2>/dev/null | grep -qx "$tag"; then
+      echo "  · $dir 已存在且版本正确（${have:0:9}）"; return 0
+    fi
+    echo "  ⚠️ $dir 版本不对：现在 ${have:0:9}，需要 ${want:0:9} —— 重新拉取"
+    rm -rf "$dir"
+  fi
+
   echo "  ↓ $dir"
   if [[ -n "$tag" ]]; then
     git clone -q --depth 1 --branch "$tag" "$url" "$dir" 2>/dev/null || git clone -q "$url" "$dir"
   else
     git clone -q "$url" "$dir" 2>/dev/null || { echo "  ❌ clone 失败: $url" >&2; return 1; }
   fi
-  [[ -n "$sha" ]] && git -C "$dir" fetch -q --depth 1 origin "$sha" 2>/dev/null && \
-    git -C "$dir" checkout -q "$sha" 2>/dev/null || true
+  if [[ -n "$sha" ]]; then
+    git -C "$dir" fetch -q --depth 1 origin "$sha" 2>/dev/null \
+      && git -C "$dir" checkout -q "$sha" 2>/dev/null \
+      || { echo "  ❌ 无法切到 $sha" >&2; return 1; }
+    local now; now="$(git -C "$dir" rev-parse HEAD)"
+    [[ "${now:0:9}" == "${sha:0:9}" ]] || { echo "  ❌ checkout 后 HEAD=${now:0:9}，期望 ${sha:0:9}" >&2; return 1; }
+  fi
+  return 0
 }
 
 if [[ ! -d "$SRC" ]]; then
@@ -140,14 +165,37 @@ if [[ ! -d "$SRC" ]]; then
   echo "拉取 mujoco $MUJOCO_VER 源码..."
   mkdir -p "$WORK/mujoco-src"
   tar="$WORK/mujoco-$MUJOCO_VER.tar.gz"
-  [[ -f "$tar" ]] || curl -sL --max-time 600 -o "$tar" \
-    "https://github.com/google-deepmind/mujoco/archive/refs/tags/$MUJOCO_VER.tar.gz"
-  tar xzf "$tar" -C "$WORK/mujoco-src" --strip-components=1 || {
-    # tag 名可能是 v3.11.0 之类
-    curl -sL --max-time 600 -o "$tar" \
-      "https://github.com/google-deepmind/mujoco/archive/refs/tags/v$MUJOCO_VER.tar.gz"
-    tar xzf "$tar" -C "$WORK/mujoco-src" --strip-components=1
+
+  # ⚠️ 2026-09-20 修：改用 codeload 直链 + 校验完整性。
+  #
+  # 旧写法 `github.com/<org>/<repo>/archive/refs/tags/<tag>.tar.gz` 会 302 到
+  # codeload，经代理时这条重定向容易断流。实测同一台机器：
+  #     github.com/...  → 卡在 8.8 MB / 10.3 MB（三次都断）
+  #     codeload 直链   → 10 秒下完 71 MB
+  # ⚠️ 而且断掉的包【开头仍是合法 gzip 头 0x1f8b】，`file` 看不出来。
+  # 旧代码只判断 `[[ -f "$tar" ]]` ⇒ 会拿坏包继续跑，报错是
+  # `tar: 归档文件中异常的 EOF`，指向 tar 而不是下载，极难诊断。
+  # ⇒ 判据必须是「文件存在 **且** tar tzf 能读通」。
+  ok_tar() { [[ -f "$tar" ]] && tar tzf "$tar" >/dev/null 2>&1; }
+
+  dl() { # url
+    echo "  ↓ $1"
+    curl -sL --max-time 600 --retry 2 -o "$tar" "$1" || true
+    ok_tar || { echo "  ⚠️ 下载不完整（$(stat -c%s "$tar" 2>/dev/null || echo 0) 字节），重试" >&2; return 1; }
   }
+
+  if ! ok_tar; then
+    [[ -f "$tar" ]] && { echo "  ⚠️ 已有包损坏，删除重下"; rm -f "$tar"; }
+    # tag 名可能是 3.11.0 或 v3.11.0，两个都试
+    for base in \
+      "https://codeload.github.com/google-deepmind/mujoco/tar.gz/refs/tags" ; do
+      dl "$base/$MUJOCO_VER" || dl "$base/v$MUJOCO_VER" || {
+        echo "❌ 源码下载失败：$base/$MUJOCO_VER（已试 v 前缀）" >&2; exit 1; }
+    done
+  fi
+  echo "  ✅ 源码包完整（$(stat -c%s "$tar" | awk '{printf "%.1f MB", $1/1e6}')）"
+  tar xzf "$tar" -C "$WORK/mujoco-src" --strip-components=1 || {
+    echo "❌ 解压失败" >&2; exit 1; }
 fi
 
 # ⚠️ imgui 必须是 pin 的 docking 分支 commit，不能用 master
@@ -168,13 +216,27 @@ PATCH_DIR="${PATCH_DIR:-$REPO/patches}"
 if [[ -d "$PATCH_DIR" ]] && compgen -G "$PATCH_DIR/*.patch" >/dev/null; then
   echo "应用译文 patch..."
   n_ok=0
+  # ⚠️ 2026-09-20 修：幂等判断必须【自己判、自己跳】，不能靠 patch 的 --batch。
+  #
+  # 两个错误示范（都踩过）：
+  #   ① 不加 --batch：patch 检测到已应用会【交互提问】
+  #      「Reversed (or previously applied) patch detected! Assume -R? [n]」。
+  #      `--silent` 管不住它，`2>/dev/null` 只吞显示、吞不掉它在读 stdin；
+  #      而 stdin 被 `< "$p"` 重定向成 patch 文件 ⇒ 它拿 patch 文本当答案，
+  #      行为不确定 + 往终端喷乱码。
+  #   ② 加 `--batch`：它的语义是「**假设 -R 并执行**」—— 真的把 patch
+  #      **反向撤销**掉！而脚本把退出码 0 当成"成功应用"，静默产出一个
+  #      【不含中文】的 .so。实测：双语句从 459 条变 0 条，源码中文行 469→0。
+  #
+  # ⇒ 正确做法：用 `-R --dry-run` 自己判断"是否已应用"，成立就【跳过】，
+  #    不执行任何 patch 命令。`--dry-run` 不改文件，安全。
   for p in "$PATCH_DIR"/*.patch; do
-    if patch -d "$REPO_SRC" -p1 --dry-run --silent < "$p" 2>/dev/null; then
-      patch -d "$REPO_SRC" -p1 --silent < "$p"
-      echo "  ✅ $(basename "$p")"
-      n_ok=$((n_ok + 1))
-    elif patch -d "$REPO_SRC" -p1 -R --dry-run --silent < "$p" 2>/dev/null; then
+    if patch -d "$REPO_SRC" -p1 -R --dry-run --silent < "$p" >/dev/null 2>&1; then
       echo "  · $(basename "$p") 已应用（跳过）"
+      n_ok=$((n_ok + 1))
+    elif patch -d "$REPO_SRC" -p1 --dry-run --silent < "$p" >/dev/null 2>&1; then
+      patch -d "$REPO_SRC" -p1 --silent --batch < "$p" >/dev/null 2>&1
+      echo "  ✅ $(basename "$p")"
       n_ok=$((n_ok + 1))
     else
       echo "❌ $(basename "$p") 打不上 —— 源码版本与 patch 不匹配" >&2
@@ -196,6 +258,33 @@ BUILD="$WORK/build"
 mkdir -p "$BUILD"; cd "$BUILD"
 PYINC="$("$PY" -c 'import sysconfig;print(sysconfig.get_paths()["include"])')"
 PBINC="$("$PY" -c 'import pybind11;print(pybind11.get_include())')"
+
+# ⚠️ 2026-09-20 加：pybind11 版本必须预先校验，不能等编译完看 ABI key 才发现。
+#
+# 官方 ux.so 的 key 是 __pybind11_internals_v11_system_libcpp_abi1__，
+# 而 PYBIND11_INTERNALS_VERSION 随 pybind11 版本跳变（实测三个版本全不同）：
+#     pybind11 3.1.0  → 12   ❌ key 变 v12，装上报 incompatible function arguments
+#     pybind11 2.13.6 →  5   ❌ key 变 v5_clang_libcpp_cxxabi1002（连编译器段都变了）
+#     pybind11 3.0.x  → 11   ✅ 与官方一致
+# 整个编译要几分钟，编完才发现版本不对纯属浪费；这里提前拦。
+PB_INTERNALS_H="$PBINC/pybind11/detail/internals.h"
+[[ -f "$PB_INTERNALS_H" ]] || { echo "❌ 找不到 $PB_INTERNALS_H（pybind11 安装不完整）" >&2; exit 1; }
+PB_VER="$(grep -oE '# *define PYBIND11_INTERNALS_VERSION +[0-9]+' "$PB_INTERNALS_H" \
+          | grep -oE '[0-9]+$' | head -1)"
+PB_PKG="$("$PY" -c 'import pybind11;print(pybind11.__version__)')"
+# 官方 key 的版本段（从备份里读；没备份就跳过检查）
+PB_EXPECT=""
+if [[ -f "$BACKUP" ]]; then
+  PB_EXPECT="$(strings -a "$BACKUP" | grep -oE '__pybind11_internals_v[0-9]+_' | grep -oE '[0-9]+' | head -1 || true)"
+fi
+echo "pybind11: $PB_PKG (INTERNALS_VERSION=v${PB_VER:-?}${PB_EXPECT:+, 官方要求 v$PB_EXPECT})"
+if [[ -n "$PB_EXPECT" && -n "$PB_VER" && "$PB_VER" != "$PB_EXPECT" ]]; then
+  echo "❌ pybind11 ABI 版本不匹配：当前 v$PB_VER，需要 v$PB_EXPECT" >&2
+  echo "   ⇒ 装对应的 pybind11，例如（官方 ux.so 是 v11）：" >&2
+  echo "        uv pip install 'pybind11==3.0.2'" >&2
+  echo "   （v11 = pybind11 3.0.x ；v12 = 3.1.0 ；v5 = 2.13.6）" >&2
+  exit 1
+fi
 WEBP_INC=""
 [[ -f /home/zhan/anaconda3/include/webp/encode.h ]] && WEBP_INC="-I/home/zhan/anaconda3/include"
 
